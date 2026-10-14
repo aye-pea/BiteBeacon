@@ -62,7 +62,7 @@ async function getJson(url: string, native: boolean): Promise<{ status: number; 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(url, { signal: controller.signal, headers: native ? { 'User-Agent': 'PantryCheck-Demo/0.1 (local-development)' } : undefined });
+    const response = await fetch(url, { signal: controller.signal, headers: native ? { 'User-Agent': 'BiteBeacon-Demo/0.1 (local-development)' } : undefined });
     if (response.status === 404) return { status: 404 };
     if (response.status === 429) throw new LookupError('busy', 'Product source is busy. Wait a minute and try again.');
     if (!response.ok) throw new LookupError('unavailable', 'Product lookup is unavailable. Check the package and try again later.');
@@ -80,7 +80,7 @@ async function lookupUsda(barcode: string, native: boolean): Promise<Product | n
 }
 async function lookupOpenFoodFacts(barcode: string, native: boolean): Promise<Product | null> {
   const fields = 'code,product_name,product_name_en,brands,ingredients_text,ingredients_text_en,lang,allergens_tags,traces_tags,last_modified_t';
-  const { data } = await getJson(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=${fields}&app_name=PantryCheck-Demo&app_version=0.1`, native);
+  const { data } = await getJson(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=${fields}&app_name=BiteBeacon-Demo&app_version=0.1`, native);
   if (data === undefined) return null;
   const product = parseProduct(data, barcode);
   if (!product) return null;

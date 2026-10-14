@@ -1,7 +1,7 @@
 import { Messages } from './en';
 // Simplified Chinese (zh-CN). Machine-drafted; needs native-speaker review before launch.
 export const zh: Messages = {
-  'app.opening': '正在打开 PantryCheck…',
+  'app.opening': '正在打开 BiteBeacon…',
   'nav.overview': '概览', 'nav.overview.short': '首页',
   'nav.scan': '扫描商品', 'nav.scan.short': '扫描',
   'nav.allergies': '我的过敏原', 'nav.allergies.short': '过敏原',
@@ -174,5 +174,5 @@ export const zh: Messages = {
   'about.deleteConfirm': '要永久删除你的账户和已保存的过敏档案吗？此操作无法撤销。',
   'about.deleting': '正在删除…', 'about.confirmDelete': '确认永久删除', 'about.cancelDelete': '取消删除', 'about.delete': '删除我的账户',
   'account.deleteFailed': '无法删除账户，请重试。', 'account.deleted': '账户和过敏档案已删除。',
-  'footer.disclaimer': '有用的检查工具，绝不是安全保证。请务必阅读标签。', 'footer.version': 'PantryCheck / 演示版 0.1',
+  'footer.disclaimer': '有用的检查工具，绝不是安全保证。请务必阅读标签。', 'footer.version': 'BiteBeacon / 演示版 0.1',
 };

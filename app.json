@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "PantryCheck",
-    "slug": "pantrycheck",
+    "name": "BiteBeacon",
+    "slug": "bitebeacon",
     "version": "0.1.0",
-    "scheme": "pantrycheck",
+    "scheme": "bitebeacon",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -24,7 +24,7 @@
     },
     "plugins": [
       "expo-secure-store",
-      ["expo-camera", { "cameraPermission": "Allow PantryCheck to scan food barcodes. Camera images are not stored or uploaded.", "recordAudioAndroid": false }]
+      ["expo-camera", { "cameraPermission": "Allow BiteBeacon to scan food barcodes. Camera images are not stored or uploaded.", "recordAudioAndroid": false }]
     ]
   }
 }

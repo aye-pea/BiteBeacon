@@ -1,7 +1,7 @@
 import { Messages } from './en';
 // Vietnamese (vi-VN). Machine-drafted; needs native-speaker review before launch.
 export const vi: Messages = {
-  'app.opening': 'Đang mở PantryCheck…',
+  'app.opening': 'Đang mở BiteBeacon…',
   'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ',
   'nav.scan': 'Quét sản phẩm', 'nav.scan.short': 'Quét',
   'nav.allergies': 'Dị ứng của tôi', 'nav.allergies.short': 'Dị ứng',
@@ -174,5 +174,5 @@ export const vi: Messages = {
   'about.deleteConfirm': 'Xóa vĩnh viễn tài khoản và hồ sơ dị ứng đã lưu? Thao tác này không thể hoàn tác.',
   'about.deleting': 'Đang xóa…', 'about.confirmDelete': 'Xác nhận xóa vĩnh viễn', 'about.cancelDelete': 'Hủy xóa', 'about.delete': 'Xóa tài khoản của tôi',
   'account.deleteFailed': 'Không thể xóa tài khoản. Vui lòng thử lại.', 'account.deleted': 'Đã xóa tài khoản và hồ sơ dị ứng.',
-  'footer.disclaimer': 'Một bước kiểm tra hữu ích, không bao giờ là sự đảm bảo an toàn. Luôn đọc nhãn.', 'footer.version': 'PantryCheck / Demo 0.1',
+  'footer.disclaimer': 'Một bước kiểm tra hữu ích, không bao giờ là sự đảm bảo an toàn. Luôn đọc nhãn.', 'footer.version': 'BiteBeacon / Demo 0.1',
 };
