@@ -1,4 +1,9 @@
 import { Product, validBarcode } from '../domain/allergens';
+// Codes let the UI show the message in the person's language; message stays English for logs and tests.
+export type LookupErrorCode = 'invalid' | 'incomplete' | 'busy' | 'unavailable' | 'timeout' | 'unreachable' | 'mismatch' | 'badBarcode' | 'disputed' | 'wait';
+export class LookupError extends Error {
+  constructor(public code: LookupErrorCode, message: string) { super(message); this.name = 'LookupError'; }
+}
 
 const sample = (name: string, ingredients: string, allergens: string[], traces: string[], barcode: string, allergensKnown = true): Product => ({
   name, brand: 'PANTRY LAB · FICTIONAL SAMPLE', ingredients, allergens, traces, barcode, allergensKnown,
@@ -12,10 +17,10 @@ export const SAMPLES: Product[] = [
 ];
 
 export function parseProduct(data: unknown, barcode: string): Product | null {
-  if (!data || typeof data !== 'object') throw new Error('Product source returned an invalid response.');
+  if (!data || typeof data !== 'object') throw new LookupError('invalid', 'Product source returned an invalid response.');
   const body = data as Record<string, unknown>;
   if (body.status === 0 || (body.status === 'failure' && !body.product)) return null;
-  if (!body.product || typeof body.product !== 'object') throw new Error('Product source returned incomplete data. Try again later.');
+  if (!body.product || typeof body.product !== 'object') throw new LookupError('incomplete', 'Product source returned incomplete data. Try again later.');
   const p = body.product as Record<string, unknown>;
   const text = (v: unknown) => typeof v === 'string' ? v : '';
   const tags = (v: unknown) => Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : [];
@@ -35,7 +40,7 @@ const gtinForms = (barcode: string) => {
 // USDA FoodData Central Branded Foods: manufacturer-submitted label data (GS1 GDSN / Label Insight).
 // No structured allergen or trace fields; allergen checks use the full ingredient statement.
 export function parseUsdaFoods(data: unknown, barcode: string): Product | null {
-  if (!data || typeof data !== 'object' || !Array.isArray((data as { foods?: unknown }).foods)) throw new Error('Product source returned an invalid response.');
+  if (!data || typeof data !== 'object' || !Array.isArray((data as { foods?: unknown }).foods)) throw new LookupError('invalid', 'Product source returned an invalid response.');
   const text = (v: unknown) => typeof v === 'string' ? v.trim() : '';
   const matches = ((data as { foods: unknown[] }).foods).filter((f): f is Record<string, unknown> => !!f && typeof f === 'object')
     .filter(f => f.dataType === 'Branded' && typeof f.gtinUpc === 'string' && /^\d{8,14}$/.test(f.gtinUpc) && gtin14(f.gtinUpc) === gtin14(barcode));
@@ -59,12 +64,12 @@ async function getJson(url: string, native: boolean): Promise<{ status: number; 
   try {
     const response = await fetch(url, { signal: controller.signal, headers: native ? { 'User-Agent': 'PantryCheck-Demo/0.1 (local-development)' } : undefined });
     if (response.status === 404) return { status: 404 };
-    if (response.status === 429) throw new Error('Product source is busy. Wait a minute and try again.');
-    if (!response.ok) throw new Error('Product lookup is unavailable. Check the package and try again later.');
+    if (response.status === 429) throw new LookupError('busy', 'Product source is busy. Wait a minute and try again.');
+    if (!response.ok) throw new LookupError('unavailable', 'Product lookup is unavailable. Check the package and try again later.');
     return { status: response.status, data: await response.json() as unknown };
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') throw new Error('Product lookup timed out. Check your connection and try again.');
-    if (error instanceof TypeError) throw new Error('Could not reach the product source. Check your connection and try again. No allergy assessment is available.');
+    if (error instanceof Error && error.name === 'AbortError') throw new LookupError('timeout', 'Product lookup timed out. Check your connection and try again.');
+    if (error instanceof TypeError) throw new LookupError('unreachable', 'Could not reach the product source. Check your connection and try again. No allergy assessment is available.');
     throw error;
   } finally { clearTimeout(timeout); }
 }
@@ -82,15 +87,15 @@ async function lookupOpenFoodFacts(barcode: string, native: boolean): Promise<Pr
   const body = data as { code?: unknown; product: { code?: unknown } };
   const codes = [body.code, body.product.code].filter(code => code !== undefined);
   if (!codes.length || codes.some(code => typeof code !== 'string' || !validBarcode(code) || gtin14(code) !== gtin14(barcode))) {
-    throw new Error('Product source returned an unverified or different barcode. No allergy assessment available. Check the package label.');
+    throw new LookupError('mismatch', 'Product source returned an unverified or different barcode. No allergy assessment available. Check the package label.');
   }
   return product;
 }
 // Manufacturer-submitted USDA record first; community Open Food Facts only when USDA has no exact GTIN match.
 export async function lookupProduct(barcode: string, native = false): Promise<Product | null> {
-  if (!validBarcode(barcode)) throw new Error('Enter a valid UPC or EAN barcode, including its check digit (8, 12, 13 or 14 digits).');
-  if (disputedBarcodes.has(gtin14(barcode))) throw new Error('Product identity disputed for this barcode: Open Food Facts lists Hellmann’s Light Mayonnaise, but a Poland Spring bottle was reported. No allergy assessment available. Check the physical package label.');
-  if (Date.now() - lastRequest < 4500) throw new Error('Please wait a few seconds before another product lookup.');
+  if (!validBarcode(barcode)) throw new LookupError('badBarcode', 'Enter a valid UPC or EAN barcode, including its check digit (8, 12, 13 or 14 digits).');
+  if (disputedBarcodes.has(gtin14(barcode))) throw new LookupError('disputed', 'Product identity disputed for this barcode: Open Food Facts lists Hellmann’s Light Mayonnaise, but a Poland Spring bottle was reported. No allergy assessment available. Check the physical package label.');
+  if (Date.now() - lastRequest < 4500) throw new LookupError('wait', 'Please wait a few seconds before another product lookup.');
   lastRequest = Date.now();
   let usdaError: unknown;
   try {

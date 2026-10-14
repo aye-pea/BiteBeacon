@@ -15,10 +15,11 @@ export type Product = {
   allergens: string[]; traces: string[]; allergensKnown: boolean;
   source: 'sample' | 'usda' | 'openfoodfacts'; sourceId?: string; fetchedAt: string; updatedAt?: string; ingredientLanguage: 'en' | 'unknown';
 };
-export type Assessment = { kind: 'contains' | 'traces' | 'unknown' | 'no-match'; title: string; detail: string; matches: string[] };
+// title/detail are the English wording; the UI translates from kind and reason.
+export type Assessment = { kind: 'contains' | 'traces' | 'unknown' | 'no-match'; title: string; detail: string; matches: string[]; reason?: 'no-profile' | 'gluten' };
 const tag = (s: string) => s.toLowerCase().replace(/^[a-z]{2}:/, '');
 export function assess(product: Product, selected: AllergenId[]): Assessment {
-  if (!selected.length) return { kind: 'unknown', title: 'Choose your allergies first', detail: 'No allergy profile is selected. This product has not been checked for you.', matches: [] };
+  if (!selected.length) return { kind: 'unknown', title: 'Choose your allergies first', detail: 'No allergy profile is selected. This product has not been checked for you.', matches: [], reason: 'no-profile' };
   const active = ALLERGENS.filter(a => selected.includes(a.id));
   const contains = active.filter(a => a.tags.some(t => product.allergens.map(tag).includes(t)));
   const traces = active.filter(a => a.tags.some(t => product.traces.map(tag).includes(t)));
@@ -30,7 +31,7 @@ export function assess(product: Product, selected: AllergenId[]): Assessment {
   if (matches.length) return { kind: 'contains', title: 'Allergen signal found', detail: 'Your selected allergen appears in reported tags or ingredient text. Text matches can include precautionary statements. Check the package; do not rely on this app to decide to eat it.', matches };
   if (traces.length) return { kind: 'traces', title: 'May contain your allergen', detail: 'The source reports possible traces or cross-contact with your selected allergen. Check the physical label.', matches: traces.map(a => a.label) };
   const genericGluten = selected.includes('wheat') && [...product.allergens, ...product.traces].map(tag).includes('gluten');
-  if (!product.ingredients.trim() || !product.allergensKnown || genericGluten || product.ingredientLanguage !== 'en') return { kind: 'unknown', title: 'Not enough information', detail: genericGluten ? 'The source lists gluten without identifying its grain. Wheat exposure cannot be ruled out.' : 'Ingredient or allergen information is incomplete, or ingredient language is unsupported. Missing data does not mean an allergen is absent.', matches: [] };
+  if (!product.ingredients.trim() || !product.allergensKnown || genericGluten || product.ingredientLanguage !== 'en') return { kind: 'unknown', title: 'Not enough information', detail: genericGluten ? 'The source lists gluten without identifying its grain. Wheat exposure cannot be ruled out.' : 'Ingredient or allergen information is incomplete, or ingredient language is unsupported. Missing data does not mean an allergen is absent.', matches: [], ...(genericGluten ? { reason: 'gluten' as const } : {}) };
   return { kind: 'no-match', title: 'No selected allergens found', detail: 'No match in the available data. This is not an allergy-free or safe-to-eat guarantee. Recipes, labels and cross-contact can differ; always check the package.', matches: [] };
 }
 export function validBarcode(value: string): boolean {
@@ -91,14 +92,15 @@ export const validName = (value: string) => cleanName(value).length >= 1 && clea
 export function assessPeople(product: Product, people: Person[]): PersonResult[] {
   return people.map(person => ({ person, assessment: assess(product, person.allergies), evidence: explain(product, person.allergies) }));
 }
-export function householdSummary(results: PersonResult[]): { kind: Assessment['kind']; title: string; detail: string } {
+export function householdSummary(results: PersonResult[]): { kind: Assessment['kind']; title: string; detail: string; count: number; total: number } {
   const n = results.length;
   const kind = worstKind(results.map(r => r.assessment.kind));
   const count = results.filter(r => r.assessment.kind === kind).length;
   const people = (c: number) => `${c} of ${n} people`;
   const caution = 'Check the package before serving. A result for one person says nothing about anyone else.';
-  if (kind === 'contains') return { kind, title: `${people(count)} ${count === 1 ? 'has' : 'have'} an allergen signal`, detail: caution };
-  if (kind === 'traces') return { kind, title: `Possible traces for ${people(count)}`, detail: caution };
-  if (kind === 'unknown') return { kind, title: `Not enough information for ${people(count)}`, detail: 'Missing data does not mean an allergen is absent. ' + caution };
-  return { kind, title: `No selected allergens found for all ${n} people`, detail: 'This is not an allergy-free or safe-to-eat guarantee for anyone. Recipes, labels and cross-contact can differ; always check the package.' };
+  const counts = { count, total: n };
+  if (kind === 'contains') return { ...counts, kind, title: `${people(count)} ${count === 1 ? 'has' : 'have'} an allergen signal`, detail: caution };
+  if (kind === 'traces') return { ...counts, kind, title: `Possible traces for ${people(count)}`, detail: caution };
+  if (kind === 'unknown') return { ...counts, kind, title: `Not enough information for ${people(count)}`, detail: 'Missing data does not mean an allergen is absent. ' + caution };
+  return { ...counts, kind, title: `No selected allergens found for all ${n} people`, detail: 'This is not an allergy-free or safe-to-eat guarantee for anyone. Recipes, labels and cross-contact can differ; always check the package.' };
 }
