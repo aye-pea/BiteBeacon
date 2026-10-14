@@ -1,7 +1,7 @@
 // Source strings. Every other language must provide exactly these keys (enforced by the Messages type)
 // and the same {placeholders} (enforced by tests/i18n.test.ts). Keys ending _one/_other are plural forms.
 export const en = {
-  'app.opening': 'Opening PantryCheck…',
+  'app.opening': 'Opening BiteBeacon…',
   'nav.overview': 'Overview', 'nav.overview.short': 'Home',
   'nav.scan': 'Scan a product', 'nav.scan.short': 'Scan',
   'nav.allergies': 'My allergies', 'nav.allergies.short': 'Allergies',
@@ -174,7 +174,7 @@ export const en = {
   'about.deleteConfirm': 'Delete your account and saved allergy profile permanently? This cannot be undone.',
   'about.deleting': 'Deleting…', 'about.confirmDelete': 'Confirm permanent deletion', 'about.cancelDelete': 'Cancel deletion', 'about.delete': 'Delete my account',
   'account.deleteFailed': 'Account could not be deleted. Please retry.', 'account.deleted': 'Account and allergy profile deleted.',
-  'footer.disclaimer': 'A helpful check, never a safety guarantee. Always read the label.', 'footer.version': 'PantryCheck / Demo 0.1',
+  'footer.disclaimer': 'A helpful check, never a safety guarantee. Always read the label.', 'footer.version': 'BiteBeacon / Demo 0.1',
 } as const;
 
 export type MessageKey = keyof typeof en;

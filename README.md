@@ -1,4 +1,4 @@
-# PantryCheck
+# BiteBeacon
 
 React Native / Expo allergy-aware barcode demo. US-first, with nine major allergen groups. Built from scratch in this workspace.
 

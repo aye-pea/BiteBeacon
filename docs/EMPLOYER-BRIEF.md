@@ -1,10 +1,10 @@
-# PantryCheck — employer product briefing
+# BiteBeacon — employer product briefing
 
 Prepared September 30, 2026. Working name; trademark and domain availability not checked.
 
 ## Product pitch
 
-PantryCheck helps shoppers compare reported food ingredients with their own allergy profile. Users create an account, select their allergies, and scan a packaged food barcode. The app explains available allergen signals, shows its source, and prompts users to verify the physical label. The initial market is the United States.
+BiteBeacon helps shoppers compare reported food ingredients with their own allergy profile. Users create an account, select their allergies, and scan a packaged food barcode. The app explains available allergen signals, shows its source, and prompts users to verify the physical label. The initial market is the United States.
 
 This is decision-support information, not a guarantee that a food is safe. A barcode identifies a product record; it does not measure the contents of a package.
 
@@ -108,7 +108,7 @@ For image recognition, start with **ingredient-label OCR**, not visual guesses a
 
 ## Suggested 30-second explanation
 
-“PantryCheck turns a food barcode into a personalized ingredient check. Users keep an allergy profile, scan a product, and see matching allergens, possible traces or gaps in the available data. We built the demo in React Native with Expo, and prepared Supabase authentication and PostgreSQL with owner-only access policies. The demo already performs live product lookup; the next milestones are hosted account validation and physical-device scanning. It supports label checking—it does not certify food as safe. Ingredient-label recognition is our next planned feature.”
+“BiteBeacon turns a food barcode into a personalized ingredient check. Users keep an allergy profile, scan a product, and see matching allergens, possible traces or gaps in the available data. We built the demo in React Native with Expo, and prepared Supabase authentication and PostgreSQL with owner-only access policies. The demo already performs live product lookup; the next milestones are hosted account validation and physical-device scanning. It supports label checking—it does not certify food as safe. Ingredient-label recognition is our next planned feature.”
 
 ## Technical sources
 

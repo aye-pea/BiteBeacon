@@ -1,7 +1,7 @@
 import { Messages } from './en';
 // Bengali (bn-BD). Machine-drafted; needs native-speaker review before launch.
 export const bn: Messages = {
-  'app.opening': 'PantryCheck খোলা হচ্ছে…',
+  'app.opening': 'BiteBeacon খোলা হচ্ছে…',
   'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম',
   'nav.scan': 'পণ্য স্ক্যান করুন', 'nav.scan.short': 'স্ক্যান',
   'nav.allergies': 'আমার অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
@@ -174,5 +174,5 @@ export const bn: Messages = {
   'about.deleteConfirm': 'আপনার অ্যাকাউন্ট ও সংরক্ষিত অ্যালার্জি প্রোফাইল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরানো যাবে না।',
   'about.deleting': 'মুছে ফেলা হচ্ছে…', 'about.confirmDelete': 'স্থায়ীভাবে মুছে ফেলা নিশ্চিত করুন', 'about.cancelDelete': 'মুছে ফেলা বাতিল করুন', 'about.delete': 'আমার অ্যাকাউন্ট মুছে ফেলুন',
   'account.deleteFailed': 'অ্যাকাউন্ট মুছে ফেলা যায়নি। আবার চেষ্টা করুন।', 'account.deleted': 'অ্যাকাউন্ট ও অ্যালার্জি প্রোফাইল মুছে ফেলা হয়েছে।',
-  'footer.disclaimer': 'একটি সহায়ক যাচাই, কখনোই নিরাপত্তার নিশ্চয়তা নয়। সবসময় লেবেল পড়ুন।', 'footer.version': 'PantryCheck / ডেমো 0.1',
+  'footer.disclaimer': 'একটি সহায়ক যাচাই, কখনোই নিরাপত্তার নিশ্চয়তা নয়। সবসময় লেবেল পড়ুন।', 'footer.version': 'BiteBeacon / ডেমো 0.1',
 };

@@ -1,7 +1,7 @@
 import { Messages } from './en';
 // Spanish (es-US). Machine-drafted; needs native-speaker review before launch.
 export const es: Messages = {
-  'app.opening': 'Abriendo PantryCheck…',
+  'app.opening': 'Abriendo BiteBeacon…',
   'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio',
   'nav.scan': 'Escanear un producto', 'nav.scan.short': 'Escanear',
   'nav.allergies': 'Mis alergias', 'nav.allergies.short': 'Alergias',
@@ -174,5 +174,5 @@ export const es: Messages = {
   'about.deleteConfirm': '¿Eliminar tu cuenta y tu perfil de alergias guardado de forma permanente? Esto no se puede deshacer.',
   'about.deleting': 'Eliminando…', 'about.confirmDelete': 'Confirmar eliminación permanente', 'about.cancelDelete': 'Cancelar eliminación', 'about.delete': 'Eliminar mi cuenta',
   'account.deleteFailed': 'No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'account.deleted': 'Se eliminaron la cuenta y el perfil de alergias.',
-  'footer.disclaimer': 'Una revisión útil, nunca una garantía de seguridad. Siempre lee la etiqueta.', 'footer.version': 'PantryCheck / Demo 0.1',
+  'footer.disclaimer': 'Una revisión útil, nunca una garantía de seguridad. Siempre lee la etiqueta.', 'footer.version': 'BiteBeacon / Demo 0.1',
 };
