@@ -17,11 +17,10 @@ test('one scan shows a result for each household member', async ({ page }) => {
   await page.getByTestId('product-result').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'artifacts/household-result-mobile.png', fullPage: true });
 
-  // Switching to one person shows the single-person result and only their highlighted words.
+  // Switching to one person shows the single-person result.
   await page.getByRole('radio', { name: 'Check for DFK' }).click();
   await expect(page.getByTestId('household-summary')).toHaveCount(0);
   await expect(page.getByText('No selected allergens found', { exact: true })).toBeVisible();
-  await expect(page.getByLabel(/matches/)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

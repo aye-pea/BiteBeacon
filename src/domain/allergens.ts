@@ -42,55 +42,16 @@ export function validBarcode(value: string): boolean {
   return (10 - sum % 10) % 10 === check;
 }
 
-// Evidence explains an assessment; it never changes one. It reuses assess()'s tags and vocabulary so the two cannot disagree.
-export type Evidence = { allergen: string; via: 'tag' | 'trace' | 'ingredient'; term: string };
-export type Segment = { text: string; allergen?: string };
-const escape = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-function ingredientHits(text: string, selected: AllergenId[]) {
-  const cocoa = Array.from(text.matchAll(/\bcocoa butter\b/gi), m => [m.index!, m.index! + m[0].length]);
-  const hits: { start: number; end: number; allergen: string }[] = [];
-  for (const a of ALLERGENS.filter(a => selected.includes(a.id))) for (const w of a.words) for (const m of text.matchAll(new RegExp(`\\b${escape(w)}\\b`, 'gi'))) {
-    const start = m.index!, end = start + m[0].length;
-    if (!cocoa.some(([s, e]) => start >= s && end <= e)) hits.push({ start, end, allergen: a.label });
-  }
-  // Earliest first, longest wins on ties; highlightIngredients drops overlaps so each character is highlighted once.
-  return hits.sort((x, y) => x.start - y.start || y.end - x.end);
-}
-export function highlightIngredients(text: string, selected: AllergenId[]): Segment[] {
-  const segments: Segment[] = []; let at = 0;
-  for (const h of ingredientHits(text, selected)) {
-    if (h.start < at) continue;
-    if (h.start > at) segments.push({ text: text.slice(at, h.start) });
-    segments.push({ text: text.slice(h.start, h.end), allergen: h.allergen }); at = h.end;
-  }
-  if (at < text.length) segments.push({ text: text.slice(at) });
-  return segments;
-}
-export function explain(product: Product, selected: AllergenId[]): Evidence[] {
-  const out: Evidence[] = [];
-  const add = (e: Evidence) => { if (!out.some(o => o.allergen === e.allergen && o.via === e.via && o.term === e.term)) out.push(e); };
-  const clean = (t: string) => tag(t).replace(/-/g, ' ');
-  for (const a of ALLERGENS.filter(a => selected.includes(a.id))) {
-    for (const t of product.allergens) if ((a.tags as readonly string[]).includes(tag(t))) add({ allergen: a.label, via: 'tag', term: clean(t) });
-    for (const t of product.traces) if ((a.tags as readonly string[]).includes(tag(t))) add({ allergen: a.label, via: 'trace', term: clean(t) });
-  }
-  for (const s of highlightIngredients(product.ingredients, selected)) if (s.allergen) add({ allergen: s.allergen, via: 'ingredient', term: s.text.toLowerCase() });
-  // Group by allergen so each one's reasons read together.
-  const order = (e: Evidence) => ALLERGENS.findIndex(a => a.label === e.allergen);
-  return out.sort((x, y) => order(x) - order(y));
-}
-
 // Household: the same per-person assessment, run once for each person being checked.
 export type Person = { id: string; name: string; allergies: AllergenId[] };
-export type PersonResult = { person: Person; assessment: Assessment; evidence: Evidence[] };
+export type PersonResult = { person: Person; assessment: Assessment };
 export const MAX_MEMBERS = 8;
 const SEVERITY: Record<Assessment['kind'], number> = { 'no-match': 0, unknown: 1, traces: 2, contains: 3 };
 export const worstKind = (kinds: Assessment['kind'][]) => kinds.reduce<Assessment['kind']>((w, k) => SEVERITY[k] > SEVERITY[w] ? k : w, 'no-match');
-export const unionAllergies = (people: Person[]) => ALLERGENS.map(a => a.id).filter(id => people.some(p => p.allergies.includes(id)));
 export const cleanName = (value: string) => value.trim().replace(/\s+/g, ' ');
 export const validName = (value: string) => cleanName(value).length >= 1 && cleanName(value).length <= 40;
 export function assessPeople(product: Product, people: Person[]): PersonResult[] {
-  return people.map(person => ({ person, assessment: assess(product, person.allergies), evidence: explain(product, person.allergies) }));
+  return people.map(person => ({ person, assessment: assess(product, person.allergies) }));
 }
 export function householdSummary(results: PersonResult[]): { kind: Assessment['kind']; title: string; detail: string; count: number; total: number } {
   const n = results.length;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALLERGENS, AllergenId, assess, assessPeople, cleanName, explain, highlightIngredients, householdSummary, Person, unionAllergies, validBarcode, validName, worstKind } from '../src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, assessPeople, cleanName, householdSummary, Person, validBarcode, validName, worstKind } from '../src/domain/allergens';
 import { parseProduct, SAMPLES } from '../src/data/products';
 
 describe('allergy decisions', () => {
@@ -57,39 +57,6 @@ describe('provider normalization', () => {
     expect(p.allergens).toEqual(['en:milk']); expect(p.updatedAt).toBeUndefined();
   });
 });
-describe('result evidence', () => {
-  const base = { ...SAMPLES[2], allergens: [], traces: [] };
-  it('highlights the exact ingredient words that matched, keeping the original text', () => {
-    const segs = highlightIngredients('Sugar, Whey powder, tahini.', ['milk', 'sesame']);
-    expect(segs.map(s => s.text).join('')).toBe('Sugar, Whey powder, tahini.');
-    expect(segs.filter(s => s.allergen)).toEqual([{ text: 'Whey', allergen: 'Milk' }, { text: 'tahini', allergen: 'Sesame' }]);
-  });
-  it('does not highlight cocoa butter or words inside other words', () => {
-    expect(highlightIngredients('Cocoa butter, eggplant.', ['milk', 'eggs']).some(s => s.allergen)).toBe(false);
-    expect(highlightIngredients('Cocoa butter, butter.', ['milk']).filter(s => s.allergen)).toEqual([{ text: 'butter', allergen: 'Milk' }]);
-  });
-  it('only highlights selected allergens', () => {
-    expect(highlightIngredients('Milk, peanuts.', ['peanuts']).filter(s => s.allergen).map(s => s.text)).toEqual(['peanuts']);
-  });
-  it('explains tags, traces and ingredient words separately', () => {
-    const e = explain({ ...base, allergens: ['en:milk'], traces: ['en:tree-nuts'], ingredients: 'Whey, whey, almonds.' }, ['milk', 'tree-nuts']);
-    expect(e).toEqual([
-      { allergen: 'Milk', via: 'tag', term: 'milk' },
-      { allergen: 'Milk', via: 'ingredient', term: 'whey' },
-      { allergen: 'Tree nuts', via: 'trace', term: 'tree nuts' },
-      { allergen: 'Tree nuts', via: 'ingredient', term: 'almonds' },
-    ]);
-  });
-  it('has evidence for every allergen assess() reports', () => {
-    for (const p of SAMPLES) for (const sel of [['milk', 'peanuts'], ALLERGENS.map(a => a.id)] as AllergenId[][]) {
-      const labels = new Set(explain(p, sel).map(e => e.allergen));
-      for (const m of assess(p, sel).matches) expect(labels.has(m)).toBe(true);
-    }
-  });
-  it('has no evidence for a no-match result', () => {
-    expect(explain({ ...base, ingredients: 'Oats, salt.' }, ['milk'])).toEqual([]);
-  });
-});
 describe('household results', () => {
   const alex: Person = { id: 'me', name: 'Alex', allergies: ['peanuts', 'tree-nuts'] };
   const kha: Person = { id: 'k', name: 'Kha', allergies: ['milk', 'eggs'] };
@@ -110,9 +77,6 @@ describe('household results', () => {
     expect(worstKind(['unknown', 'traces'])).toBe('traces');
     expect(worstKind(['traces', 'contains', 'no-match'])).toBe('contains');
     expect(worstKind([])).toBe('no-match');
-  });
-  it('unions allergies in canonical order for highlighting', () => {
-    expect(unionAllergies([dfk, alex, kha])).toEqual(['milk', 'eggs', 'peanuts', 'tree-nuts', 'sesame']);
   });
   it('accepts names of 1 to 40 characters after trimming', () => {
     expect(cleanName('  Kha   Le ')).toBe('Kha Le');

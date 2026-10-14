@@ -5,7 +5,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ArrowUpRight, BookOpen, Camera, Check, Languages, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
-import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
 import { cloudConfigured, supabase } from './src/lib/supabase';
@@ -36,16 +36,15 @@ const KIND_KEY = { contains: 'kind.contains', traces: 'kind.traces', unknown: 'k
 function words({ t, tp, list }: I18n) {
   const allergyLabel = (id: AllergenId) => t(`allergen.${id}` as MessageKey);
   const labelOf = (english: string) => { const a = ALLERGENS.find(x => x.label === english); return a ? allergyLabel(a.id) : english; };
-  const evidenceText = (e: Evidence) => t(`evidence.${e.via}` as MessageKey, { term: e.term });
   const kindTitle = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.title') : t(`${KIND_KEY[a.kind]}.title` as MessageKey);
   const kindDetail = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.detail') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
   const summaryTitle = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'contains' ? tp('summary.contains', sm.count, { c: sm.count, n: sm.total })
     : sm.kind === 'traces' ? t('summary.traces', { c: sm.count, n: sm.total }) : sm.kind === 'unknown' ? t('summary.unknown', { c: sm.count, n: sm.total }) : t('summary.noMatch', { n: sm.total });
   const summaryDetail = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'no-match' ? t('summary.noMatchDetail') : sm.kind === 'unknown' ? `${t('summary.missing')} ${t('summary.caution')}` : t('summary.caution');
-  const personReason = ({ assessment: a, evidence }: PersonResult) => evidence.length ? `${evidence.map(evidenceText).join(t('evidence.join'))}${t('evidence.end')}` : a.kind === 'no-match' ? t('person.noMatchReason') : kindDetail(a);
+  const personReason = ({ assessment: a }: PersonResult) => a.kind === 'no-match' ? t('person.noMatchReason') : kindDetail(a);
   const sourceName = (p: Product) => p.source === 'sample' ? t('source.sample') : p.source === 'usda' ? 'USDA FoodData Central' : 'Open Food Facts';
   const allergyList = (ids: AllergenId[], sep?: string) => sep ? ids.map(allergyLabel).join(sep) : list(ids.map(allergyLabel));
-  return { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList };
+  return { allergyLabel, labelOf, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList };
 }
 const toPerson = (row: { id: unknown; name: unknown; allergies: unknown }): Person | null => typeof row.id === 'string' && typeof row.name === 'string' && Array.isArray(row.allergies)
   ? { id: row.id, name: row.name, allergies: ALLERGENS.map(a => a.id).filter(id => (row.allergies as unknown[]).includes(id)) } : null;
@@ -64,7 +63,7 @@ function AppContent() {
   const [lang, setLang] = useState<Lang>(detectLanguage);
   const i18n = useMemo(() => makeI18n(lang), [lang]);
   const { t, tp } = i18n;
-  const { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList } = words(i18n);
+  const { allergyLabel, labelOf, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList } = words(i18n);
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const [page, setPage] = useState<Page>('overview');
@@ -312,8 +311,6 @@ function AppContent() {
   const single = results.length === 1 ? results[0] : null;
   const summary = results.length > 1 ? householdSummary(results) : null;
   const assessment = single?.assessment ?? null;
-  const evidence = single?.evidence ?? [];
-  const focusAllergies = unionAllergies(viewPeople);
   const canScan = profileReady && allergies.length > 0;
   const profileChanged = draft.length !== allergies.length || draft.some(id => !allergies.includes(id));
   const inlineScanFeedback = page === 'scan' && canScan;
@@ -421,9 +418,8 @@ function AppContent() {
                   {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
                 </> : assessment && <>
                 <View style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{kindTitle(assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{kindDetail(assessment)}</Text>{assessment.matches.length > 0 && <View style={s.chips}>{assessment.matches.map(m => <Text key={m} style={[s.matchChip, { color: tone[result.tone].fg, borderColor: tone[result.tone].fg }]}>{labelOf(m)}</Text>)}</View>}</View></View>
-                {evidence.length > 0 && <View testID="result-evidence" style={s.detailBlock}><Text style={s.label}>{t('result.why')}</Text>{evidence.map(e => <View key={`${e.allergen}-${e.via}-${e.term}`} style={s.evidenceRow}><Text style={[s.evidenceAllergen, { color: tone[e.via === 'trace' ? 'warning' : 'danger'].fg }]}>{labelOf(e.allergen)}</Text><Text style={[s.bodySmall, { flex: 1, color: C.ink }]}>{evidenceText(e)}</Text></View>)}</View>}
                 </>}
-                <View style={s.detailBlock}><Text style={s.label}>{t('result.ingredients')}</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients ? highlightIngredients(product.ingredients, focusAllergies).map((seg, i) => seg.allergen ? <Text key={i} accessibilityLabel={t('result.matchesLabel', { text: seg.text, allergen: labelOf(seg.allergen) })} style={s.ingredientHit}>{seg.text}</Text> : seg.text) : t('result.noIngredients')}</Text></View>
+                <View style={s.detailBlock}><Text style={s.label}>{t('result.ingredients')}</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients || t('result.noIngredients')}</Text></View>
                 {product.source === 'usda' ? <View style={s.detailBlock}><Text style={s.label}>{t('result.allergenCheck')}</Text><Text style={s.bodySmall}>{t('result.usdaNote')}</Text></View> : <>
                   <View style={s.detailBlock}><Text style={s.label}>{t('result.tags')}</Text><Text style={s.body}>{reportedTags(product.allergens) || t('result.noTags')}</Text></View>
                   <View style={s.detailBlock}><Text style={s.label}>{t('result.traces')}</Text><Text style={s.body}>{reportedTags(product.traces) || t('result.noTraces')}</Text></View>
@@ -529,7 +525,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sampleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, borderBottomWidth: 1, borderColor: C.border }, sampleSwatch: { padding: 7, borderRadius: 9 },
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
-  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
+  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 }, empty: { alignItems: 'center', paddingVertical: 44 },
   mobileNavWrap: { paddingHorizontal: '4%', paddingTop: 6, paddingBottom: 8, backgroundColor: C.bg },
   groupedList: { backgroundColor: C.paper, borderRadius: 22, overflow: 'hidden', rowGap: 0 }, groupedRow: { width: '100%', borderRadius: 0, borderWidth: 0 }, groupedSeparator: { borderBottomWidth: 1, borderBottomColor: C.separator },

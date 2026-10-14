@@ -145,3 +145,9 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Not translated: product names, brands and ingredient lists (shown as the source wrote them) and ingredient matching, which stays English. Domain code still produces English titles; the UI translates from the result kind, reason codes and lookup error codes.
 - Translations are machine-drafted and need native-speaker review before launch, especially allergen names (regional peanut/sesame words in es and vi, crustacean shellfish in bn and zh) and every "not a safe-to-eat guarantee" line.
 - Validation: TypeScript passed; 91 unit/database tests passed (new translation checks and a language RLS test); 13 Playwright flows passed (new `language.spec.ts`: switch to Español in Settings, start in Vietnamese from a vi-VN browser). Screenshots inspected in all five languages at 390 × 844. Device and screen-reader QA pending. No Lua/Luau changed; Selene not applicable.
+
+## Evidence highlighting removed - 2026-10-14
+
+- Alex asked to remove evidence highlighting. Results no longer show **Why this result**, and the ingredient list is plain text with no highlighted words. Household person cards now show the outcome detail instead of per-word reasons.
+- Removed `explain()`, `highlightIngredients()`, `unionAllergies()` and the `Evidence` type from `src/domain/allergens.ts`, the `evidence.*`, `result.why` and `result.matchesLabel` strings from all five dictionaries, `tests/e2e/evidence.spec.ts` and `artifacts/evidence-mobile.png`. `assess()` is unchanged, so outcomes are the same. To bring it back, revert this commit.
+- Validation: TypeScript passed; 84 unit/database tests passed (7 evidence-only tests removed); 12 Playwright flows passed, live test skipped.
