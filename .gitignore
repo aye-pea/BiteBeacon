@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Expo / build output
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+ios/
+android/
+
+# Secrets: keep your real keys out of git
+.env
+.env*.local
+*.pem
+*.key
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# Test output
+test-results/
+playwright-report/
+coverage/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
