@@ -112,3 +112,18 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Result banner per kind: contains red, traces/unknown amber, no-match info blue; matched allergens as chips. History rows show kind icon/colour. Allergy save bar has selection progress meter.
 - Layout stays flex/percentage; toast layer uses percentage insets; camera frame uses aspectRatio instead of fixed height.
 - Validation: TypeScript passed; 62 unit/database tests passed; 6 deterministic Playwright flows passed (new `feedback.spec.ts`: progress state, disabled busy button, inline in-viewport outcome, toast, auto-scroll to result). Screenshots inspected at 1440, 390 and 320 widths plus enlarged-label fixture. Physical-device haptics, native animation feel and screen-reader toast announcements still need device QA. No Lua/Luau changed; Selene not applicable.
+
+## Result evidence — 2026-10-08
+
+- Results now show **Why this result**: one line per reason, grouped by allergen — a source allergen tag, a source trace tag, or the exact ingredient word that matched (for example `"whey" appears in the ingredients`). Matched words are highlighted in the ingredient text.
+- Evidence comes from `explain()` and `highlightIngredients()` in `src/domain/allergens.ts`, which reuse the same tags, vocabulary and cocoa-butter exception as `assess()`; they explain a result and never change it. A unit test checks every allergen `assess()` reports has evidence. No-match results show no evidence block.
+- Validation: TypeScript passed; 68 unit/database tests passed (6 new); 7 deterministic Playwright flows passed (new `evidence.spec.ts`), live test skipped. Screenshot `artifacts/evidence-mobile.png` inspected at 390 × 844. Screen-reader reading of highlighted words needs device QA. No Lua/Luau changed; Selene not applicable.
+
+## Household profiles and Settings — 2026-10-14
+
+- Account holder's allergies stay in `profiles`. New `household_members` table (migration `202610140001_household_members.sql`) stores up to 8 more people per account: name (1–40 chars) and 1–9 supported allergies. Owner-only RLS; `owner_id` comes from the caller JWT via column default and is not client-writable. Members are deleted with the account.
+- `profiles` gains `display_name`, `default_everyone` and `default_member_id`. A composite foreign key keeps the default pointed at the caller's own member; removing that member resets the default to the account holder.
+- Scan results: "Checking for" chips (Everyone or one person). Everyone shows a summary by the most serious outcome (contains > traces > unknown > no-match) plus one card per person with their reasons. One person shows the existing single result. Ingredient highlighting covers everyone being checked. History follows the current view. Never an all-clear wording; no-match cards keep the safe-to-eat caveat.
+- New Settings tab: your name, add/edit/remove people (inline remove confirmation), default "Show results for". App details moved off the phone tab bar (five tabs fit 320 px) and opens from Settings; still in the desktop sidebar.
+- Demo household: Alex (Peanuts, Tree nuts; account holder), Kha (Milk, Eggs), DFK (Sesame); default view Everyone. Demo changes stay in memory.
+- Validation: TypeScript passed; 80 unit/database tests passed (7 new PGlite RLS tests: owner stamping, cross-user hiding, spoofed owner refused, validation, 8-member cap, default ownership and reset, cascade on account deletion, anon blocked). 9 Playwright flows passed (new `household.spec.ts`); existing flows updated for the household demo. Hosted Supabase migration, real signed-in add/edit/remove, and device/screen-reader QA still pending. No Lua/Luau changed; Selene not applicable.

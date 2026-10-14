@@ -16,6 +16,7 @@ beforeAll(async () => {
     grant execute on function auth.uid() to authenticated, anon;
     insert into auth.users values ('${A}'), ('${B}');`);
   await db.exec(readFileSync('supabase/migrations/202609300001_profiles.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610140001_household_members.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -56,5 +57,62 @@ describe('owner-only database boundary', () => {
     await db.exec('reset role;');
     expect((await db.query('select id from auth.users')).rows).toEqual([{ id: A }]);
     expect((await db.query('select id from public.profiles')).rows).toEqual([{ id: A }]);
+  });
+});
+
+describe('household members', () => {
+  const C = '33333333-3333-4333-8333-333333333333';
+  const D = '44444444-4444-4444-8444-444444444444';
+  beforeAll(async () => {
+    await db.exec(`reset role; insert into auth.users values ('${C}'), ('${D}');`);
+    await asUser(D);
+    await db.query(`insert into public.profiles(id, allergies, consent_version) values ($1, array['sesame'], '2026-09-30')`, [D]);
+  });
+  const add = (name: string, allergies = "array['milk']") => db.query<{ id: string; owner_id: string }>(`insert into public.household_members(name, allergies) values ($1, ${allergies}) returning id, owner_id`, [name]);
+  it('stamps the owner from the caller and lists only their own members', async () => {
+    await asUser(C);
+    const kha = (await add('Kha')).rows[0];
+    expect(kha.owner_id).toBe(C);
+    await asUser(D);
+    expect((await db.query('select * from public.household_members')).rows).toHaveLength(0);
+    expect((await db.query(`update public.household_members set name = 'X' where id = $1 returning id`, [kha.id])).rows).toHaveLength(0);
+    expect((await db.query('delete from public.household_members where id = $1 returning id', [kha.id])).rows).toHaveLength(0);
+  });
+  it('refuses a client-supplied owner', async () => {
+    await asUser(D);
+    await expect(db.query(`insert into public.household_members(owner_id, name, allergies) values ($1, 'Spoof', array['milk'])`, [C])).rejects.toThrow(/permission denied/);
+  });
+  it('validates names and allergies', async () => {
+    await asUser(D);
+    for (const [name, allergies] of [['  ', "array['milk']"], ['x'.repeat(41), "array['milk']"], ['Ok', "array['banana']"], ['Ok', 'array[]::text[]']]) {
+      await expect(add(name, allergies)).rejects.toThrow(/check constraint/);
+    }
+  });
+  it('caps a household at eight members', async () => {
+    await asUser(D);
+    for (let i = 0; i < 8; i++) await add(`Person ${i}`);
+    await expect(add('Ninth')).rejects.toThrow(/household_limit/);
+    await db.query(`delete from public.household_members where name like 'Person %' and name <> 'Person 0'`);
+  });
+  it('lets the default view point only at the caller own member, and clears it when that member is removed', async () => {
+    await asUser(C);
+    const other = (await db.query<{ id: string }>(`select id from public.household_members`)).rows[0].id;
+    await asUser(D);
+    const own = (await db.query<{ id: string }>(`select id from public.household_members`)).rows[0].id;
+    await db.query('update public.profiles set default_member_id = $1, display_name = $2 where id = $3', [own, 'DFK', D]);
+    await expect(db.query('update public.profiles set default_member_id = $1 where id = $2', [other, D])).rejects.toThrow(/default_member_owned/);
+    await db.query('delete from public.household_members where id = $1', [own]);
+    const row = (await db.query<{ default_member_id: string | null; display_name: string }>('select default_member_id, display_name from public.profiles where id = $1', [D])).rows[0];
+    expect(row).toEqual({ default_member_id: null, display_name: 'DFK' });
+  });
+  it('deletes members with the account', async () => {
+    await asUser(C);
+    await db.query('select public.delete_my_account()');
+    await db.exec('reset role;');
+    expect((await db.query('select owner_id from public.household_members where owner_id = $1', [C])).rows).toHaveLength(0);
+  });
+  it('blocks anonymous access', async () => {
+    await db.exec('reset role; set role anon;');
+    await expect(db.query('select * from public.household_members')).rejects.toThrow(/permission denied/);
   });
 });

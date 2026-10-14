@@ -10,7 +10,7 @@ test('opt-in real provider lookup through browser UI', async ({ page }) => {
   await expect(page.getByText('LIVE PRODUCT RESULT', { exact: true })).toBeVisible({ timeout: 20000 });
   await expect(page.getByText('USDA FoodData Central (manufacturer-submitted)', { exact: false })).toBeVisible();
   await expect(page.getByTestId('product-result').getByText(/NUTELLA/).first()).toBeVisible();
-  await expect(page.getByText('Allergen signal found', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('household-summary')).toContainText(/allergen signal/);
   await page.getByTestId('product-result').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'artifacts/live-lookup.png', fullPage: true });
 });

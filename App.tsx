@@ -3,19 +3,22 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, Camera, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, RotateCcw, ScanBarcode, Search, ShieldCheck, SlidersHorizontal, Sparkles, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Camera, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
-import { ALLERGENS, AllergenId, assess, Assessment, Product, validBarcode } from './src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { lookupProduct, SAMPLES } from './src/data/products';
 import { cloudConfigured, supabase } from './src/lib/supabase';
 import { C, shadow, Tone, tone } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, Tap, ToastProvider, useToast } from './src/ui/controls';
 
-type Page = 'overview' | 'scan' | 'allergies' | 'history' | 'about';
+type Page = 'overview' | 'scan' | 'allergies' | 'history' | 'settings' | 'about';
+// 'me' is the account holder (allergies in profiles); other ids are household members.
+const ME = 'me', EVERYONE = 'everyone';
+const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }];
 type Entry = { product: Product; at: string };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, allergies: SlidersHorizontal, history: Clock3, about: BookOpen }[name];
+  const Component = { overview: Leaf, scan: ScanBarcode, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -26,6 +29,10 @@ const RESULT: Record<Assessment['kind'], { tone: Tone; Icon: typeof Info; haptic
 const SAMPLE_ART = [{ bg: '#EDE5D2', pack: '#B38B58', word: 'CRUNCH' }, { bg: '#ECE0DA', pack: '#6E4F43', word: 'COCOA' }, { bg: '#E4EBCD', pack: '#84965A', word: 'OATS' }, { bg: '#E7E9E3', pack: '#9DA597', word: '?' }];
 const allergyLabel = (id: AllergenId) => ALLERGENS.find(a => a.id === id)?.label;
 const reportedTags = (tags: string[]) => tags.map(tag => tag.trim().replace(/^[a-z]{2}:/i, '').replace(/-/g, ' ').toUpperCase()).join(', ');
+const evidenceText = (e: Evidence) => e.via === 'ingredient' ? `"${e.term}" appears in the ingredients` : `The source lists "${e.term}" as ${e.via === 'tag' ? 'an allergen' : 'a possible trace'}`;
+const personReason = ({ assessment: a, evidence }: PersonResult) => evidence.length ? `${evidence.map(evidenceText).join('; ')}.` : a.kind === 'no-match' ? 'Not a safe-to-eat guarantee. Cross-contact is unknown; check the package.' : a.detail;
+const toPerson = (row: { id: unknown; name: unknown; allergies: unknown }): Person | null => typeof row.id === 'string' && typeof row.name === 'string' && Array.isArray(row.allergies)
+  ? { id: row.id, name: row.name, allergies: ALLERGENS.map(a => a.id).filter(id => (row.allergies as unknown[]).includes(id)) } : null;
 const sourceName = (p: Product) => p.source === 'sample' ? 'Fictional sample' : p.source === 'usda' ? 'USDA FoodData Central' : 'Open Food Facts';
 function barcodeHint(value: string): { text: string; ok: boolean } {
   const digits = value.trim();
@@ -69,6 +76,15 @@ function AppContent() {
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [myName, setMyName] = useState('');
+  const [nameDraft, setNameDraft] = useState('');
+  const [members, setMembers] = useState<Person[]>([]);
+  const [defaultView, setDefaultView] = useState(ME);
+  const [view, setView] = useState(ME);
+  const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [settingsBusy, setSettingsBusy] = useState(false);
+  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView(ME); setView(ME); setEditing(null); setRemoving(null); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
   useEffect(() => {
@@ -83,23 +99,31 @@ function AppContent() {
   }, []);
   useEffect(() => {
     const current = ++generation.current;
-    setHistory([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]);
+    setHistory([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold();
     if (!session || !supabase || demo) return;
-    supabase.from('profiles').select('allergies').eq('id', session.user.id).maybeSingle().then(({ data, error }) => {
+    Promise.all([
+      supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id').eq('id', session.user.id).maybeSingle(),
+      supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
+    ]).then(([{ data, error }, household]) => {
       if (generation.current !== current) return;
-      if (error) { haptic.error(); say('Could not load your allergy profile. Sign out and retry; scanning remains locked.', 'danger'); return; }
+      if (error || household.error) { haptic.error(); say('Could not load your allergy profile. Sign out and retry; scanning remains locked.', 'danger'); return; }
       const selected = Array.isArray(data?.allergies) ? data.allergies.filter((id: AllergenId) => ALLERGENS.some(a => a.id === id)) : [];
+      const loaded = (household.data ?? []).map(toPerson).filter((p): p is Person => p !== null);
+      const preferred = data?.default_everyone ? EVERYONE : loaded.some(p => p.id === data?.default_member_id) ? data!.default_member_id as string : ME;
+      const name = typeof data?.display_name === 'string' ? data.display_name : '';
+      setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
       setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(selected.length ? 'overview' : 'allergies');
       toast(selected.length ? 'Signed in · profile loaded' : 'Signed in · choose your allergies to start');
     });
   }, [session?.user.id]);
 
   const enterDemo = () => {
-    ++generation.current; setDemo(true); setAllergies(['milk', 'peanuts']); setDraft(['milk', 'peanuts']);
+    ++generation.current; setDemo(true); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
+    resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView(EVERYONE); setView(EVERYONE);
     setProfileReady(true); setHistory([]); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
-    haptic.success(); toast('Demo ready · Milk and Peanuts preselected');
+    haptic.success(); toast('Demo ready · household of 3: Alex, Kha and DFK');
   };
-  const navigate = (next: Page) => { setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); };
+  const navigate = (next: Page) => { setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
     if (!email.trim() || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say('Enter email and password. New accounts require 12+ characters and privacy consent.'); return; }
@@ -137,10 +161,10 @@ function AppContent() {
     finally { setSaving(false); }
   };
   const showProduct = (next: Product) => {
-    haptic[RESULT[assess(next, allergies).kind].haptic]();
+    haptic[RESULT[worstKind(assessPeople(next, viewPeople).map(r => r.assessment.kind))].haptic]();
     pendingScroll.current = true;
     setProduct(next); setHistory(prev => [{ product: next, at: new Date().toISOString() }, ...prev].slice(0, 30)); setPage('scan'); setFeedback(''); setCamera(false);
-    toast(`Checked against your ${allergies.length} saved allerg${allergies.length === 1 ? 'y' : 'ies'}`, 'info');
+    toast(viewPeople.length > 1 ? `Checked for ${viewPeople.length} people` : viewPeople[0].id === ME ? `Checked against your ${allergies.length} saved allerg${allergies.length === 1 ? 'y' : 'ies'}` : `Checked for ${viewPeople[0].name}`, 'info');
   };
   const scan = async (code: string, fromCamera = false) => {
     if (scanLock.current || !profileReady || !allergies.length) return;
@@ -166,7 +190,7 @@ function AppContent() {
     if (saving || busy) return;
     if (!demo && supabase) { const { error } = await supabase.auth.signOut(); if (error) { haptic.error(); say('Sign out failed. Check your connection and retry.', 'danger'); return; } }
     const wasDemo = demo;
-    ++generation.current; setDemo(false); setSession(null); setProfileReady(false); setAllergies([]); setDraft([]); setHistory([]); setProduct(null); setFeedback(''); setPage('overview');
+    ++generation.current; setDemo(false); setSession(null); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setHistory([]); setProduct(null); setFeedback(''); setPage('overview');
     toast(wasDemo ? 'Demo ended · session cleared' : 'Signed out · session cleared', 'info');
   };
   const deleteAccount = async () => {
@@ -177,9 +201,88 @@ function AppContent() {
     if (error) { haptic.error(); say('Account could not be deleted. Please retry.', 'danger'); return; }
     await supabase.auth.signOut({ scope: 'local' });
     haptic.success();
-    ++generation.current; setSession(null); setAllergies([]); setDraft([]); setHistory([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say('Account and allergy profile deleted.', 'success');
+    ++generation.current; setSession(null); setAllergies([]); setDraft([]); resetHousehold(); setHistory([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say('Account and allergy profile deleted.', 'success');
   };
-  const assessment = product ? assess(product, allergies) : null;
+  // Settings changes are saved straight away; in the demo they only live in memory.
+  const settingsReady = profileReady && (demo || allergies.length > 0);
+  const failSettings = (message: string) => { haptic.error(); say(message, 'danger'); };
+  const saveProfileFields = async (fields: Record<string, unknown>) => {
+    if (demo) return true;
+    if (!session || !supabase) return false;
+    const { error } = await supabase.from('profiles').update(fields).eq('id', session.user.id);
+    return !error;
+  };
+  const saveMyName = async () => {
+    const next = cleanName(nameDraft);
+    if (next && !validName(next)) { haptic.warning(); say('Names can be up to 40 characters.'); return; }
+    setSettingsBusy(true); setFeedback('');
+    const ok = await saveProfileFields({ display_name: next || null });
+    setSettingsBusy(false);
+    if (!ok) { failSettings('Your name could not be saved. Please retry.'); return; }
+    setMyName(next); setNameDraft(next); haptic.success(); toast(next ? `Name saved · results show “${next}”` : 'Name cleared · results show “You”');
+  };
+  const chooseDefault = async (next: string) => {
+    if (settingsBusy || next === defaultView) return;
+    setSettingsBusy(true); setFeedback('');
+    const ok = await saveProfileFields({ default_everyone: next === EVERYONE, default_member_id: next === EVERYONE || next === ME ? null : next });
+    setSettingsBusy(false);
+    if (!ok) { failSettings('Default could not be saved. Your previous choice is still active.'); return; }
+    setDefaultView(next); setView(next); haptic.select(); toast(`Results now show ${next === EVERYONE ? 'everyone' : people.find(p => p.id === next)?.name ?? 'you'} by default`, 'info');
+  };
+  const saveMember = async () => {
+    if (!editing || settingsBusy) return;
+    const name = cleanName(editing.name);
+    if (!validName(name)) { haptic.warning(); say('Enter a name of 1 to 40 characters.'); return; }
+    if (!editing.allergies.length) { haptic.warning(); say(`Choose at least one allergy for ${name}.`); return; }
+    if (!editing.id && members.length >= MAX_MEMBERS) { haptic.warning(); say(`A household can have up to ${MAX_MEMBERS} people besides you.`); return; }
+    const allergiesInOrder = ALLERGENS.map(a => a.id).filter(id => editing.allergies.includes(id));
+    setSettingsBusy(true); setFeedback('');
+    let saved: Person | null = { id: editing.id ?? `local-${Date.now()}`, name, allergies: allergiesInOrder };
+    if (!demo) {
+      if (!supabase) saved = null;
+      else {
+        const query = editing.id
+          ? supabase.from('household_members').update({ name, allergies: allergiesInOrder }).eq('id', editing.id)
+          : supabase.from('household_members').insert({ name, allergies: allergiesInOrder, position: members.length });
+        const { data, error } = await query.select('id, name, allergies').single();
+        saved = error || !data ? null : toPerson(data);
+      }
+    }
+    setSettingsBusy(false);
+    if (!saved) { failSettings(`${name} could not be saved. Nothing changed.`); return; }
+    const person = saved;
+    setMembers(prev => editing.id ? prev.map(p => p.id === editing.id ? person : p) : [...prev, person]);
+    setEditing(null); haptic.success(); toast(editing.id ? `${name} updated` : `${name} added to your household`);
+  };
+  const removeMember = async (id: string) => {
+    if (settingsBusy) return;
+    const person = members.find(p => p.id === id);
+    setSettingsBusy(true); setFeedback('');
+    let ok = demo;
+    if (!demo && supabase) ok = !(await supabase.from('household_members').delete().eq('id', id)).error;
+    setSettingsBusy(false);
+    if (!ok) { failSettings(`${person?.name ?? 'This person'} could not be removed. Please retry.`); return; }
+    // The database clears a default that pointed at this person; mirror that here.
+    setMembers(prev => prev.filter(p => p.id !== id)); setRemoving(null);
+    if (defaultView === id) setDefaultView(ME);
+    if (view === id) setView(defaultView === id ? ME : defaultView);
+    haptic.warning(); toast(`${person?.name ?? 'Person'} removed`, 'info');
+  };
+  const memberForm = editing && <Reveal testID="member-form" style={s.memberForm}><Text style={s.cardTitle}>{editing.id ? `Edit ${members.find(m => m.id === editing.id)?.name ?? 'person'}` : 'Add a person'}</Text>
+              <Text style={s.label}>Name</Text><TextInput accessibilityLabel="Person's name" style={s.input} value={editing.name} onChangeText={name => setEditing({ ...editing, name })} placeholder="e.g. Kha" placeholderTextColor={C.faint} maxLength={40} editable={!settingsBusy} />
+              <Text style={s.label}>Their allergies</Text><View style={s.chips}>{ALLERGENS.map(a => { const on = editing.allergies.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={`${a.label} for this person`} haptic="select" scaleTo={.96} disabled={settingsBusy} onPress={() => setEditing({ ...editing, allergies: on ? editing.allergies.filter(id => id !== a.id) : [...editing.allergies, a.id] })} style={[s.viewChip, on && s.viewChipOn]}><Text style={[s.viewChipText, on && { color: 'white' }]}>{a.label}</Text></Tap>; })}</View>
+              <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? 'Save changes' : 'Add to household'}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>Cancel</Button></View></Reveal>;
+  const people: Person[] = [{ id: ME, name: myName || 'You', allergies }, ...members];
+  const household = members.length > 0;
+  const activeView = household && (view === EVERYONE || people.some(p => p.id === view)) ? view : ME;
+  const viewPeople = activeView === EVERYONE ? people : people.filter(p => p.id === activeView);
+  const viewOptions = [{ id: EVERYONE, label: `Everyone (${people.length})` }, ...people.map(p => ({ id: p.id, label: p.name }))];
+  const results = product ? assessPeople(product, viewPeople) : [];
+  const single = results.length === 1 ? results[0] : null;
+  const summary = results.length > 1 ? householdSummary(results) : null;
+  const assessment = single?.assessment ?? null;
+  const evidence = single?.evidence ?? [];
+  const focusAllergies = unionAllergies(viewPeople);
   const canScan = profileReady && allergies.length > 0;
   const profileChanged = draft.length !== allergies.length || draft.some(id => !allergies.includes(id));
   const inlineScanFeedback = page === 'scan' && canScan;
@@ -212,8 +315,11 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = [{ page: 'overview', label: 'Overview', short: 'Home' }, { page: 'scan', label: 'Scan a product', short: 'Scan' }, { page: 'allergies', label: 'My allergies', short: 'Allergies' }, { page: 'history', label: 'Recent scans', short: 'History' }, { page: 'about', label: 'App details', short: 'Details' }];
-  const result = product && assessment ? RESULT[assessment.kind] : null;
+  const navItems: { page: Page; label: string; short: string }[] = [{ page: 'overview', label: 'Overview', short: 'Home' }, { page: 'scan', label: 'Scan a product', short: 'Scan' }, { page: 'allergies', label: 'My allergies', short: 'Allergies' }, { page: 'history', label: 'Recent scans', short: 'History' }, { page: 'settings', label: 'Settings', short: 'Settings' }, { page: 'about', label: 'App details', short: 'Details' }];
+  // Five tabs fit a 320px phone; App details opens from Settings there.
+  const mobileNavItems = navItems.filter(item => item.page !== 'about');
+  const overallKind = summary?.kind ?? assessment?.kind;
+  const result = product && overallKind ? RESULT[overallKind] : null;
   return <SafeAreaView style={s.root}><StatusBar style="dark" /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><View style={s.logo}><Leaf size={24} color="white" /></View><Text style={s.brandText}>pantrycheck.</Text></View>
@@ -231,7 +337,7 @@ function AppContent() {
       </View>
       <ScrollView ref={scrollRef} key={page} testID="page-scroll" style={s.pageScroll} contentContainerStyle={[s.content, !wide && { padding: 18, gap: 20 }]} keyboardShouldPersistTaps="handled">
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>Employer preview · fictional samples + live barcode lookup · nothing saved</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: '#F3E3BD' }}><Text style={[s.textLink, { color: C.amber }]}>Exit demo ↗</Text></Tap></View>}
-        {feedback && page !== 'allergies' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
+        {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>Allergy profile loading or unavailable. Scanning stays locked until your profile is ready.</Notice>}
         {page === 'overview' && <>
           <View style={s.titleRow}><View style={{ flex: 1 }}><Text style={s.eyebrow}>SMALL CHECK. MORE CLARITY.</Text><Text accessibilityRole="header" style={s.pageTitle}>Good food starts with a check.</Text><Text style={s.body}>A clearer view of what’s in your next bite.</Text></View>{wide && <View style={s.roundLeaf}><Leaf size={28} color={C.green} /></View>}</View>
@@ -240,7 +346,7 @@ function AppContent() {
             <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><View style={s.tinyLeaf}><Leaf size={18} color={C.green} /></View><Text style={s.labelMini}>PANTRY CHECK</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>FICTIONAL PACKAGING</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>Scan. Compare. Read the label.</Text></View></View></View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
-            <View style={[s.card, { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>Your allergy profile</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>Edit profile ↗</Text></Tap></View><Text style={s.bodySmall}>Every check is personal to you.</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{allergies.length} selected · {demo ? 'Local session only' : 'Private to your account'}</Text></View></View>
+            <View style={[s.card, { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>Your allergy profile</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>Edit profile ↗</Text></Tap></View><Text style={s.bodySmall}>Every check is personal to you.</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{allergies.length} selected · {demo ? 'Local session only' : 'Private to your account'}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>Household: {members.map(m => m.name).join(', ')}</Text><Text style={s.textLink}>Manage ↗</Text></Tap>}</View>
             <View style={[s.card, { flex: 1 }]}><View style={s.between}><Text style={s.cardTitle}>Made for real life.</Text><View style={s.iconTile}><ScanBarcode size={21} color={C.green} /></View></View>{['Scan a packaged food barcode', 'Review your personal allergen signals', 'Double-check the package label'].map((line, i) => <View key={line} style={s.step}><Text style={s.stepNumber}>{i + 1}</Text><Text style={[s.bodySmall, { flex: 1 }]}>{line}</Text></View>)}</View>
           </View>
           <View style={s.between}><View><Text style={s.sectionTitle}>Give it a try</Text><Text style={s.bodySmall}>Four fictional products. Four useful outcomes.</Text></View><Text style={s.sampleLabel}>DEMO COLLECTION</Text></View>
@@ -273,30 +379,56 @@ function AppContent() {
           </View><View style={[s.card, { flex: 1 }]}><Text style={s.cardTitle}>Try a sample instead</Text><Text style={s.bodySmall}>Fictional examples for your presentation. These never replace a live lookup.</Text>
             <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color="white" /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
             <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>Only barcode sent to the product provider. Allergy matching happens on your device.</Text></View></View></View>}
-          {(busy || (product && assessment)) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollRef.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 12), animated: true }); } }}>
+          {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollRef.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 12), animated: true }); } }}>
             {busy ? <Reveal style={s.card}><View accessibilityRole="progressbar" aria-busy accessibilityLabel="Checking product" style={s.inline}><ActivityIndicator color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>Checking product…</Text><Text style={s.bodySmall}>Looking up {barcode || 'barcode'} in USDA FoodData Central, then Open Food Facts, and matching against your profile.</Text></View></View><Skeleton width="60%" height={22} /><Skeleton height={64} /><Skeleton width="85%" /><Skeleton width="70%" /></Reveal>
-              : product && assessment && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
+              : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? 'FICTIONAL DEMO RESULT' : 'LIVE PRODUCT RESULT'}</Text><Tap accessibilityRole="button" accessibilityLabel="Close result" haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
                 <Text style={s.sectionTitle}>{product.name}</Text><Text style={s.bodySmall}>{product.brand} · {product.barcode}</Text>
+                {household && <View style={s.detailBlock}><Text style={s.label}>Checking for</Text><View accessibilityRole="radiogroup" style={s.chips}>{viewOptions.map(o => { const on = activeView === o.id; return <Tap key={o.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={`Check for ${o.label}`} haptic="select" scaleTo={.96} onPress={() => setView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: 'white' }]}>{o.label}</Text></Tap>; })}</View></View>}
+                {summary ? <>
+                  <View testID="household-summary" style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color="white" /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{summary.title}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{summary.detail}</Text></View></View>
+                  {results.map(r => { const t = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: t.fg, backgroundColor: t.bg }]}><View style={[s.personAvatar, { backgroundColor: t.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{r.person.allergies.map(allergyLabel).join(' · ')}</Text><Text style={[s.personVerdict, { color: t.fg }]}>{r.assessment.matches.length ? `${r.assessment.title}: ${r.assessment.matches.join(', ')}` : r.assessment.title}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
+                </> : assessment && <>
                 <View style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color="white" /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{assessment.title}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{assessment.detail}</Text>{assessment.matches.length > 0 && <View style={s.chips}>{assessment.matches.map(m => <Text key={m} style={[s.matchChip, { color: tone[result.tone].fg, borderColor: tone[result.tone].fg }]}>{m}</Text>)}</View>}</View></View>
-                <View style={s.detailBlock}><Text style={s.label}>Reported ingredients</Text><Text style={s.body}>{product.ingredients || 'Not provided by the source.'}</Text></View>
+                {evidence.length > 0 && <View testID="result-evidence" style={s.detailBlock}><Text style={s.label}>Why this result</Text>{evidence.map(e => <View key={`${e.allergen}-${e.via}-${e.term}`} style={s.evidenceRow}><Text style={[s.evidenceAllergen, { color: tone[e.via === 'trace' ? 'warning' : 'danger'].fg }]}>{e.allergen}</Text><Text style={[s.bodySmall, { flex: 1, color: C.ink }]}>{evidenceText(e)}</Text></View>)}</View>}
+                </>}
+                <View style={s.detailBlock}><Text style={s.label}>Reported ingredients</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients ? highlightIngredients(product.ingredients, focusAllergies).map((seg, i) => seg.allergen ? <Text key={i} accessibilityLabel={`${seg.text}, matches ${seg.allergen}`} style={s.ingredientHit}>{seg.text}</Text> : seg.text) : 'Not provided by the source.'}</Text></View>
                 {product.source === 'usda' ? <View style={s.detailBlock}><Text style={s.label}>Allergen check</Text><Text style={s.bodySmall}>USDA provides the manufacturer ingredient statement, not separate allergen or trace tags. Only the text above was checked; cross-contact remains unknown.</Text></View> : <>
                   <View style={s.detailBlock}><Text style={s.label}>Reported allergen tags</Text><Text style={s.body}>{reportedTags(product.allergens) || 'None listed — does not confirm absence.'}</Text></View>
                   <View style={s.detailBlock}><Text style={s.label}>Reported traces</Text><Text style={s.body}>{reportedTags(product.traces) || 'None listed — cross-contact remains unknown.'}</Text></View>
                 </>}
-                <View style={s.divider} /><Text style={s.footnote}>Checked against current saved profile: {allergies.map(allergyLabel).join(', ')}.</Text>
+                <View style={s.divider} /><Text style={s.footnote}>{viewPeople.length > 1 ? `Checked against ${viewPeople.length} household profiles: ${viewPeople.map(p => p.name).join(', ')}.` : `Checked against ${viewPeople[0].id === ME && !myName ? 'your' : `${viewPeople[0].name}’s`} saved profile: ${viewPeople[0].allergies.map(allergyLabel).join(', ')}.`}</Text>
                 <Text style={s.footnote}>{product.source === 'sample' ? 'Fictional sample. Not a real food assessment.' : product.source === 'usda' ? `USDA FoodData Central (manufacturer-submitted) · fetched ${new Date(product.fetchedAt).toLocaleString()} · record updated ${product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : 'unknown'}. Labels change; newer packages may differ.` : `Open Food Facts (community) · fetched ${new Date(product.fetchedAt).toLocaleString()} · source updated ${product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : 'unknown'}. Community data may be incomplete or outdated.`}</Text>
                 {product.source === 'usda' && product.sourceId && <Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL(`https://fdc.nal.usda.gov/food-details/${product.sourceId}/nutrients`)}><Text style={s.link}>View source on USDA FoodData Central ↗</Text></Tap>}
                 {product.source === 'openfoodfacts' && <Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL(`https://world.openfoodfacts.org/product/${product.barcode}`)}><Text style={s.link}>View source on Open Food Facts ↗</Text></Tap>}
               </View></Reveal>}
           </View>}
         </>}
-        {page === 'history' && <><Text style={s.eyebrow}>YOUR CURRENT SESSION</Text><View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>Recent scans</Text>{history.length > 0 && <Button secondary hapticKind="warning" icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setHistory([]); toast('Scan history cleared', 'info'); }}>Clear history</Button>}</View><Text style={s.body}>Up to 30 recent checks. Results recalculate against your current profile. History clears on sign out or reload.</Text>
+        {page === 'history' && <><Text style={s.eyebrow}>YOUR CURRENT SESSION</Text><View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>Recent scans</Text>{history.length > 0 && <Button secondary hapticKind="warning" icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setHistory([]); toast('Scan history cleared', 'info'); }}>Clear history</Button>}</View><Text style={s.body}>Up to 30 recent checks. Results recalculate against the profiles you are checking for now. History clears on sign out or reload.</Text>
           {history.length === 0 ? <Reveal style={[s.card, s.empty]}><View style={[s.iconTile, { alignSelf: 'center', padding: 16, borderRadius: 40 }]}><Clock3 size={34} color={C.green} /></View><Text style={s.cardTitle}>Your next scan starts here.</Text><Text style={[s.bodySmall, { textAlign: 'center' }]}>Checked products will appear in this session.</Text><Button onPress={() => navigate('scan')}>Check a product</Button></Reveal>
-            : history.map((entry, index) => { const a = assess(entry.product, allergies); const r = RESULT[a.kind]; return <Tap accessibilityRole="button" key={`${entry.at}-${index}`} haptic="select" scaleTo={.98} onPress={() => { navigate('scan'); pendingScroll.current = true; setProduct(entry.product); }} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>
+            : history.map((entry, index) => { const rs = assessPeople(entry.product, viewPeople); const a = rs.length > 1 ? householdSummary(rs) : rs[0].assessment; const r = RESULT[a.kind]; return <Tap accessibilityRole="button" key={`${entry.at}-${index}`} haptic="select" scaleTo={.98} onPress={() => { navigate('scan'); pendingScroll.current = true; setProduct(entry.product); }} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>
               <View style={[s.resultIcon, { backgroundColor: tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
               <View style={{ flex: 1 }}><Text style={s.cardTitle}>{entry.product.name}</Text><Text style={[s.bodySmall, { color: tone[r.tone].fg, fontWeight: '600' }]}>{a.title}</Text><Text style={s.footnote}>{sourceName(entry.product)} · {new Date(entry.at).toLocaleTimeString()}</Text></View><ChevronRight size={22} color={C.green} />
             </Tap>; })}</>}
+        {page === 'settings' && <><Text style={s.eyebrow}>HOUSEHOLD & PREFERENCES</Text><Text accessibilityRole="header" style={s.pageTitle}>Settings</Text><Text style={s.body}>Add the people you shop for. One scan checks everyone, each against their own allergies.</Text>
+          {!settingsReady && <Notice>Save your own allergy profile first. Household settings are stored with it.</Notice>}
+          {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
+          <View style={s.card}><Text style={s.cardTitle}>Your name</Text><Text style={s.bodySmall}>Shown on household results. Leave blank to show “You”.</Text>
+            <TextInput accessibilityLabel="Your name" style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder="You" placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
+            {cleanName(nameDraft) !== myName && <Button loading={settingsBusy} disabled={!settingsReady} onPress={saveMyName}>Save name</Button>}</View>
+          <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>Household</Text><Text style={s.footnote}>{people.length} of {MAX_MEMBERS + 1} people</Text></View>
+            <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{(myName || 'You').charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || 'You'} <Text style={s.footnote}>(you)</Text></Text><Text style={s.footnote}>{allergies.length ? allergies.map(allergyLabel).join(' · ') : 'No allergies saved yet'}</Text></View><Tap accessibilityRole="button" accessibilityLabel="Edit your allergies" haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
+            {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{m.allergies.map(allergyLabel).join(' · ')}</Text></View>
+              <Tap accessibilityRole="button" accessibilityLabel={`Edit ${m.name}`} haptic="select" disabled={settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: m.id, name: m.name, allergies: [...m.allergies] }); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap>
+              <Tap accessibilityRole="button" accessibilityLabel={`Remove ${m.name}`} haptic="warning" disabled={settingsBusy} onPress={() => { setFeedback(''); setEditing(null); setRemoving(m.id); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><Trash2 size={17} color={C.red} /></Tap></View>
+              {removing === m.id && <Reveal style={{ gap: 10 }}><Notice kind="danger">Remove {m.name} and their allergies from your household?{defaultView === m.id ? ' Results will show you by default instead.' : ''}</Notice><View style={s.actionRow}><View style={{ flex: 1 }}><Button variant="danger" hapticKind="warning" loading={settingsBusy} onPress={() => void removeMember(m.id)}>{`Remove ${m.name}`}</Button></View><Button secondary onPress={() => setRemoving(null)}>Keep</Button></View></Reveal>}</View>)}
+            {editing && !editing.id ? memberForm
+              : !editing && members.length < MAX_MEMBERS && <Button secondary disabled={!settingsReady || settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: null, name: '', allergies: [] }); }} icon={<Plus accessible={false} size={18} color={C.green} />}>Add a person</Button>}
+            {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>Household is full: up to {MAX_MEMBERS} people besides you.</Text>}</View>
+          <View style={s.card}><Text style={s.cardTitle}>Show results for</Text><Text style={s.bodySmall}>Who a scan checks by default. You can switch on any result.</Text>
+            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = defaultView === o.id || (!household && o.id === ME); return <Tap key={o.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={`Default: ${o.label}`} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void chooseDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
+            {!household && <Text style={s.footnote}>Add a person to choose “Everyone”.</Text>}</View>
+          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>App details</Text><Text style={s.footnote}>Data sources, privacy, sign out and account deletion</Text></View><ChevronRight size={20} color={C.green} /></Tap></>}
         {page === 'about' && <><Text style={s.eyebrow}>BUILT WITH CARE</Text><Text accessibilityRole="header" style={s.pageTitle}>A little more behind the check.</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>Your profile belongs to you.</Text><Text style={s.body}>Connected accounts use Supabase Auth and PostgreSQL. Row-level security limits profile access to its owner. Native sessions use OS-backed secure storage; browser sessions stay in memory. Allergy selections never go to the food-data provider.</Text><Text style={s.body}>Demo profiles and scan history live only in memory. Camera frames are processed by the scanner; this app does not upload or save them. No advertising SDK or analytics added.</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>Where food information comes from</Text><Text style={s.body}>Lookups use USDA FoodData Central Branded Foods first: public-domain label data submitted by manufacturers through GS1 and label-data partners. If USDA has no exact barcode match, the app falls back to Open Food Facts, a community-maintained database. Any record can be stale after a recipe or label change. This app checks reported tags and a limited English ingredient vocabulary. It cannot confirm absence, cross-contact, or suitability for your medical needs.</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>USDA FoodData Central · public domain ↗</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>Open Food Facts · database under ODbL ↗</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>Read database license ↗</Text></Tap></View>
@@ -312,7 +444,7 @@ function AppContent() {
           : feedback ? <Reveal trigger={feedback}><View testID="profile-save-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite" style={[s.saveConfirmation, { backgroundColor: tone[feedbackTone].bg }]}>{profileSaved ? <CheckMark checked round /> : <CircleAlert accessible={false} size={24} color={tone[feedbackTone].fg} />}<View style={{ flex: 1 }}>{profileSaved && <Text style={s.cardTitle}>Profile saved</Text>}<Text style={[s.bodySmall, { color: tone[feedbackTone].fg }]}>{feedback}</Text></View></View></Reveal> : null}
         <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? 'Saving…' : 'Save allergy profile'}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...allergies]); setProfileSaved(false); setFeedback(''); toast('Changes discarded', 'info'); }}>Reset changes</Button>}</View>
       </View>}
-      {!wide && <View style={s.mobileNav}>{navItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
+      {!wide && <View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
         <View style={[s.mobileNavIcon, active && { backgroundColor: C.greenSoft }]}><Icon name={item.page} color={active ? C.green : C.muted} /></View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '700' }]}>{item.short}</Text>
       </Tap>; })}</View>}
     </View>
@@ -363,7 +495,7 @@ const s = StyleSheet.create({
   sampleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, borderBottomWidth: 1, borderColor: C.border }, sampleSwatch: { padding: 7, borderRadius: 9 },
   resultCard: { borderWidth: 1.5, boxShadow: '0px 14px 34px rgba(23,51,43,0.10)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { padding: 10, borderRadius: 20, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 16, borderLeftWidth: 5, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { fontSize: 19, fontWeight: '800', lineHeight: 25 },
-  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 },
+  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.bg }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { fontSize: 13, fontWeight: '700', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1.5, borderRadius: 16, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: 'white', fontWeight: '800', fontSize: 16 }, personVerdict: { fontSize: 14, fontWeight: '800', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: C.pale }, iconButton: { padding: 10, borderRadius: 12 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: C.border }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 }, empty: { alignItems: 'center', paddingVertical: 44 },
   mobileNav: { flexDirection: 'row', backgroundColor: '#FBFCF8', borderTopWidth: 1, borderColor: C.border, paddingVertical: 6 }, mobileNavItem: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, gap: 3 }, mobileNavIcon: { paddingVertical: 5, paddingHorizontal: 16, borderRadius: 20 }, mobileNavText: { textAlign: 'center', fontSize: 12, color: C.muted },
 });
