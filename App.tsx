@@ -3,23 +3,29 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, Camera, Check, Languages, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
+import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
-import { cloudConfigured, supabase } from './src/lib/supabase';
+import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
+import { cameraAvailable } from './src/lib/webScanner';
 import { bothSchemes, C, Palette, themes, Tone, type, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
-import { Button, CheckMark, Notice, Reveal, Skeleton, Tap, ToastProvider, useToast } from './src/ui/controls';
+import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 
-type Page = 'overview' | 'scan' | 'allergies' | 'history' | 'settings' | 'about';
+type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
 const ME = 'me', EVERYONE = 'everyone';
 const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }];
 type Entry = { product: Product; at: string };
+// Fictional demo pantry, dated relative to today so the expiry alerts always show.
+const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[0], 1], [SAMPLES[1], 20]].map(([product, days], i) =>
+  ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
+const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen }[name];
+  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -33,10 +39,10 @@ const SAMPLE_ART = [{ bg: '#EDE5D2', pack: '#B38B58', word: 'CRUNCH' }, { bg: '#
 const reportedTags = (tags: string[]) => tags.map(tag => tag.trim().replace(/^[a-z]{2}:/i, '').replace(/-/g, ' ').toUpperCase()).join(', ');
 const KIND_KEY = { contains: 'kind.contains', traces: 'kind.traces', unknown: 'kind.unknown', 'no-match': 'kind.noMatch' } as const;
 // Everything the result screens say, in the chosen language. Domain code keeps English for tests and logs.
-function words({ t, tp, list }: I18n) {
+function words({ t, tp, list, day }: I18n) {
   const allergyLabel = (id: AllergenId) => t(`allergen.${id}` as MessageKey);
   const labelOf = (english: string) => { const a = ALLERGENS.find(x => x.label === english); return a ? allergyLabel(a.id) : english; };
-  const evidenceText = (e: Evidence) => t(`evidence.${e.via}` as MessageKey, { term: e.term });
+  const evidenceText = (e: Evidence) => t(`evidence.${e.via}` as MessageKey, { term: e.term, allergen: labelOf(e.allergen).toLowerCase() });
   const kindTitle = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.title') : t(`${KIND_KEY[a.kind]}.title` as MessageKey);
   const kindDetail = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.detail') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
   const summaryTitle = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'contains' ? tp('summary.contains', sm.count, { c: sm.count, n: sm.total })
@@ -45,10 +51,31 @@ function words({ t, tp, list }: I18n) {
   const personReason = ({ assessment: a, evidence }: PersonResult) => evidence.length ? `${evidence.map(evidenceText).join(t('evidence.join'))}${t('evidence.end')}` : a.kind === 'no-match' ? t('person.noMatchReason') : kindDetail(a);
   const sourceName = (p: Product) => p.source === 'sample' ? t('source.sample') : p.source === 'usda' ? 'USDA FoodData Central' : 'Open Food Facts';
   const allergyList = (ids: AllergenId[], sep?: string) => sep ? ids.map(allergyLabel).join(sep) : list(ids.map(allergyLabel));
-  return { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList };
+  const expiryText = (item: Pick<PantryItem, 'expiresOn'>, today: string) => {
+    const state = expiryState(item, today);
+    if (state === 'none') return t('expiry.none');
+    const days = daysUntil(item.expiresOn!, today);
+    return state === 'expired' ? tp('expiry.expired', -days) : state === 'today' ? t('expiry.today') : state === 'soon' ? tp('expiry.soon', days) : t('expiry.later', { date: day(item.expiresOn!) });
+  };
+  return { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList, expiryText };
 }
 const toPerson = (row: { id: unknown; name: unknown; allergies: unknown }): Person | null => typeof row.id === 'string' && typeof row.name === 'string' && Array.isArray(row.allergies)
   ? { id: row.id, name: row.name, allergies: ALLERGENS.map(a => a.id).filter(id => (row.allergies as unknown[]).includes(id)) } : null;
+// Stored product snapshots are re-validated on load. Anything malformed is marked incomplete, never treated as allergen-free.
+const toPantryItem = (row: Record<string, unknown>): PantryItem | null => {
+  const p = row.product as Record<string, unknown> | null;
+  if (typeof row.id !== 'string' || !p || typeof p !== 'object' || typeof p.name !== 'string') return null;
+  const text = (v: unknown) => typeof v === 'string' ? v : '';
+  const tags = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  const intact = typeof p.ingredients === 'string' && Array.isArray(p.allergens) && Array.isArray(p.traces) && p.allergensKnown === true;
+  const source = p.source === 'usda' || p.source === 'openfoodfacts' || p.source === 'sample' ? p.source : 'openfoodfacts';
+  const product: Product = { barcode: text(p.barcode), name: p.name, brand: text(p.brand), ingredients: text(p.ingredients), allergens: tags(p.allergens), traces: tags(p.traces),
+    allergensKnown: intact, source, sourceId: text(p.sourceId) || undefined, fetchedAt: text(p.fetchedAt) || new Date(0).toISOString(), updatedAt: text(p.updatedAt) || undefined,
+    ingredientLanguage: intact && p.ingredientLanguage === 'en' ? 'en' : 'unknown' };
+  const status: PantryStatus = row.status === 'consumed' || row.status === 'discarded' ? row.status : 'active';
+  return { id: row.id, product, expiresOn: typeof row.expires_on === 'string' && validDay(row.expires_on) ? row.expires_on : null, status,
+    addedAt: text(row.added_at) || new Date().toISOString(), closedAt: status === 'active' ? null : text(row.closed_at) || new Date().toISOString() };
+};
 function barcodeHint(value: string, { t }: I18n): { text: string; ok: boolean } {
   const digits = value.trim();
   if (!digits) return { text: t('hint.empty'), ok: false };
@@ -64,7 +91,7 @@ function AppContent() {
   const [lang, setLang] = useState<Lang>(detectLanguage);
   const i18n = useMemo(() => makeI18n(lang), [lang]);
   const { t, tp } = i18n;
-  const { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList } = words(i18n);
+  const { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList, expiryText } = words(i18n);
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const [page, setPage] = useState<Page>('overview');
@@ -95,6 +122,7 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [stay, setStay] = useState(staySignedIn);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [myName, setMyName] = useState('');
   const [nameDraft, setNameDraft] = useState('');
@@ -104,6 +132,10 @@ function AppContent() {
   const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [settingsBusy, setSettingsBusy] = useState(false);
+  const [pantry, setPantry] = useState<PantryItem[]>([]);
+  const [pantryBusy, setPantryBusy] = useState(false);
+  const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
+  const today = dayOf(new Date());
   const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView(ME); setView(ME); setEditing(null); setRemoving(null); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
@@ -119,14 +151,17 @@ function AppContent() {
   }, []);
   useEffect(() => {
     const current = ++generation.current;
-    setHistory([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
+    setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
     if (!session || !supabase || demo) return;
     Promise.all([
       supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, language').eq('id', session.user.id).maybeSingle(),
       supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
-    ]).then(([{ data, error }, household]) => {
+      supabase.from('pantry_items').select('id, product, expires_on, status, added_at, closed_at').order('added_at', { ascending: false }),
+    ]).then(([{ data, error }, household, stored]) => {
       if (generation.current !== current) return;
       if (error || household.error) { haptic.error(); say(t('err.profileLoad'), 'danger'); return; }
+      // A pantry that fails to load must not block allergy checks; it shows empty.
+      setPantry((stored.data ?? []).map(row => toPantryItem(row as Record<string, unknown>)).filter((i): i is PantryItem => i !== null));
       const selected = Array.isArray(data?.allergies) ? data.allergies.filter((id: AllergenId) => ALLERGENS.some(a => a.id === id)) : [];
       const loaded = (household.data ?? []).map(toPerson).filter((p): p is Person => p !== null);
       const preferred = data?.default_everyone ? EVERYONE : loaded.some(p => p.id === data?.default_member_id) ? data!.default_member_id as string : ME;
@@ -141,7 +176,7 @@ function AppContent() {
   const enterDemo = () => {
     ++generation.current; setDemo(true); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
     resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView(EVERYONE); setView(EVERYONE);
-    setProfileReady(true); setHistory([]); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
+    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => { setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
@@ -149,6 +184,7 @@ function AppContent() {
     if (!supabase) return;
     if (!email.trim() || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
     setAuthBusy(true); setFeedback('');
+    setStaySignedIn(stay);
     try {
       const { data, error } = authMode === 'signup'
         ? await supabase.auth.signUp({ email: email.trim(), password })
@@ -184,6 +220,7 @@ function AppContent() {
   const showProduct = (next: Product) => {
     haptic[RESULT[worstKind(assessPeople(next, viewPeople).map(r => r.assessment.kind))].haptic]();
     pendingScroll.current = true;
+    setPantryDraft({ date: '', none: false, error: false });
     setProduct(next); setHistory(prev => [{ product: next, at: new Date().toISOString() }, ...prev].slice(0, 30)); setPage('scan'); setFeedback(''); setCamera(false);
     toast(viewPeople.length > 1 ? t('toast.checkedPeople', { n: viewPeople.length }) : viewPeople[0].id === ME ? tp('toast.checkedMine', allergies.length) : t('toast.checkedFor', { name: viewPeople[0].name }), 'info');
   };
@@ -211,7 +248,7 @@ function AppContent() {
     if (saving || busy) return;
     if (!demo && supabase) { const { error } = await supabase.auth.signOut(); if (error) { haptic.error(); say(t('leave.failed'), 'danger'); return; } }
     const wasDemo = demo;
-    ++generation.current; setDemo(false); setSession(null); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setProduct(null); setFeedback(''); setPage('overview');
+    ++generation.current; setDemo(false); setSession(null); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setPantry([]); setProduct(null); setFeedback(''); setPage('overview');
     toast(wasDemo ? t('toast.demoEnded') : t('toast.signedOut'), 'info');
   };
   const deleteAccount = async () => {
@@ -222,7 +259,7 @@ function AppContent() {
     if (error) { haptic.error(); say(t('account.deleteFailed'), 'danger'); return; }
     await supabase.auth.signOut({ scope: 'local' });
     haptic.success();
-    ++generation.current; setSession(null); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say(t('account.deleted'), 'success');
+    ++generation.current; setSession(null); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setPantry([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say(t('account.deleted'), 'success');
   };
   // Settings changes are saved straight away; in the demo they only live in memory.
   const settingsReady = profileReady && (demo || allergies.length > 0);
@@ -299,6 +336,49 @@ function AppContent() {
     if (!ok) { haptic.warning(); say(translate(next, 'settings.languageFailed')); return; }
     toast(translate(next, 'toast.languageSaved', { name: languageName(next) }), 'info');
   };
+  // Pantry changes save straight away; in the demo they only live in memory.
+  const addToPantry = async (item: Product) => {
+    if (pantryBusy) return;
+    const date = pantryDraft.date.trim();
+    if (!pantryDraft.none && !validDay(date)) { haptic.warning(); setPantryDraft({ ...pantryDraft, error: true }); return; }
+    if (pantry.length >= MAX_PANTRY) { haptic.warning(); say(t('pantry.full', { n: MAX_PANTRY })); return; }
+    const expiresOn = pantryDraft.none ? null : date;
+    let saved: PantryItem | null = { id: `local-${Date.now()}`, product: item, expiresOn, status: 'active', addedAt: new Date().toISOString(), closedAt: null };
+    if (!demo) {
+      saved = null;
+      if (supabase) {
+        setPantryBusy(true);
+        const { data, error } = await supabase.from('pantry_items').insert({ product: item, expires_on: expiresOn }).select('id, product, expires_on, status, added_at, closed_at').single();
+        setPantryBusy(false);
+        if (!error && data) saved = toPantryItem(data as Record<string, unknown>);
+      }
+    }
+    if (!saved) { haptic.error(); say(t('pantry.saveFailed'), 'danger'); return; }
+    const added = saved;
+    setPantry(prev => [added, ...prev]); setPantryDraft({ date: '', none: false, error: false });
+    haptic.success(); toast(t('toast.pantryAdded', { name: item.name }));
+  };
+  // One write path for used, thrown out and put back. The row moves straight away and snaps back if the save fails.
+  const setPantryStatus = async (id: string, status: PantryStatus) => {
+    const before = pantry.find(i => i.id === id);
+    if (!before) return;
+    const closedAt = status === 'active' ? null : new Date().toISOString();
+    setPantry(prev => prev.map(i => i.id === id ? { ...i, status, closedAt } : i));
+    const ok = demo || (!!supabase && !(await supabase.from('pantry_items').update({ status, closed_at: closedAt }).eq('id', id)).error);
+    if (!ok) { setPantry(prev => prev.map(i => i.id === id ? before : i)); haptic.error(); say(t('pantry.updateFailed', { name: before.product.name }), 'danger'); return; }
+    const name = before.product.name;
+    if (status === 'consumed') { haptic.success(); toast(t('toast.pantryUsed', { name })); }
+    else if (status === 'discarded') { haptic.warning(); toast(t('toast.pantryTossed', { name }), 'info'); }
+    else { haptic.select(); toast(t('toast.pantryRestored', { name }), 'info'); }
+  };
+  const deletePantryItem = async (id: string) => {
+    const item = pantry.find(i => i.id === id);
+    if (!item) return;
+    const ok = demo || (!!supabase && !(await supabase.from('pantry_items').delete().eq('id', id)).error);
+    if (!ok) { haptic.error(); say(t('pantry.updateFailed', { name: item.product.name }), 'danger'); return; }
+    setPantry(prev => prev.filter(i => i.id !== id)); haptic.warning(); toast(t('toast.pantryDeleted', { name: item.product.name }), 'info');
+  };
+  const openSaved = (item: Product) => { navigate('scan'); pendingScroll.current = true; setPantryDraft({ date: '', none: false, error: false }); setProduct(item); };
   const memberForm = editing && <Reveal testID="member-form" style={s.memberForm}><Text style={s.cardTitle}>{editing.id ? t('member.edit', { name: members.find(m => m.id === editing.id)?.name ?? t('member.thisPerson') }) : t('member.add')}</Text>
               <Text style={s.label}>{t('member.name')}</Text><TextInput accessibilityLabel={t('member.nameLabel')} style={s.input} value={editing.name} onChangeText={name => setEditing({ ...editing, name })} placeholder={t('member.namePlaceholder')} placeholderTextColor={C.faint} maxLength={40} editable={!settingsBusy} />
               <Text style={s.label}>{t('member.allergies')}</Text><View style={s.chips}>{ALLERGENS.map(a => { const on = editing.allergies.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('member.allergyFor', { allergen: allergyLabel(a.id) })} haptic="select" scaleTo={.96} disabled={settingsBusy} onPress={() => setEditing({ ...editing, allergies: on ? editing.allergies.filter(id => id !== a.id) : [...editing.allergies, a.id] })} style={[s.viewChip, on && s.viewChipOn]}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{allergyLabel(a.id)}</Text></Tap>; })}</View>
@@ -318,6 +398,39 @@ function AppContent() {
   const profileChanged = draft.length !== allergies.length || draft.some(id => !allergies.includes(id));
   const inlineScanFeedback = page === 'scan' && canScan;
   const hint = barcodeHint(barcode, i18n);
+  const alerts = pantryAlerts(pantry, today);
+  const alertCount = alerts.expired + alerts.today + alerts.soon;
+  const alertText = [alerts.expired && t('pantry.alert.expired', { n: alerts.expired }), alerts.today && t('pantry.alert.today', { n: alerts.today }), alerts.soon && t('pantry.alert.soon', { days: SOON_DAYS, n: alerts.soon })].filter(Boolean).join(' · ');
+  const activeItems = activePantry(pantry, today);
+  const closedItems = closedPantry(pantry);
+  const inPantry = product ? pantry.filter(i => i.status === 'active' && i.product.barcode === product.barcode).length : 0;
+  const nextMonth = (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return dayOf(d); })();
+  const quickDates = [{ key: 'week', label: t('pantry.quick.week'), date: addDays(today, 7) }, { key: 'twoWeeks', label: t('pantry.quick.twoWeeks'), date: addDays(today, 14) }, { key: 'month', label: t('pantry.quick.month'), date: nextMonth }];
+  const pantryRow = (item: PantryItem) => {
+    const rs = assessPeople(item.product, viewPeople);
+    const r = RESULT[worstKind(rs.map(x => x.assessment.kind))];
+    const et = EXPIRY_TONE[expiryState(item, today)];
+    const name = item.product.name;
+    return <SwipeRow key={item.id} testID={`pantry-item-${name}`} onRight={() => void setPantryStatus(item.id, 'consumed')} onLeft={() => void setPantryStatus(item.id, 'discarded')}
+      rightLabel={t('pantry.used')} leftLabel={t('pantry.toss')} rightIcon={<Check accessible={false} size={20} color={C.onAccent} />} leftIcon={<Trash2 accessible={false} size={20} color={C.onAccent} />}>
+      {guard => <View style={[s.card, s.pantryCard]}>
+        <Tap accessibilityRole="button" accessibilityLabel={t('pantry.openLabel', { name })} haptic="select" scaleTo={.98} onPress={guard(() => openSaved(item.product))} style={s.pantryMain}>
+          <View style={[s.resultIcon, { backgroundColor: tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={s.cardTitle}>{name}</Text>
+            {item.product.source === 'sample' && <Text style={[s.sourceBadge, s.pantryBadge]}>{t('result.fictional')}</Text>}
+            <Text style={[s.bodySmall, et ? { color: tone[et].fg, fontWeight: '700' } : null]}>{expiryText(item, today)}</Text>
+            <Text style={s.footnote}>{rs.length > 1 ? summaryTitle(householdSummary(rs)) : kindTitle(rs[0].assessment)}</Text>
+          </View>
+          <ChevronRight size={20} color={C.green} />
+        </Tap>
+        <View style={s.actionRow}>
+          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.usedLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'consumed'))} style={[s.pantryAction, { backgroundColor: C.greenSoft }]} pressedStyle={{ backgroundColor: C.greenSoftPressed }}><Check accessible={false} size={17} color={C.green} /><Text style={[s.pantryActionText, { color: C.green }]}>{t('pantry.used')}</Text></Tap>
+          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.tossLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'discarded'))} style={[s.pantryAction, { backgroundColor: C.redSoft }]} pressedStyle={{ opacity: .8 }}><Trash2 accessible={false} size={17} color={C.red} /><Text style={[s.pantryActionText, { color: C.red }]}>{t('pantry.toss')}</Text></Tap>
+        </View>
+      </View>}
+    </SwipeRow>;
+  };
 
   if (booting) return <View style={s.loading}><View style={[s.logo, { padding: 14 }]}><Leaf size={32} color={C.onAccent} /></View><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style="auto" /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
@@ -336,6 +449,7 @@ function AppContent() {
         <Text style={s.label}>{t('auth.email')}</Text><TextInput accessibilityLabel={t('auth.email')} style={s.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
         <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
+        {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
         <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
       </> : <Notice kind="info">{t('auth.noCloud')}</Notice>}
@@ -346,9 +460,9 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'allergies', 'history', 'settings', 'about'] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
-  // Five tabs fit a 320px phone; App details opens from Settings there.
-  const mobileNavItems = navItems.filter(item => item.page !== 'about');
+  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about'] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
+  const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
   return <SafeAreaView style={s.root}><StatusBar style="auto" /><View style={s.appFrame}>
@@ -356,7 +470,7 @@ function AppContent() {
       <View style={s.brand}><View style={s.logo}><Leaf size={24} color={C.onAccent} /></View><Text style={s.brandText}>BiteBeacon.</Text></View>
       <View style={{ height: 32 }} />
       {navItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} pressedStyle={!active && { backgroundColor: C.pale }}>
-        <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{active && <View style={s.navDot} />}
+        <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}
       </Tap>; })}
       <View style={{ flex: 1 }} /><View style={s.sidebarNote}><ShieldCheck size={27} color={C.green} /><Text style={s.cardTitle}>{t('sidebar.labelFirst')}</Text><Text style={s.bodySmall}>{t('sidebar.labelFirstBody')}</Text></View>
       <Tap accessibilityRole="button" disabled={busy || saving} onPress={leave} style={s.account} pressedStyle={{ opacity: .7 }}><View style={s.avatar}><UserRound size={19} color={C.green} /></View><View style={{ flex: 1 }}><Text style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text><Text style={s.footnote}>{demo ? t('account.demoSub') : t('account.yoursSub')}</Text></View><LogOut size={18} color={C.muted} /></Tap>
@@ -372,6 +486,8 @@ function AppContent() {
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
         {page === 'overview' && <>
           <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><Leaf size={28} color={C.green} /></View>}</View>
+          {alertCount > 0 && <Tap testID="pantry-alert" accessibilityRole="button" accessibilityHint={t('pantry.open')} haptic="select" scaleTo={.98} onPress={() => navigate('pantry')} style={[s.card, s.historyRow, { backgroundColor: tone[alerts.expired ? 'danger' : 'warning'].bg }]}>
+            <CalendarClock size={24} color={tone[alerts.expired ? 'danger' : 'warning'].fg} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('pantry.alertTitle')}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{alertText}</Text></View><Text style={s.textLink}>{t('pantry.open')}</Text></Tap>}
           <View style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
             <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: '#C6E26C' }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
             <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><View style={s.tinyLeaf}><Leaf size={18} color={C.green} /></View><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
@@ -400,7 +516,7 @@ function AppContent() {
           {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, { flex: 1 }]}>
             <View style={s.inline}><View style={s.iconTile}><ScanBarcode size={19} color={C.green} /></View><Text style={s.cardTitle}>{t('scan.scanner')}</Text></View>
             {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => { if (event.type === 'upc_e') { setCamera(false); haptic.warning(); say(t('scan.upce')); } else void scan(event.data, true); }} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
-              : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{Platform.OS === 'web' ? t('scan.webCamera') : t('scan.pointCamera')}</Text><Button disabled={busy || Platform.OS === 'web'} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onAccent} />}>{t('scan.openCamera')}</Button></View>}
+              : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onAccent} />}>{t('scan.openCamera')}</Button></View>}
             <Text style={s.label}>{t('scan.manual')}</Text>
             <TextInput accessibilityLabel={t('scan.barcodeLabel')} style={[s.input, barcodeFocused && s.inputFocused, hint.ok && { borderColor: C.green }]} value={barcode} onChangeText={value => { setBarcode(value); if (feedback) setFeedback(''); }} onFocus={() => setBarcodeFocused(true)} onBlur={() => setBarcodeFocused(false)} keyboardType="number-pad" maxLength={14} placeholder="e.g. 3017620422003" placeholderTextColor={C.faint} onSubmitEditing={() => void scan(barcode)} editable={!busy} />
             <Text style={[s.footnote, hint.ok && { color: C.green, fontWeight: '600' }]}>{hint.text}</Text>
@@ -423,7 +539,19 @@ function AppContent() {
                 <View style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{kindTitle(assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{kindDetail(assessment)}</Text>{assessment.matches.length > 0 && <View style={s.chips}>{assessment.matches.map(m => <Text key={m} style={[s.matchChip, { color: tone[result.tone].fg, borderColor: tone[result.tone].fg }]}>{labelOf(m)}</Text>)}</View>}</View></View>
                 {evidence.length > 0 && <View testID="result-evidence" style={s.detailBlock}><Text style={s.label}>{t('result.why')}</Text>{evidence.map(e => <View key={`${e.allergen}-${e.via}-${e.term}`} style={s.evidenceRow}><Text style={[s.evidenceAllergen, { color: tone[e.via === 'trace' ? 'warning' : 'danger'].fg }]}>{labelOf(e.allergen)}</Text><Text style={[s.bodySmall, { flex: 1, color: C.ink }]}>{evidenceText(e)}</Text></View>)}</View>}
                 </>}
-                <View style={s.detailBlock}><Text style={s.label}>{t('result.ingredients')}</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients ? highlightIngredients(product.ingredients, focusAllergies).map((seg, i) => seg.allergen ? <Text key={i} accessibilityLabel={t('result.matchesLabel', { text: seg.text, allergen: labelOf(seg.allergen) })} style={s.ingredientHit}>{seg.text}</Text> : seg.text) : t('result.noIngredients')}</Text></View>
+                <View testID="pantry-add" style={s.pantryAdd}>
+                  <View style={s.inline}><PackagePlus accessible={false} size={20} color={C.green} /><Text accessibilityRole="header" style={s.cardTitle}>{t('pantry.addTitle')}</Text></View>
+                  <Text style={s.bodySmall}>{t('pantry.addBody')}</Text>
+                  <View accessibilityRole="radiogroup" style={s.chips}>{[...quickDates, { key: 'none', label: t('pantry.quick.none'), date: '' }].map(q => { const on = q.key === 'none' ? pantryDraft.none : !pantryDraft.none && pantryDraft.date === q.date; return <Tap key={q.key} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} haptic="select" scaleTo={.96} onPress={() => setPantryDraft({ date: q.date, none: q.key === 'none', error: false })} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{q.label}</Text></Tap>; })}</View>
+                  <TextInput accessibilityLabel={t('pantry.dateLabel')} style={[s.input, pantryDraft.error && { borderColor: C.red }]} value={pantryDraft.none ? '' : pantryDraft.date} onChangeText={date => setPantryDraft({ date, none: false, error: false })} placeholder="YYYY-MM-DD" placeholderTextColor={C.faint} maxLength={10} keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'} onSubmitEditing={() => void addToPantry(product)} editable={!pantryBusy} />
+                  {pantryDraft.error ? <Text accessibilityRole="alert" style={[s.footnote, { color: tone.danger.fg, fontWeight: '600' }]}>{t('pantry.dateInvalid')}</Text>
+                    : !pantryDraft.none && validDay(pantryDraft.date) ? <Text style={[s.footnote, EXPIRY_TONE[expiryState({ expiresOn: pantryDraft.date }, today)] ? { color: tone[EXPIRY_TONE[expiryState({ expiresOn: pantryDraft.date }, today)]!].fg, fontWeight: '600' } : null]}>{expiryText({ expiresOn: pantryDraft.date }, today)}</Text> : null}
+                  <Button loading={pantryBusy} hapticKind="firm" onPress={() => void addToPantry(product)} icon={<PackagePlus accessible={false} size={18} color={C.onAccent} />}>{t('pantry.add')}</Button>
+                  {inPantry > 0 && <Text style={s.footnote}>{t('pantry.inPantry', { n: inPantry })}</Text>}
+                </View>
+                <View style={s.detailBlock}><Text style={s.label}>{t('result.ingredients')}</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients ? highlightIngredients(product.ingredients, focusAllergies).map((seg, i) => !seg.allergen ? seg.text : seg.hidden
+                  ? <Text key={i} accessibilityLabel={t('result.hiddenLabel', { text: seg.text, allergen: labelOf(seg.allergen).toLowerCase() })}><Text style={s.ingredientHit}>{seg.text}</Text><Text style={s.hiddenTag}> {t('result.hiddenTag', { allergen: labelOf(seg.allergen).toLowerCase() })}</Text></Text>
+                  : <Text key={i} accessibilityLabel={t('result.matchesLabel', { text: seg.text, allergen: labelOf(seg.allergen) })} style={s.ingredientHit}>{seg.text}</Text>) : t('result.noIngredients')}</Text></View>
                 {product.source === 'usda' ? <View style={s.detailBlock}><Text style={s.label}>{t('result.allergenCheck')}</Text><Text style={s.bodySmall}>{t('result.usdaNote')}</Text></View> : <>
                   <View style={s.detailBlock}><Text style={s.label}>{t('result.tags')}</Text><Text style={s.body}>{reportedTags(product.allergens) || t('result.noTags')}</Text></View>
                   <View style={s.detailBlock}><Text style={s.label}>{t('result.traces')}</Text><Text style={s.body}>{reportedTags(product.traces) || t('result.noTraces')}</Text></View>
@@ -435,12 +563,28 @@ function AppContent() {
               </View></Reveal>}
           </View>}
         </>}
-        {page === 'history' && <><View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>{t('history.title')}</Text>{history.length > 0 && <Button secondary hapticKind="warning" icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setHistory([]); toast(t('toast.historyCleared'), 'info'); }}>{t('history.clear')}</Button>}</View><Text style={s.body}>{t('history.body')}</Text>
+        {page === 'pantry' && <>
+          <View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>{t('pantry.title')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('nav.history')} haptic="select" onPress={() => navigate('history')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoftPressed }}><Text style={s.textLink}>{t('nav.history')}</Text></Tap></View>
+          <Text style={s.body}>{t('pantry.body')}</Text>
+          {alertCount > 0 && <Notice kind={alerts.expired ? 'danger' : 'warning'}>{alertText}</Notice>}
+          {activeItems.length === 0 ? <Reveal style={[s.card, s.empty]}><View style={[s.iconTile, { alignSelf: 'center', padding: 16, borderRadius: 40 }]}><Refrigerator size={34} color={C.green} /></View><Text style={s.cardTitle}>{t('pantry.emptyTitle')}</Text><Text style={[s.bodySmall, { textAlign: 'center' }]}>{t('pantry.emptyBody')}</Text><Button onPress={() => navigate('scan')}>{t('history.check')}</Button></Reveal>
+            : <View style={{ gap: 12 }}>{activeItems.map(pantryRow)}</View>}
+        </>}
+        {page === 'history' && <><View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>{t('history.title')}</Text>{history.length > 0 && <Button secondary hapticKind="warning" icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setHistory([]); toast(t('toast.historyCleared'), 'info'); }}>{t('history.clear')}</Button>}</View>
+          <Text accessibilityRole="header" style={s.sectionTitle}>{t('history.scansTitle')}</Text><Text style={s.bodySmall}>{t('history.body')}</Text>
           {history.length === 0 ? <Reveal style={[s.card, s.empty]}><View style={[s.iconTile, { alignSelf: 'center', padding: 16, borderRadius: 40 }]}><Clock3 size={34} color={C.green} /></View><Text style={s.cardTitle}>{t('history.emptyTitle')}</Text><Text style={[s.bodySmall, { textAlign: 'center' }]}>{t('history.emptyBody')}</Text><Button onPress={() => navigate('scan')}>{t('history.check')}</Button></Reveal>
             : history.map((entry, index) => { const rs = assessPeople(entry.product, viewPeople); const sm = rs.length > 1 ? householdSummary(rs) : null; const r = RESULT[sm?.kind ?? rs[0].assessment.kind]; return <Tap accessibilityRole="button" key={`${entry.at}-${index}`} haptic="select" scaleTo={.98} onPress={() => { navigate('scan'); pendingScroll.current = true; setProduct(entry.product); }} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>
               <View style={[s.resultIcon, { backgroundColor: tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
               <View style={{ flex: 1 }}><Text style={s.cardTitle}>{entry.product.name}</Text><Text style={[s.bodySmall, { color: tone[r.tone].fg, fontWeight: '600' }]}>{sm ? summaryTitle(sm) : kindTitle(rs[0].assessment)}</Text><Text style={s.footnote}>{sourceName(entry.product)} · {i18n.time(entry.at)}</Text></View><ChevronRight size={22} color={C.green} />
-            </Tap>; })}</>}
+            </Tap>; })}
+          <Text accessibilityRole="header" style={[s.sectionTitle, { marginTop: 8 }]}>{t('history.pantryTitle')}</Text><Text style={s.bodySmall}>{t('history.pantryBody')}</Text>
+          {closedItems.length === 0 ? <View style={[s.card, s.historyRow]}><Refrigerator size={20} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('history.pantryEmpty')}</Text></View>
+            : closedItems.map(item => { const name = item.product.name; const used = item.status === 'consumed'; return <View key={item.id} testID={`pantry-history-${name}`} style={[s.card, s.historyRow]}>
+              <View style={[s.resultIcon, { backgroundColor: used ? C.greenSoft : C.redSoft }]}>{used ? <Check size={20} color={C.green} /> : <Trash2 size={20} color={C.red} />}</View>
+              <View style={{ flex: 1 }}><Text style={s.cardTitle}>{name}</Text><Text style={s.footnote}>{t(used ? 'history.usedOn' : 'history.tossedOn', { date: i18n.date(item.closedAt!) })}{item.product.source === 'sample' ? ` · ${t('source.sample')}` : ''}</Text></View>
+              <Tap accessibilityRole="button" accessibilityLabel={t('history.putBackLabel', { name })} haptic={null} onPress={() => void setPantryStatus(item.id, 'active')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Undo2 size={18} color={C.green} /></Tap>
+              <Tap accessibilityRole="button" accessibilityLabel={t('history.deleteLabel', { name })} haptic={null} onPress={() => void deletePantryItem(item.id)} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><X size={18} color={C.red} /></Tap>
+            </View>; })}</>}
         {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('settings.title')}</Text><Text style={s.body}>{t('settings.body')}</Text>
           {!settingsReady && <Notice>{t('settings.saveFirst')}</Notice>}
           {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
@@ -479,7 +623,7 @@ function AppContent() {
         <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? t('allergies.savingShort') : t('allergies.save')}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...allergies]); setProfileSaved(false); setFeedback(''); toast(t('toast.discarded'), 'info'); }}>{t('allergies.reset')}</Button>}</View>
       </View>}
       {!wide && <View style={s.mobileNavWrap}><View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
-        <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} /></View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
+        <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} />{item.page === 'pantry' && alertCount > 0 && <View accessible={false} style={s.navBadge} />}</View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
       </Tap>; })}</View></View>}
     </View>
   </View></SafeAreaView>;
@@ -530,7 +674,12 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
   matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
-  historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 }, empty: { alignItems: 'center', paddingVertical: 44 },
+  historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
+  pantryAdd: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: C.pale }, hiddenTag: { ...type.footnote, color: C.red, fontWeight: '700' },
+  pantryCard: { gap: 12, padding: 14 }, pantryMain: { flexDirection: 'row', alignItems: 'center', gap: 12 }, pantryBadge: { alignSelf: 'flex-start', backgroundColor: C.amberSoft, color: C.amber },
+  pantryAction: { flexGrow: 1, flexBasis: '40%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 999 }, pantryActionText: { ...type.subhead, fontWeight: '700' },
+  navBadge: { position: 'absolute', top: 0, right: '-15%', width: 9, height: 9, borderRadius: 5, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.paper },
+  navCount: { marginLeft: 'auto', minWidth: 22, textAlign: 'center', ...type.caption, fontWeight: '800', color: C.onAccent, backgroundColor: C.red, borderRadius: 11, overflow: 'hidden', paddingHorizontal: 6, paddingVertical: 2 }, empty: { alignItems: 'center', paddingVertical: 44 },
   mobileNavWrap: { paddingHorizontal: '4%', paddingTop: 6, paddingBottom: 8, backgroundColor: C.bg },
   groupedList: { backgroundColor: C.paper, borderRadius: 22, overflow: 'hidden', rowGap: 0 }, groupedRow: { width: '100%', borderRadius: 0, borderWidth: 0 }, groupedSeparator: { borderBottomWidth: 1, borderBottomColor: C.separator },
   mobileNav: { flexDirection: 'row', backgroundColor: C.paper, borderRadius: 999, borderWidth: 1, borderColor: C.separator, paddingVertical: 4, paddingHorizontal: 4, boxShadow: '0px 8px 24px rgba(23,51,43,0.12)' }, mobileNavItem: { flex: 1, minWidth: 0, minHeight: 50, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, gap: 2 }, mobileNavIcon: { paddingVertical: 2 }, mobileNavText: { textAlign: 'center', fontSize: 11, lineHeight: 13, fontWeight: '500', color: C.muted },

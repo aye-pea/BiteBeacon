@@ -47,6 +47,8 @@ export type I18n = {
   date: (iso: string) => string;
   dateTime: (iso: string) => string;
   time: (iso: string) => string;
+  /** A calendar day (YYYY-MM-DD) in the reader's locale, without the UTC shift a bare date string gets. */
+  day: (day: string) => string;
 };
 export function makeI18n(lang: Lang): I18n {
   const locale = localeOf(lang);
@@ -58,6 +60,7 @@ export function makeI18n(lang: Lang): I18n {
     date: iso => new Date(iso).toLocaleDateString(locale),
     dateTime: iso => new Date(iso).toLocaleString(locale),
     time: iso => new Date(iso).toLocaleTimeString(locale),
+    day: day => { const [y, m, d] = day.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }); },
   };
 }
 export type { MessageKey } from './en';

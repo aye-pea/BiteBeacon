@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, Easing, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, PanResponder, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Check, CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { bothSchemes, nativeDriver, Palette, themes, Tone, type, useScheme } from './theme';
 import { haptic, HapticKind } from './haptics';
@@ -76,6 +76,50 @@ export function CheckMark({ checked, round = false }: { checked: boolean; round?
   </View>;
 }
 
+/** Row that commits an action when swiped far enough: right runs onRight, left runs onLeft.
+ *  Swiping is a shortcut only; callers must also show buttons, and screen readers get the same two actions.
+ *  Children get guard(): wrap row presses in it so the click that ends a swipe (web) does not also press. */
+export function SwipeRow({ children, onRight, onLeft, rightLabel, leftLabel, rightIcon, leftIcon, disabled, testID }:
+  { children: (guard: (fn: () => void) => () => void) => React.ReactNode; onRight: () => void; onLeft: () => void; rightLabel: string; leftLabel: string; rightIcon: React.ReactNode; leftIcon: React.ReactNode; disabled?: boolean; testID?: string }) {
+  const scheme = useScheme(); const s = STYLES[scheme];
+  const x = useRef(new Animated.Value(0)).current;
+  const width = useRef(1);
+  const armed = useRef(false);
+  const swipedAt = useRef(0);
+  const guard = (fn: () => void) => () => { if (Date.now() - swipedAt.current > 400) fn(); };
+  const latest = useRef({ onRight, onLeft, disabled }); latest.current = { onRight, onLeft, disabled };
+  // A third of the row's own width, so it scales with screen size and font scaling.
+  const past = (dx: number) => Math.abs(dx) > width.current / 3;
+  const settle = (dx: number) => {
+    if (!past(dx)) { Animated.spring(x, { toValue: 0, useNativeDriver: nativeDriver, bounciness: 6 }).start(); return; }
+    const right = dx > 0;
+    Animated.timing(x, { toValue: right ? width.current : -width.current, duration: 180, useNativeDriver: nativeDriver }).start(() => {
+      x.setValue(0); (right ? latest.current.onRight : latest.current.onLeft)();
+    });
+  };
+  const pan = useRef(PanResponder.create({
+    // Only clearly horizontal drags; vertical ones keep scrolling the page. Capture, so a drag that starts on a button becomes a swipe, not a press.
+    onMoveShouldSetPanResponderCapture: (_e, g) => !latest.current.disabled && Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onPanResponderGrant: () => { armed.current = false; swipedAt.current = Date.now(); },
+    onPanResponderMove: (_e, g) => {
+      x.setValue(g.dx);
+      if (past(g.dx) !== armed.current) { armed.current = past(g.dx); haptic.select(); }
+    },
+    onPanResponderRelease: (_e, g) => { swipedAt.current = Date.now(); settle(g.dx); },
+    onPanResponderTerminate: () => settle(0),
+    onPanResponderTerminationRequest: () => false,
+  })).current;
+  const rightOpacity = x.interpolate({ inputRange: [0, 40], outputRange: [0, 1], extrapolate: 'clamp' });
+  const leftOpacity = x.interpolate({ inputRange: [-40, 0], outputRange: [1, 0], extrapolate: 'clamp' });
+  return <View testID={testID} style={s.swipeWrap} onLayout={e => { width.current = Math.max(1, e.nativeEvent.layout.width); }}
+    accessibilityActions={[{ name: 'right', label: rightLabel }, { name: 'left', label: leftLabel }]}
+    onAccessibilityAction={e => e.nativeEvent.actionName === 'right' ? onRight() : onLeft()}>
+    <Animated.View accessible={false} style={[s.swipeUnder, s.swipeRight, { opacity: rightOpacity }]}>{rightIcon}<Text style={s.swipeText}>{rightLabel}</Text></Animated.View>
+    <Animated.View accessible={false} style={[s.swipeUnder, s.swipeLeft, { opacity: leftOpacity }]}><Text style={s.swipeText}>{leftLabel}</Text>{leftIcon}</Animated.View>
+    <Animated.View {...pan.panHandlers} style={{ transform: [{ translateX: x }] }}>{children(guard)}</Animated.View>
+  </View>;
+}
+
 type Toast = { id: number; message: string; kind: Tone };
 const ToastContext = createContext<(message: string, kind?: Tone) => void>(() => undefined);
 export const useToast = () => useContext(ToastContext);
@@ -118,5 +162,9 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   checkbox: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: C.borderStrong, backgroundColor: C.paper, justifyContent: 'center', alignItems: 'center' }, checked: { backgroundColor: C.green, borderColor: C.green },
   toastLayer: { position: 'absolute', top: '2%', left: '4%', right: '4%', alignItems: 'center' },
   toast: { maxWidth: 460, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 12, paddingRight: 18, borderRadius: 18, backgroundColor: C.toast, boxShadow: shadow.raised },
+  swipeWrap: { borderRadius: 22, overflow: 'hidden' },
+  swipeUnder: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: '6%' },
+  swipeRight: { justifyContent: 'flex-start', backgroundColor: C.green }, swipeLeft: { justifyContent: 'flex-end', backgroundColor: C.red },
+  swipeText: { color: C.onAccent, ...type.headline },
   toastIcon: { padding: 6, borderRadius: 20 }, toastText: { flexShrink: 1, color: C.toastText, ...type.subhead, fontWeight: '600' },
 }));

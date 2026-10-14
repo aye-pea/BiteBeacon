@@ -1,13 +1,13 @@
 export const ALLERGENS = [
-  { id: 'milk', label: 'Milk', mark: 'Mi', tags: ['milk'], words: ['milk', 'butter', 'whey', 'casein', 'caseinate', 'cream', 'cheese', 'yogurt'] },
-  { id: 'eggs', label: 'Eggs', mark: 'Eg', tags: ['eggs', 'egg'], words: ['egg', 'eggs', 'albumen', 'ovalbumin'] },
-  { id: 'peanuts', label: 'Peanuts', mark: 'Pe', tags: ['peanuts', 'peanut'], words: ['peanut', 'peanuts', 'groundnut'] },
-  { id: 'tree-nuts', label: 'Tree nuts', mark: 'Nu', tags: ['nuts', 'tree-nuts', 'almonds', 'hazelnuts', 'walnuts', 'cashews', 'pecans', 'pistachios', 'macadamia-nuts', 'brazil-nuts'], words: ['almond', 'almonds', 'hazelnut', 'hazelnuts', 'walnut', 'walnuts', 'cashew', 'cashews', 'pecan', 'pecans', 'pistachio', 'pistachios', 'macadamia', 'brazil nut'] },
-  { id: 'soy', label: 'Soy', mark: 'So', tags: ['soybeans', 'soy', 'soya'], words: ['soy', 'soya', 'soybean', 'soybeans', 'tofu', 'edamame'] },
-  { id: 'wheat', label: 'Wheat', mark: 'Wh', tags: ['wheat'], words: ['wheat', 'semolina', 'spelt', 'durum', 'bulgur', 'farina'] },
-  { id: 'fish', label: 'Fish', mark: 'Fi', tags: ['fish'], words: ['fish', 'salmon', 'tuna', 'cod', 'anchovy', 'anchovies', 'haddock'] },
-  { id: 'shellfish', label: 'Crustacean shellfish', mark: 'Sh', tags: ['crustaceans', 'shrimp', 'crab', 'lobster'], words: ['shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'crayfish'] },
-  { id: 'sesame', label: 'Sesame', mark: 'Se', tags: ['sesame-seeds', 'sesame'], words: ['sesame', 'tahini', 'benne'] },
+  { id: 'milk', plain: ['milk'] as string[], label: 'Milk', mark: 'Mi', tags: ['milk'], words: ['milk', 'butter', 'whey', 'casein', 'caseinate', 'cream', 'cheese', 'yogurt'] },
+  { id: 'eggs', plain: ['egg', 'eggs'] as string[], label: 'Eggs', mark: 'Eg', tags: ['eggs', 'egg'], words: ['egg', 'eggs', 'albumen', 'ovalbumin'] },
+  { id: 'peanuts', plain: ['peanut', 'peanuts'] as string[], label: 'Peanuts', mark: 'Pe', tags: ['peanuts', 'peanut'], words: ['peanut', 'peanuts', 'groundnut'] },
+  { id: 'tree-nuts', plain: [] as string[], label: 'Tree nuts', mark: 'Nu', tags: ['nuts', 'tree-nuts', 'almonds', 'hazelnuts', 'walnuts', 'cashews', 'pecans', 'pistachios', 'macadamia-nuts', 'brazil-nuts'], words: ['almond', 'almonds', 'hazelnut', 'hazelnuts', 'walnut', 'walnuts', 'cashew', 'cashews', 'pecan', 'pecans', 'pistachio', 'pistachios', 'macadamia', 'brazil nut'] },
+  { id: 'soy', plain: ['soy', 'soya', 'soybean', 'soybeans'] as string[], label: 'Soy', mark: 'So', tags: ['soybeans', 'soy', 'soya'], words: ['soy', 'soya', 'soybean', 'soybeans', 'tofu', 'edamame'] },
+  { id: 'wheat', plain: ['wheat'] as string[], label: 'Wheat', mark: 'Wh', tags: ['wheat'], words: ['wheat', 'semolina', 'spelt', 'durum', 'bulgur', 'farina'] },
+  { id: 'fish', plain: ['fish'] as string[], label: 'Fish', mark: 'Fi', tags: ['fish'], words: ['fish', 'salmon', 'tuna', 'cod', 'anchovy', 'anchovies', 'haddock'] },
+  { id: 'shellfish', plain: [] as string[], label: 'Crustacean shellfish', mark: 'Sh', tags: ['crustaceans', 'shrimp', 'crab', 'lobster'], words: ['shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'crayfish'] },
+  { id: 'sesame', plain: ['sesame'] as string[], label: 'Sesame', mark: 'Se', tags: ['sesame-seeds', 'sesame'], words: ['sesame', 'tahini', 'benne'] },
 ] as const;
 export type AllergenId = typeof ALLERGENS[number]['id'];
 export type Product = {
@@ -43,8 +43,10 @@ export function validBarcode(value: string): boolean {
 }
 
 // Evidence explains an assessment; it never changes one. It reuses assess()'s tags and vocabulary so the two cannot disagree.
-export type Evidence = { allergen: string; via: 'tag' | 'trace' | 'ingredient'; term: string };
-export type Segment = { text: string; allergen?: string };
+// 'ingredient' = the allergen is named outright ("milk"); 'hidden' = a word that comes from it without saying so ("whey" → milk).
+export type Evidence = { allergen: string; via: 'tag' | 'trace' | 'ingredient' | 'hidden'; term: string };
+export type Segment = { text: string; allergen?: string; hidden?: boolean };
+const isHidden = (allergen: string, term: string) => !ALLERGENS.find(a => a.label === allergen)!.plain.includes(term.toLowerCase());
 const escape = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function ingredientHits(text: string, selected: AllergenId[]) {
   const cocoa = Array.from(text.matchAll(/\bcocoa butter\b/gi), m => [m.index!, m.index! + m[0].length]);
@@ -61,7 +63,8 @@ export function highlightIngredients(text: string, selected: AllergenId[]): Segm
   for (const h of ingredientHits(text, selected)) {
     if (h.start < at) continue;
     if (h.start > at) segments.push({ text: text.slice(at, h.start) });
-    segments.push({ text: text.slice(h.start, h.end), allergen: h.allergen }); at = h.end;
+    const word = text.slice(h.start, h.end);
+    segments.push({ text: word, allergen: h.allergen, ...(isHidden(h.allergen, word) ? { hidden: true } : {}) }); at = h.end;
   }
   if (at < text.length) segments.push({ text: text.slice(at) });
   return segments;
@@ -74,9 +77,11 @@ export function explain(product: Product, selected: AllergenId[]): Evidence[] {
     for (const t of product.allergens) if ((a.tags as readonly string[]).includes(tag(t))) add({ allergen: a.label, via: 'tag', term: clean(t) });
     for (const t of product.traces) if ((a.tags as readonly string[]).includes(tag(t))) add({ allergen: a.label, via: 'trace', term: clean(t) });
   }
-  for (const s of highlightIngredients(product.ingredients, selected)) if (s.allergen) add({ allergen: s.allergen, via: 'ingredient', term: s.text.toLowerCase() });
-  // Group by allergen so each one's reasons read together.
-  const order = (e: Evidence) => ALLERGENS.findIndex(a => a.label === e.allergen);
+  // A plain word adds nothing once a tag already names that allergen ("milk" next to tag "milk"); hidden sources always stay.
+  const tagged = new Set(out.filter(e => e.via === 'tag').map(e => e.allergen));
+  for (const s of highlightIngredients(product.ingredients, selected)) if (s.allergen && (s.hidden || !tagged.has(s.allergen))) add({ allergen: s.allergen, via: s.hidden ? 'hidden' : 'ingredient', term: s.text.toLowerCase() });
+  // Group by allergen so each one's reasons read together; within one, hidden sources lead because they are the ones people miss.
+  const order = (e: Evidence) => ALLERGENS.findIndex(a => a.label === e.allergen) * 10 + ['hidden', 'tag', 'ingredient', 'trace'].indexOf(e.via);
   return out.sort((x, y) => order(x) - order(y));
 }
 

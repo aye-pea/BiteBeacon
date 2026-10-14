@@ -82,6 +82,8 @@ test('small phone allergy controls stay reachable and navigation resets scroll',
   await expect(page.getByTestId('profile-save-feedback')).toBeInViewport();
   await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
   await expect(page.getByTestId('profile-save-feedback')).toHaveCount(0);
+  // Phones open history from the Pantry page; the tab bar keeps five tabs.
+  await page.getByRole('button', { name: 'Pantry', exact: true }).click();
   await page.getByRole('button', { name: 'Recent scans', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Recent scans', exact: true })).toBeInViewport();
   await page.getByRole('button', { name: 'My allergies', exact: true }).click();
