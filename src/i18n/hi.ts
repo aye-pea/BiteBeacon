@@ -4,7 +4,7 @@ export const hi: Messages = {
   'app.opening': 'BiteBeacon खुल रहा है…',
   'nav.overview': 'सारांश', 'nav.overview.short': 'होम',
   'nav.scan': 'प्रोडक्ट स्कैन करें', 'nav.scan.short': 'स्कैन',
-  'nav.allergies': 'मेरी एलर्जी', 'nav.allergies.short': 'एलर्जी',
+  'nav.allergies': 'एलर्जी', 'nav.allergies.short': 'एलर्जी',
   'nav.history': 'हाल के स्कैन', 'nav.history.short': 'इतिहास',
   'nav.settings': 'सेटिंग्स', 'nav.settings.short': 'सेटिंग्स',
   'nav.about': 'ऐप की जानकारी', 'nav.about.short': 'जानकारी',
@@ -54,7 +54,7 @@ export const hi: Messages = {
   'samples.title': 'आज़माकर देखें', 'samples.body': 'चार काल्पनिक प्रोडक्ट। चार उपयोगी नतीजे।', 'samples.label': 'डेमो संग्रह',
   'samples.try': '{name} आज़माएं', 'samples.fictional': 'काल्पनिक नमूना',
 
-  'allergies.title': 'आपकी एलर्जी, सबसे आगे।', 'allergies.body': '15 आम खाद्य एलर्जेन में से चुनें: अमेरिका के नौ प्रमुख एलर्जेन और यूरोप व कनाडा में सूचीबद्ध छह और। जो भी लागू हों, सभी चुनें।',
+  'allergies.body': '15 आम खाद्य एलर्जेन में से चुनें: अमेरिका के नौ प्रमुख एलर्जेन और यूरोप व कनाडा में सूचीबद्ध छह और। जो भी लागू हों, सभी चुनें।',
   'allergies.notice': 'यह ऐप हर एलर्जी को कवर नहीं करता। गेहूं केवल गेहूं की जांच करता है; जौ, राई और जई की भी जांच के लिए ग्लूटेन चुनें। क्रस्टेशियन शेलफिश में मोलस्क शामिल नहीं हैं; सीप, शंख और स्क्विड के लिए मोलस्क चुनें।',
   'allergies.hint': 'बदलाव एलर्जी प्रोफ़ाइल सेव करने के बाद लागू होंगे।',
   'allergies.chooseOne': 'बारकोड जांच के लिए कम से कम एक एलर्जी चुनें।',
@@ -64,6 +64,7 @@ export const hi: Messages = {
   'allergies.count': '{total} में से {n} चुनी गईं', 'allergies.unsaved': 'बिना सेव किए बदलाव', 'allergies.saved': 'सेव की गई प्रोफ़ाइल',
   'allergies.saving': 'आपकी एलर्जी प्रोफ़ाइल सेव हो रही है…', 'allergies.profileSaved': 'प्रोफ़ाइल सेव हो गई', 'allergies.savingShort': 'सेव हो रहा है…',
   'allergies.save': 'एलर्जी प्रोफ़ाइल सेव करें', 'allergies.reset': 'बदलाव रीसेट करें', 'toast.discarded': 'बदलाव हटा दिए गए',
+  'allergies.whose': 'किसकी एलर्जी', 'allergies.saveFor': '{name} की एलर्जी सहेजें',
 
   'scan.title': 'आपके अगले निवाले में क्या है?', 'scan.body': 'खाने का बारकोड स्कैन करें या उसके नीचे लिखे नंबर डालें।',
   'scan.chooseAllergies': 'अपनी एलर्जी चुनें', 'scan.scanner': 'बारकोड स्कैनर',

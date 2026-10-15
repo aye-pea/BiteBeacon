@@ -7,18 +7,18 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await expect(page.getByText('Good food starts with a check.')).toBeVisible();
   await page.screenshot({ path: 'artifacts/dashboard-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: 'Try Peanut crunch granola' }).click();
+  await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByText('2 of 3 people have an allergen signal', { exact: true })).toBeVisible();
   // Unticking Everyone narrows the check back to the account holder.
   await page.getByRole('checkbox', { name: 'Check for Everyone (3)' }).click();
   await expect(page.getByText('Allergen signal found', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Dark chocolate bites', exact: true }).click();
+  await page.getByRole('button', { name: 'Dark Chocolate Bites', exact: true }).click();
   await expect(page.getByText('May contain your allergen', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Simply oat crackers', exact: true }).click();
+  await page.getByRole('button', { name: 'Simply Oat Crackers', exact: true }).click();
   await expect(page.getByText('No selected allergens found', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Mystery snack', exact: true }).click();
+  await page.getByRole('button', { name: 'Mystery Snack', exact: true }).click();
   await expect(page.getByText('Not enough information', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'My Allergies', exact: true }).click();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Peanuts', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
@@ -26,8 +26,8 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
   await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
-  await expect(page.getByText('Peanut crunch granola', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Peanut crunch granola/ }).click();
+  await expect(page.getByText('Peanut Crunch Granola', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Peanut Crunch Granola/ }).click();
   await expect(page.getByText('No selected allergens found', { exact: true })).toBeVisible();
   await page.getByLabel('Barcode number').fill('123');
   await page.getByRole('button', { name: 'Look up product' }).click();
@@ -51,7 +51,7 @@ test('mobile layout and no-result network path', async ({ page }) => {
   await page.getByRole('button', { name: 'Look up product' }).click();
   await expect(page.getByText(/Product not found/)).toBeVisible();
   await expect(page.getByTestId('product-result')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Dark chocolate bites', exact: true }).click();
+  await page.getByRole('button', { name: 'Dark Chocolate Bites', exact: true }).click();
   await page.getByTestId('product-result').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'artifacts/result-mobile.png', fullPage: true });
 });
@@ -60,10 +60,10 @@ test('small phone allergy controls stay reachable and navigation resets scroll',
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await page.getByRole('button', { name: 'My Allergies', exact: true }).click();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
   const save = page.getByRole('button', { name: 'Save allergy profile' });
   await expect(save).toBeInViewport();
-  await expect(page.getByRole('heading', { name: 'Your allergies, front and center.' })).toBeInViewport();
+  await expect(page.getByRole('heading', { name: 'Allergies', exact: true })).toBeInViewport();
   await page.getByRole('checkbox', { name: 'Crustacean shellfish', exact: true }).click();
   await expect(page.getByText('3 of 15 selected · Unsaved changes')).toBeVisible();
   await expect(save).toBeInViewport();
@@ -87,8 +87,8 @@ test('small phone allergy controls stay reachable and navigation resets scroll',
   await page.getByRole('button', { name: 'Pantry', exact: true }).click();
   await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Recent scans', exact: true })).toBeInViewport();
-  await page.getByRole('button', { name: 'My Allergies', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Your allergies, front and center.' })).toBeInViewport();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Allergies', exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -97,7 +97,7 @@ test('allergy rows wrap enlarged text without hiding controls', async ({ page })
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await page.getByRole('button', { name: 'My Allergies', exact: true }).click();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
   // Browser stress fixture; native Dynamic Type still requires device QA.
   await page.addStyleTag({ content: '[role="checkbox"] div { font-size: 32px !important; line-height: 1.4 !important; }' });
   const shellfish = page.getByRole('checkbox', { name: 'Crustacean shellfish', exact: true });

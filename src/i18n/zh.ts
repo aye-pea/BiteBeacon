@@ -4,7 +4,7 @@ export const zh: Messages = {
   'app.opening': '正在打开 BiteBeacon…',
   'nav.overview': '概览', 'nav.overview.short': '首页',
   'nav.scan': '扫描商品', 'nav.scan.short': '扫描',
-  'nav.allergies': '我的过敏原', 'nav.allergies.short': '过敏原',
+  'nav.allergies': '过敏原', 'nav.allergies.short': '过敏原',
   'nav.history': '最近扫描', 'nav.history.short': '记录',
   'nav.settings': '设置', 'nav.settings.short': '设置',
   'nav.about': '应用详情', 'nav.about.short': '详情',
@@ -54,7 +54,7 @@ export const zh: Messages = {
   'samples.title': '试一试', 'samples.body': '四款虚构商品，四种实用结果。', 'samples.label': '演示合集',
   'samples.try': '试试 {name}', 'samples.fictional': '虚构示例',
 
-  'allergies.title': '你的过敏原，一目了然。', 'allergies.body': '从15种常见食物过敏原中选择：美国九大主要过敏原，另加欧洲和加拿大列出的六种。可多选。',
+  'allergies.body': '从15种常见食物过敏原中选择：美国九大主要过敏原，另加欧洲和加拿大列出的六种。可多选。',
   'allergies.notice': '本应用无法涵盖所有过敏。“小麦”只检查小麦；如需同时检查大麦、黑麦和燕麦，请选择“麸质”。甲壳类水产不包括软体动物；如需检查蛤蜊、牡蛎和鱿鱼，请选择“软体动物”。',
   'allergies.hint': '保存过敏档案后，更改才会生效。',
   'allergies.chooseOne': '请至少选择一种过敏原，才能使用条码检查。',
@@ -64,6 +64,7 @@ export const zh: Messages = {
   'allergies.count': '已选 {n}/{total} 项', 'allergies.unsaved': '有未保存的更改', 'allergies.saved': '已保存的档案',
   'allergies.saving': '正在保存你的过敏档案…', 'allergies.profileSaved': '档案已保存', 'allergies.savingShort': '正在保存…',
   'allergies.save': '保存过敏档案', 'allergies.reset': '撤销更改', 'toast.discarded': '已放弃更改',
+  'allergies.whose': '查看谁的过敏原', 'allergies.saveFor': '保存{name}的过敏原',
 
   'scan.title': '你下一口吃的是什么？', 'scan.body': '扫描食品条形码，或输入条码下方的数字。',
   'scan.chooseAllergies': '选择你的过敏原', 'scan.scanner': '条码扫描器',

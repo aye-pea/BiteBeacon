@@ -4,7 +4,7 @@ export const fr: Messages = {
   'app.opening': 'Ouverture de BiteBeacon…',
   'nav.overview': 'Vue d’ensemble', 'nav.overview.short': 'Accueil',
   'nav.scan': 'Scanner un produit', 'nav.scan.short': 'Scanner',
-  'nav.allergies': 'Mes allergies', 'nav.allergies.short': 'Allergies',
+  'nav.allergies': 'Allergies', 'nav.allergies.short': 'Allergies',
   'nav.history': 'Scans récents', 'nav.history.short': 'Historique',
   'nav.settings': 'Réglages', 'nav.settings.short': 'Réglages',
   'nav.about': 'Infos sur l’app', 'nav.about.short': 'Infos',
@@ -54,7 +54,7 @@ export const fr: Messages = {
   'samples.title': 'Essayez', 'samples.body': 'Quatre produits fictifs. Quatre résultats utiles.', 'samples.label': 'COLLECTION DÉMO',
   'samples.try': 'Essayer {name}', 'samples.fictional': 'Exemple fictif',
 
-  'allergies.title': 'Vos allergies, au premier plan.', 'allergies.body': 'Choisissez parmi 15 allergènes alimentaires courants : les neuf allergènes majeurs aux États-Unis et six autres déclarés en Europe et au Canada. Sélectionnez tous ceux qui vous concernent.',
+  'allergies.body': 'Choisissez parmi 15 allergènes alimentaires courants : les neuf allergènes majeurs aux États-Unis et six autres déclarés en Europe et au Canada. Sélectionnez tous ceux qui vous concernent.',
   'allergies.notice': 'Cette app ne couvre pas toutes les allergies. Blé ne vérifie que le blé ; choisissez Gluten pour vérifier aussi l’orge, le seigle et l’avoine. Les crustacés n’incluent pas les mollusques ; choisissez Mollusques pour les palourdes, les huîtres et les calmars.',
   'allergies.hint': 'Les modifications s’appliquent après l’enregistrement de votre profil d’allergies.',
   'allergies.chooseOne': 'Choisissez au moins une allergie pour utiliser la vérification par code-barres.',
@@ -64,6 +64,7 @@ export const fr: Messages = {
   'allergies.count': '{n} sur {total} sélectionnée(s)', 'allergies.unsaved': 'Modifications non enregistrées', 'allergies.saved': 'Profil enregistré',
   'allergies.saving': 'Enregistrement de votre profil d’allergies…', 'allergies.profileSaved': 'Profil enregistré', 'allergies.savingShort': 'Enregistrement…',
   'allergies.save': 'Enregistrer le profil d’allergies', 'allergies.reset': 'Annuler les modifications', 'toast.discarded': 'Modifications annulées',
+  'allergies.whose': 'Allergies de qui', 'allergies.saveFor': 'Enregistrer les allergies de {name}',
 
   'scan.title': 'Qu’y a-t-il dans votre prochaine bouchée ?', 'scan.body': 'Scannez le code-barres d’un aliment ou saisissez les chiffres situés dessous.',
   'scan.chooseAllergies': 'Choisissez vos allergies', 'scan.scanner': 'Lecteur de code-barres',

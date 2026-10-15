@@ -4,7 +4,7 @@ export const ru: Messages = {
   'app.opening': 'Открываем BiteBeacon…',
   'nav.overview': 'Обзор', 'nav.overview.short': 'Главная',
   'nav.scan': 'Сканировать продукт', 'nav.scan.short': 'Скан',
-  'nav.allergies': 'Мои аллергии', 'nav.allergies.short': 'Аллергии',
+  'nav.allergies': 'Аллергии', 'nav.allergies.short': 'Аллергии',
   'nav.history': 'Недавние сканы', 'nav.history.short': 'История',
   'nav.settings': 'Настройки', 'nav.settings.short': 'Настройки',
   'nav.about': 'О приложении', 'nav.about.short': 'О приложении',
@@ -54,7 +54,7 @@ export const ru: Messages = {
   'samples.title': 'Попробуйте', 'samples.body': 'Четыре вымышленных продукта. Четыре полезных результата.', 'samples.label': 'ДЕМОКОЛЛЕКЦИЯ',
   'samples.try': 'Попробовать: {name}', 'samples.fictional': 'Вымышленный пример',
 
-  'allergies.title': 'Ваши аллергии — на первом месте.', 'allergies.body': 'Выберите из 15 распространённых пищевых аллергенов: девять основных аллергенов США и ещё шесть, указанных в Европе и Канаде. Отметьте все подходящие.',
+  'allergies.body': 'Выберите из 15 распространённых пищевых аллергенов: девять основных аллергенов США и ещё шесть, указанных в Европе и Канаде. Отметьте все подходящие.',
   'allergies.notice': 'Приложение охватывает не все аллергии. «Пшеница» проверяет только пшеницу; выберите «Глютен», чтобы проверять также ячмень, рожь и овёс. Ракообразные не включают моллюсков; выберите «Моллюски» для мидий, устриц и кальмаров.',
   'allergies.hint': 'Изменения вступят в силу после сохранения профиля аллергий.',
   'allergies.chooseOne': 'Выберите хотя бы одну аллергию, чтобы проверять штрихкоды.',
@@ -64,6 +64,7 @@ export const ru: Messages = {
   'allergies.count': 'Выбрано {n} из {total}', 'allergies.unsaved': 'Есть несохранённые изменения', 'allergies.saved': 'Профиль сохранён',
   'allergies.saving': 'Сохраняем профиль аллергий…', 'allergies.profileSaved': 'Профиль сохранён', 'allergies.savingShort': 'Сохранение…',
   'allergies.save': 'Сохранить профиль аллергий', 'allergies.reset': 'Сбросить изменения', 'toast.discarded': 'Изменения отменены',
+  'allergies.whose': 'Чьи аллергии', 'allergies.saveFor': 'Сохранить аллергии: {name}',
 
   'scan.title': 'Что в вашем следующем кусочке?', 'scan.body': 'Отсканируйте штрихкод продукта или введите цифры под ним.',
   'scan.chooseAllergies': 'Выберите аллергии', 'scan.scanner': 'Сканер штрихкодов',

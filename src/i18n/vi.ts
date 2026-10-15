@@ -4,7 +4,7 @@ export const vi: Messages = {
   'app.opening': 'Đang mở BiteBeacon…',
   'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ',
   'nav.scan': 'Quét sản phẩm', 'nav.scan.short': 'Quét',
-  'nav.allergies': 'Dị ứng của tôi', 'nav.allergies.short': 'Dị ứng',
+  'nav.allergies': 'Dị ứng', 'nav.allergies.short': 'Dị ứng',
   'nav.history': 'Lượt quét gần đây', 'nav.history.short': 'Lịch sử',
   'nav.settings': 'Cài đặt', 'nav.settings.short': 'Cài đặt',
   'nav.about': 'Thông tin ứng dụng', 'nav.about.short': 'Chi tiết',
@@ -54,7 +54,7 @@ export const vi: Messages = {
   'samples.title': 'Thử ngay', 'samples.body': 'Bốn sản phẩm hư cấu. Bốn kết quả hữu ích.', 'samples.label': 'BỘ SƯU TẬP DEMO',
   'samples.try': 'Thử {name}', 'samples.fictional': 'Mẫu hư cấu',
 
-  'allergies.title': 'Dị ứng của bạn, luôn được ưu tiên.', 'allergies.body': 'Chọn từ 15 chất gây dị ứng thực phẩm phổ biến: chín chất chính tại Mỹ và sáu chất khác được liệt kê ở châu Âu và Canada. Chọn tất cả những gì áp dụng.',
+  'allergies.body': 'Chọn từ 15 chất gây dị ứng thực phẩm phổ biến: chín chất chính tại Mỹ và sáu chất khác được liệt kê ở châu Âu và Canada. Chọn tất cả những gì áp dụng.',
   'allergies.notice': 'Ứng dụng này không bao gồm mọi loại dị ứng. Lúa mì chỉ kiểm tra lúa mì; hãy chọn Gluten để kiểm tra cả lúa mạch, lúa mạch đen và yến mạch. Động vật giáp xác không bao gồm động vật thân mềm; hãy chọn Động vật thân mềm cho nghêu, hàu và mực.',
   'allergies.hint': 'Thay đổi có hiệu lực sau khi lưu hồ sơ dị ứng.',
   'allergies.chooseOne': 'Chọn ít nhất một loại dị ứng để dùng chức năng kiểm tra mã vạch.',
@@ -64,6 +64,7 @@ export const vi: Messages = {
   'allergies.count': 'Đã chọn {n}/{total}', 'allergies.unsaved': 'Thay đổi chưa lưu', 'allergies.saved': 'Hồ sơ đã lưu',
   'allergies.saving': 'Đang lưu hồ sơ dị ứng…', 'allergies.profileSaved': 'Đã lưu hồ sơ', 'allergies.savingShort': 'Đang lưu…',
   'allergies.save': 'Lưu hồ sơ dị ứng', 'allergies.reset': 'Hoàn tác thay đổi', 'toast.discarded': 'Đã hủy thay đổi',
+  'allergies.whose': 'Dị ứng của ai', 'allergies.saveFor': 'Lưu dị ứng của {name}',
 
   'scan.title': 'Miếng ăn tiếp theo có gì?', 'scan.body': 'Quét mã vạch thực phẩm hoặc nhập dãy số bên dưới mã.',
   'scan.chooseAllergies': 'Chọn dị ứng của bạn', 'scan.scanner': 'Máy quét mã vạch',

@@ -3,10 +3,11 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
+import { titleCase } from './src/domain/names';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
 import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
@@ -83,7 +84,7 @@ const toPantryItem = (row: Record<string, unknown>): PantryItem | null => {
   const tags = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
   const intact = typeof p.ingredients === 'string' && Array.isArray(p.allergens) && Array.isArray(p.traces) && p.allergensKnown === true;
   const source = p.source === 'usda' || p.source === 'openfoodfacts' || p.source === 'sample' ? p.source : 'openfoodfacts';
-  const product: Product = { barcode: text(p.barcode), name: p.name, brand: text(p.brand), ingredients: text(p.ingredients), allergens: tags(p.allergens), traces: tags(p.traces),
+  const product: Product = { barcode: text(p.barcode), name: titleCase(p.name), brand: titleCase(text(p.brand)), ingredients: text(p.ingredients), allergens: tags(p.allergens), traces: tags(p.traces),
     allergensKnown: intact, source, sourceId: text(p.sourceId) || undefined, fetchedAt: text(p.fetchedAt) || new Date(0).toISOString(), updatedAt: text(p.updatedAt) || undefined,
     ingredientLanguage: intact && p.ingredientLanguage === 'en' ? 'en' : 'unknown' };
   const status: PantryStatus = row.status === 'consumed' || row.status === 'discarded' ? row.status : 'active';
@@ -151,12 +152,15 @@ function AppContent() {
   const [view, setView] = useState<ViewPick>([ME]);
   const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+  // Whose allergies the Allergies page shows and edits: ME or a household member id.
+  const [allergyPerson, setAllergyPerson] = useState<string>(ME);
+  const [langOpen, setLangOpen] = useState(false);
   const [settingsBusy, setSettingsBusy] = useState(false);
   const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [pantryBusy, setPantryBusy] = useState(false);
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
   const today = dayOf(new Date());
-  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); };
+  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
   useEffect(() => {
@@ -203,7 +207,10 @@ function AppContent() {
     setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
-  const navigate = (next: Page) => { setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
+  const navigate = (next: Page) => {
+    // The Allergies page always opens on your own list; a member's unsaved picks are dropped.
+    if (allergyPerson !== ME) { setAllergyPerson(ME); setDraft([...allergies]); }
+    setLangOpen(false); setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
     if (!email.trim() || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
@@ -222,6 +229,7 @@ function AppContent() {
   const saveAllergies = async () => {
     if (saving) return;
     setProfileSaved(false);
+    if (allergyPerson !== ME) { await saveMemberAllergies(allergyPerson); return; }
     if (!draft.length) { haptic.warning(); say(t('allergies.chooseOne')); return; }
     setSaving(true); setFeedback('');
     const current = generation.current;
@@ -240,6 +248,37 @@ function AppContent() {
       if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(message);
     } catch { haptic.error(); say(t('allergies.saveFailed'), 'danger'); }
     finally { setSaving(false); }
+  };
+  // A member's list saves straight to their household row, like the member form in Settings.
+  const saveMemberAllergies = async (id: string) => {
+    const member = members.find(m => m.id === id);
+    if (!member) return;
+    if (!draft.length) { haptic.warning(); say(t('member.chooseAllergy', { name: member.name })); return; }
+    const allergiesInOrder = ALLERGENS.map(a => a.id).filter(a => draft.includes(a));
+    setSaving(true); setFeedback('');
+    const current = generation.current;
+    let saved: Person | null = { ...member, allergies: allergiesInOrder };
+    if (!demo) {
+      if (!supabase) saved = null;
+      else {
+        const { data, error } = await supabase.from('household_members').update({ allergies: allergiesInOrder }).eq('id', id).select('id, name, allergies').single();
+        saved = error || !data ? null : toPerson(data);
+      }
+    }
+    setSaving(false);
+    if (current !== generation.current) return;
+    if (!saved) { haptic.error(); say(t('member.saveFailed', { name: member.name }), 'danger'); return; }
+    const person = saved;
+    setMembers(prev => prev.map(p => p.id === id ? person : p)); setDraft([...person.allergies]); setProfileSaved(true);
+    const message = t('toast.memberUpdated', { name: person.name });
+    say(message, 'success'); haptic.success();
+    if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(message);
+  };
+  const chooseAllergyPerson = (id: string) => {
+    if (saving || id === allergyPerson) return;
+    const person = id === ME ? null : members.find(m => m.id === id);
+    if (id !== ME && !person) return;
+    setAllergyPerson(id); setDraft([...(person ? person.allergies : allergies)]); setProfileSaved(false); setFeedback('');
   };
   const showProduct = (next: Product) => {
     haptic[RESULT[worstKind(assessPeople(next, viewPeople).map(r => r.assessment.kind))].haptic]();
@@ -429,7 +468,9 @@ function AppContent() {
   const evidence = single?.evidence ?? [];
   const focusAllergies = unionAllergies(viewPeople);
   const canScan = profileReady && allergies.length > 0;
-  const profileChanged = draft.length !== allergies.length || draft.some(id => !allergies.includes(id));
+  const allergyOwner = allergyPerson === ME ? null : members.find(m => m.id === allergyPerson) ?? null;
+  const savedDraft = allergyOwner ? allergyOwner.allergies : allergies;
+  const profileChanged = draft.length !== savedDraft.length || draft.some(id => !savedDraft.includes(id));
   const inlineScanFeedback = page === 'scan' && canScan;
   const hint = barcodeHint(barcode, i18n);
   const alerts = pantryAlerts(pantry, today);
@@ -544,17 +585,19 @@ function AppContent() {
             <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
-            <View style={[s.card, { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>{t('profileCard.title')}</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>{t('profileCard.edit')}</Text></Tap></View><Text style={s.bodySmall}>{t('profileCard.personal')}</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{t('profileCard.selected', { n: allergies.length })} · {demo ? t('profileCard.local') : t('profileCard.private')}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('profileCard.household', { names: i18n.list(members.map(m => m.name)) })}</Text><Text style={s.textLink}>{t('profileCard.manage')}</Text></Tap>}</View>
-            <View style={[s.card, { flex: 1 }]}><View style={s.between}><Text style={s.cardTitle}>{t('real.title')}</Text><View style={s.iconTile}><ScanBarcode size={21} color={C.green} /></View></View>{[t('real.step1'), t('real.step2'), t('real.step3')].map((line, i) => <View key={line} style={s.step}><Text style={s.stepNumber}>{i + 1}</Text><Text style={[s.bodySmall, { flex: 1 }]}>{line}</Text></View>)}</View>
+            <View style={[s.card, wide && { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>{t('profileCard.title')}</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>{t('profileCard.edit')}</Text></Tap></View><Text style={s.bodySmall}>{t('profileCard.personal')}</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{t('profileCard.selected', { n: allergies.length })} · {demo ? t('profileCard.local') : t('profileCard.private')}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('profileCard.household', { names: i18n.list(members.map(m => m.name)) })}</Text><Text style={s.textLink}>{t('profileCard.manage')}</Text></Tap>}</View>
+            <View style={[s.card, wide && { flex: 1 }]}><View style={s.between}><Text style={s.cardTitle}>{t('real.title')}</Text><View style={s.iconTile}><ScanBarcode size={21} color={C.green} /></View></View>{[t('real.step1'), t('real.step2'), t('real.step3')].map((line, i) => <View key={line} style={s.step}><Text style={s.stepNumber}>{i + 1}</Text><Text style={[s.bodySmall, { flex: 1 }]}>{line}</Text></View>)}</View>
           </View>
           <View style={s.between}><View><Text style={s.sectionTitle}>{t('samples.title')}</Text><Text style={s.bodySmall}>{t('samples.body')}</Text></View><Text style={s.sampleLabel}>{t('samples.label')}</Text></View>
-          <View style={[s.sampleGrid, !wide && { flexDirection: 'column' }]}>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={t('samples.try', { name: item.name })} disabled={!canScan} key={item.barcode} haptic={null} onPress={() => showProduct(item)} style={[s.sampleCard, !canScan && { opacity: .5 }]} pressedStyle={{ borderColor: C.green }}>
+          <View style={[s.sampleGrid, !wide && { flexDirection: 'column' }]}>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={t('samples.try', { name: item.name })} disabled={!canScan} key={item.barcode} haptic={null} onPress={() => showProduct(item)} style={[s.sampleCard, wide && { flex: 1 }, !canScan && { opacity: .5 }]} pressedStyle={{ borderColor: C.green }}>
             <View style={[s.sampleArt, { backgroundColor: SAMPLE_ART[i].bg }]}><View /><View style={[s.miniPack, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={19} color="white" /><Text style={s.miniPackText}>{SAMPLE_ART[i].word}</Text></View><ArrowUpRight size={17} color={C.muted} /></View>
             <View style={s.sampleInfo}><Text style={s.sampleName}>{item.name}</Text><View style={s.between}><Text style={s.footnote}>{t('samples.fictional')}</Text><ChevronRight size={16} color={C.green} /></View></View>
           </Tap>)}</View>
         </>}
         {page === 'allergies' && <>
-          <Text accessibilityRole="header" style={s.pageTitle}>{t('allergies.title')}</Text><Text style={s.body}>{t('allergies.body')}</Text>
+          <Text accessibilityRole="header" style={s.pageTitle}>{t('nav.allergies')}</Text>
+          {household && <View testID="allergy-person" accessibilityRole="radiogroup" accessibilityLabel={t('allergies.whose')} style={s.chips}>{people.map(p => { const on = p.id === allergyPerson; return <Tap key={p.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: saving }} accessibilityLabel={p.name} haptic="select" scaleTo={.96} disabled={saving} onPress={() => chooseAllergyPerson(p.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{p.name}</Text></Tap>; })}</View>}
+          <Text style={s.body}>{t('allergies.body')}</Text>
           <Notice kind="info">{t('allergies.notice')}</Notice>
           <View style={[s.allergyGrid, singleColumn && s.groupedList]}>{ALLERGENS.map((a, i) => { const on = draft.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} aria-disabled={saving || !profileReady} accessibilityLabel={allergyLabel(a.id)} accessibilityHint={t('allergies.hint')} accessibilityState={{ checked: on, disabled: saving || !profileReady }} disabled={saving || !profileReady} haptic="select" scaleTo={.98}
             onPress={() => { setProfileSaved(false); setFeedback(''); setDraft(prev => prev.includes(a.id) ? prev.filter(id => id !== a.id) : [...prev, a.id]); }}
@@ -564,7 +607,7 @@ function AppContent() {
         </>}
         {page === 'scan' && <>
           <Text accessibilityRole="header" style={s.pageTitle}>{t('scan.title')}</Text><Text style={s.body}>{t('scan.body')}</Text>
-          {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, { flex: 1 }]}>
+          {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, wide && { flex: 1 }]}>
             <View style={s.inline}><View style={s.iconTile}><ScanBarcode size={19} color={C.green} /></View><Text style={s.cardTitle}>{t('scan.scanner')}</Text></View>
             {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => { if (event.type === 'upc_e') { setCamera(false); haptic.warning(); say(t('scan.upce')); } else void scan(event.data, true); }} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
               : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onAccent} />}>{t('scan.openCamera')}</Button></View>}
@@ -574,7 +617,7 @@ function AppContent() {
             <Button loading={busy} onPress={() => void scan(barcode)} icon={<Search accessible={false} size={18} color={C.onAccent} />}>{busy ? t('scan.checking') : t('scan.lookUp')}</Button>
             {feedback && inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
             <Text style={s.footnote}>{t('scan.sources')}</Text>
-          </View><View style={[s.card, { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
+          </View><View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
             <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color="white" /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
             <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View></View></View>}
           {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollToY(Math.max(0, e.nativeEvent.layout.y - 12)); } }}>
@@ -655,7 +698,8 @@ function AppContent() {
             <View testID="show-for-settings" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = !household ? o.id === ME : ticked(defaultView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
             {!household && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
-            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{LANGUAGES.map(l => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} disabled={settingsBusy} onPress={() => void chooseLanguage(l.code)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View>
+            <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>
+            {langOpen && <Reveal style={s.dropdownMenu}><View accessibilityRole="radiogroup">{LANGUAGES.map((l, i) => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} scaleTo={.99} disabled={settingsBusy} onPress={() => { setLangOpen(false); void chooseLanguage(l.code); }} style={[s.dropdownRow, i < LANGUAGES.length - 1 && s.groupedSeparator]} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }, on && { color: C.green, fontWeight: '700' }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></Reveal>}
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
@@ -674,8 +718,8 @@ function AppContent() {
         <Text accessibilityLiveRegion="polite" style={[s.bodySmall, profileChanged && { color: C.amber, fontWeight: '600' }]}>{t('allergies.count', { n: draft.length, total: ALLERGENS.length })} · {profileChanged ? t('allergies.unsaved') : t('allergies.saved')}</Text>
         <View accessible={false} style={s.progressTrack}><View style={[s.progressFill, { width: `${(draft.length / ALLERGENS.length) * 100}%` }]} /></View>
         {saving ? <Reveal><View accessibilityRole="alert" accessibilityLiveRegion="polite" style={s.saveConfirmation}><ActivityIndicator color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('allergies.saving')}</Text></View></Reveal>
-          : feedback ? <Reveal trigger={feedback}><View testID="profile-save-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite" style={[s.saveConfirmation, { backgroundColor: tone[feedbackTone].bg }]}>{profileSaved ? <CheckMark checked round /> : <CircleAlert accessible={false} size={24} color={tone[feedbackTone].fg} />}<View style={{ flex: 1 }}>{profileSaved && <Text style={s.cardTitle}>{t('allergies.profileSaved')}</Text>}<Text style={[s.bodySmall, { color: tone[feedbackTone].fg }]}>{feedback}</Text></View></View></Reveal> : null}
-        <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? t('allergies.savingShort') : t('allergies.save')}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...allergies]); setProfileSaved(false); setFeedback(''); toast(t('toast.discarded'), 'info'); }}>{t('allergies.reset')}</Button>}</View>
+          : feedback ? <Reveal trigger={feedback}><View testID="profile-save-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite" style={[s.saveConfirmation, { backgroundColor: tone[feedbackTone].bg }]}>{profileSaved ? <CheckMark checked round /> : <CircleAlert accessible={false} size={24} color={tone[feedbackTone].fg} />}<View style={{ flex: 1 }}>{profileSaved && !allergyOwner && <Text style={s.cardTitle}>{t('allergies.profileSaved')}</Text>}<Text style={[s.bodySmall, { color: tone[feedbackTone].fg }]}>{feedback}</Text></View></View></Reveal> : null}
+        <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? t('allergies.savingShort') : allergyOwner ? t('allergies.saveFor', { name: allergyOwner.name }) : t('allergies.save')}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...savedDraft]); setProfileSaved(false); setFeedback(''); toast(t('toast.discarded'), 'info'); }}>{t('allergies.reset')}</Button>}</View>
       </View>}
       {!wide && <View style={s.mobileNavWrap}><View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
         <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} />{item.page === 'pantry' && alertCount > 0 && <View accessible={false} style={s.navBadge} />}</View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
@@ -707,6 +751,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   hero: { flexDirection: 'row', backgroundColor: '#214B3C', borderRadius: 26, overflow: 'hidden' }, heroCopy: { flex: 1.35, padding: 32, gap: 16 }, heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: '#CBD9AE' }, heroTitle: { color: '#FAFCF4', fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 }, heroBody: { color: '#C7D4C7', fontSize: 15, lineHeight: 22, maxWidth: 360 }, heroCaption: { color: '#ADC2B0', ...type.footnote },
   limeButton: { backgroundColor: C.lime, minHeight: 50, paddingVertical: 13, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 999 }, limeButtonText: { color: HERO_INK, ...type.headline },
   heroArt: { flex: .8, padding: 26, backgroundColor: '#2D5A48', alignItems: 'center', justifyContent: 'center' }, scanIllustration: { backgroundColor: '#FCFCF5', borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, transform: [{ rotate: '5deg' }], gap: 12, boxShadow: '0px 14px 35px #183E3333' }, tinyLeaf: { padding: 5, backgroundColor: '#EDF2DD', borderRadius: 30 }, labelMini: { fontSize: 8, letterSpacing: 2, fontWeight: '700', color: C.green }, packageIllustration: { backgroundColor: '#E8EACD', padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 }, packageBrand: { color: '#64754A', fontSize: 14, fontStyle: 'italic' }, packageName: { color: C.green, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 }, packageBottom: { fontSize: 7, letterSpacing: 1, color: C.muted }, illustrationBarcode: { alignItems: 'center' },
+  // Cards share a row's width with flex only when wide. In the phone column a flex basis of 0 squeezed them
+  // shorter than their content (clipped Household row, caption spilling under the lookup card).
   columns: { flexDirection: 'row', gap: 20 }, card: { backgroundColor: C.paper, borderRadius: 22, padding: 20, gap: 13, boxShadow: shadow.card },
   cardTitle: { ...type.headline, color: C.ink }, sectionTitle: { ...type.title2, color: C.ink },
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }, inline: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -714,7 +760,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 4 }, allergyChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, backgroundColor: C.greenSoft, paddingVertical: 8, paddingHorizontal: 14 }, chipDot: { width: 7, height: 7, borderRadius: 7, backgroundColor: C.green }, chipText: { fontSize: 13, color: C.green, fontWeight: '700' },
   divider: { height: 1, backgroundColor: C.border, marginVertical: 3 }, iconTile: { alignSelf: 'flex-start', padding: 8, borderRadius: 11, backgroundColor: C.pale },
   step: { flexDirection: 'row', alignItems: 'center', gap: 12 }, stepNumber: { color: C.green, backgroundColor: C.greenSoft, fontSize: 12, fontWeight: '800', paddingVertical: 4, paddingHorizontal: 9, borderRadius: 20, overflow: 'hidden' }, sampleLabel: { fontSize: 10, fontWeight: '700', color: C.muted, letterSpacing: 1.3 },
-  sampleGrid: { flexDirection: 'row', gap: 16 }, sampleCard: { flex: 1, borderRadius: 22, overflow: 'hidden', backgroundColor: C.paper, boxShadow: shadow.card }, sampleArt: { padding: 15, minHeight: 128, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }, sampleNumber: { fontSize: 10, fontWeight: '700', color: C.muted }, miniPack: { alignSelf: 'center', alignItems: 'center', gap: 12, paddingVertical: 20, paddingHorizontal: 14, borderRadius: 6, transform: [{ rotate: '-7deg' }], boxShadow: '0px 8px 14px rgba(0,0,0,0.12)' }, miniPackText: { color: '#FFFBEA', fontSize: 9, fontWeight: '800', letterSpacing: 1 }, sampleInfo: { padding: 14, gap: 8 }, sampleName: { fontSize: 14, fontWeight: '700', color: C.ink },
+  sampleGrid: { flexDirection: 'row', gap: 16 }, sampleCard: { borderRadius: 22, overflow: 'hidden', backgroundColor: C.paper, boxShadow: shadow.card }, sampleArt: { padding: 15, minHeight: 128, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }, sampleNumber: { fontSize: 10, fontWeight: '700', color: C.muted }, miniPack: { alignSelf: 'center', alignItems: 'center', gap: 12, paddingVertical: 20, paddingHorizontal: 14, borderRadius: 6, transform: [{ rotate: '-7deg' }], boxShadow: '0px 8px 14px rgba(0,0,0,0.12)' }, miniPackText: { color: '#FFFBEA', fontSize: 9, fontWeight: '800', letterSpacing: 1 }, sampleInfo: { padding: 14, gap: 8 }, sampleName: { fontSize: 14, fontWeight: '700', color: C.ink },
   footer: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingVertical: 15, borderTopWidth: 1, borderColor: C.border },
   welcome: { flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 44, padding: 24 }, welcomeBrand: { width: '100%', gap: 20, maxWidth: 590 }, welcomeTitle: { color: C.ink, fontWeight: '700', letterSpacing: -1.6 }, welcomeChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   smallPill: { ...type.footnote, fontWeight: '600', color: C.green, backgroundColor: C.greenSoft, paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999, overflow: 'hidden' },
@@ -730,6 +776,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
   matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
+  dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   pantryAdd: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: C.pale }, hiddenTag: { ...type.footnote, color: C.red, fontWeight: '700' },
   pantryCard: { gap: 12, padding: 14 }, pantryMain: { flexDirection: 'row', alignItems: 'center', gap: 12 }, pantryBadge: { alignSelf: 'flex-start', backgroundColor: C.amberSoft, color: C.amber },

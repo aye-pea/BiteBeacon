@@ -17,7 +17,7 @@ for (const [scheme, background] of [['light', LIGHT], ['dark', DARK]] as const) 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.getByRole('button', { name: 'Explore employer demo' }).click();
-    await page.getByRole('button', { name: 'Try Peanut crunch granola' }).click();
+    await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
     await expect(page.getByTestId('product-result')).toBeVisible();
     expect(await canvas(page)).toBe(background);
     expect(errors).toEqual([]);

@@ -1,4 +1,5 @@
 import { Product, validBarcode } from '../domain/allergens';
+import { titleCase } from '../domain/names';
 // Codes let the UI show the message in the person's language; message stays English for logs and tests.
 export type LookupErrorCode = 'invalid' | 'incomplete' | 'busy' | 'unavailable' | 'timeout' | 'unreachable' | 'mismatch' | 'badBarcode' | 'disputed' | 'wait';
 export class LookupError extends Error {
@@ -6,14 +7,14 @@ export class LookupError extends Error {
 }
 
 const sample = (name: string, ingredients: string, allergens: string[], traces: string[], barcode: string, allergensKnown = true): Product => ({
-  name, brand: 'PANTRY LAB · FICTIONAL SAMPLE', ingredients, allergens, traces, barcode, allergensKnown,
+  name, brand: 'Pantry Lab · Fictional Sample', ingredients, allergens, traces, barcode, allergensKnown,
   source: 'sample', fetchedAt: new Date().toISOString(), ingredientLanguage: 'en',
 });
 export const SAMPLES: Product[] = [
-  sample('Peanut crunch granola', 'Rolled oats, peanuts, honey, whey powder, sea salt.', ['en:peanuts', 'en:milk'], [], 'SAMPLE-01'),
-  sample('Dark chocolate bites', 'Cocoa mass, sugar, cocoa butter.', [], ['en:peanuts', 'en:milk'], 'SAMPLE-02'),
-  sample('Simply oat crackers', 'Oats, sunflower oil, sea salt.', [], [], 'SAMPLE-03'),
-  sample('Mystery snack', '', [], [], 'SAMPLE-04', false),
+  sample('Peanut Crunch Granola', 'Rolled oats, peanuts, honey, whey powder, sea salt.', ['en:peanuts', 'en:milk'], [], 'SAMPLE-01'),
+  sample('Dark Chocolate Bites', 'Cocoa mass, sugar, cocoa butter.', [], ['en:peanuts', 'en:milk'], 'SAMPLE-02'),
+  sample('Simply Oat Crackers', 'Oats, sunflower oil, sea salt.', [], [], 'SAMPLE-03'),
+  sample('Mystery Snack', '', [], [], 'SAMPLE-04', false),
 ];
 
 export function parseProduct(data: unknown, barcode: string): Product | null {
@@ -24,7 +25,7 @@ export function parseProduct(data: unknown, barcode: string): Product | null {
   const p = body.product as Record<string, unknown>;
   const text = (v: unknown) => typeof v === 'string' ? v : '';
   const tags = (v: unknown) => Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : [];
-  return { barcode, name: text(p.product_name_en) || text(p.product_name) || 'Unnamed product', brand: text(p.brands) || 'Brand not listed',
+  return { barcode, name: titleCase(text(p.product_name_en) || text(p.product_name)) || 'Unnamed product', brand: titleCase(text(p.brands)) || 'Brand not listed',
     ingredients: text(p.ingredients_text_en) || text(p.ingredients_text), allergens: tags(p.allergens_tags), traces: tags(p.traces_tags),
     allergensKnown: Array.isArray(p.allergens_tags) && p.allergens_tags.every(t => typeof t === 'string'), source: 'openfoodfacts', fetchedAt: new Date().toISOString(),
     ingredientLanguage: text(p.ingredients_text_en).trim() || p.lang === 'en' ? 'en' : 'unknown',
@@ -49,7 +50,7 @@ export function parseUsdaFoods(data: unknown, barcode: string): Product | null {
   const f = matches.sort((a, b) => text(b.publishedDate).localeCompare(text(a.publishedDate)))[0];
   const ingredients = text(f.ingredients);
   const updated = Date.parse(text(f.modifiedDate) || text(f.publishedDate));
-  return { barcode, name: text(f.description) || 'Unnamed product', brand: text(f.brandName) || text(f.brandOwner) || 'Brand not listed',
+  return { barcode, name: titleCase(text(f.description)) || 'Unnamed product', brand: titleCase(text(f.brandName) || text(f.brandOwner)) || 'Brand not listed',
     ingredients, allergens: [], traces: [], allergensKnown: ingredients !== '', source: 'usda', sourceId: typeof f.fdcId === 'number' ? String(f.fdcId) : undefined,
     fetchedAt: new Date().toISOString(), ingredientLanguage: ingredients ? 'en' : 'unknown', updatedAt: Number.isFinite(updated) ? new Date(updated).toISOString() : undefined };
 }

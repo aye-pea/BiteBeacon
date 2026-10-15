@@ -45,7 +45,7 @@ test('browser camera scans a barcode and checks the product', async ({ page }) =
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await expect(page.getByText('Point your camera at a UPC or EAN barcode.')).toBeVisible();
   await page.getByRole('button', { name: 'Open camera' }).click();
-  await expect(page.getByTestId('product-result')).toContainText('Camera test spread', { timeout: 20000 });
+  await expect(page.getByTestId('product-result')).toContainText('Camera Test Spread', { timeout: 20000 });
   await expect(page.getByTestId('product-result')).toContainText(BARCODE);
   // The decoder, when a polyfill is needed, comes from this site, never a public CDN.
   if (!(await page.evaluate(() => 'BarcodeDetector' in globalThis))) expect(wasm.length).toBeGreaterThan(0);

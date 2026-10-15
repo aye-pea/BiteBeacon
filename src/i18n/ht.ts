@@ -4,7 +4,7 @@ export const ht: Messages = {
   'app.opening': 'N ap louvri BiteBeacon…',
   'nav.overview': 'Apèsi', 'nav.overview.short': 'Akèy',
   'nav.scan': 'Eskane yon pwodui', 'nav.scan.short': 'Eskane',
-  'nav.allergies': 'Alèji mwen yo', 'nav.allergies.short': 'Alèji',
+  'nav.allergies': 'Alèji', 'nav.allergies.short': 'Alèji',
   'nav.history': 'Dènye eskanè yo', 'nav.history.short': 'Istorik',
   'nav.settings': 'Paramèt', 'nav.settings.short': 'Paramèt',
   'nav.about': 'Detay aplikasyon an', 'nav.about.short': 'Detay',
@@ -54,7 +54,7 @@ export const ht: Messages = {
   'samples.title': 'Eseye l', 'samples.body': 'Kat pwodui fiktif. Kat rezilta itil.', 'samples.label': 'KOLEKSYON DEMO',
   'samples.try': 'Eseye {name}', 'samples.fictional': 'Egzanp fiktif',
 
-  'allergies.title': 'Alèji ou, an premye plas.', 'allergies.body': 'Chwazi nan 15 alèjèn manje ki komen: nèf gwo alèjèn Etazini yo plis sis lòt yo mete sou lis an Ewòp ak Kanada. Chwazi tout sa ki aplike.',
+  'allergies.body': 'Chwazi nan 15 alèjèn manje ki komen: nèf gwo alèjèn Etazini yo plis sis lòt yo mete sou lis an Ewòp ak Kanada. Chwazi tout sa ki aplike.',
   'allergies.notice': 'Aplikasyon sa a pa kouvri tout alèji. Ble tcheke ble sèlman; chwazi Gluten pou tcheke lòj, sèg ak avwàn tou. Kristase pa kouvri molisk; chwazi Molisk pou paloud, zuit ak kalma.',
   'allergies.hint': 'Chanjman yo aplike apre ou sere pwofil alèji ou.',
   'allergies.chooseOne': 'Chwazi omwen yon alèji pou itilize verifikasyon kòd ba.',
@@ -64,6 +64,7 @@ export const ht: Messages = {
   'allergies.count': '{n} sou {total} chwazi', 'allergies.unsaved': 'Chanjman ki pa sere', 'allergies.saved': 'Pwofil ki sere',
   'allergies.saving': 'N ap sere pwofil alèji ou…', 'allergies.profileSaved': 'Pwofil la sere', 'allergies.savingShort': 'N ap sere…',
   'allergies.save': 'Sere pwofil alèji', 'allergies.reset': 'Anile chanjman yo', 'toast.discarded': 'Chanjman yo anile',
+  'allergies.whose': 'Alèji kiyès', 'allergies.saveFor': 'Anrejistre alèji {name}',
 
   'scan.title': 'Kisa ki nan pwochen bouche ou?', 'scan.body': 'Eskane kòd ba yon manje oswa antre nimewo ki anba l yo.',
   'scan.chooseAllergies': 'Chwazi alèji ou', 'scan.scanner': 'Eskanè kòd ba',

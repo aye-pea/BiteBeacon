@@ -4,7 +4,7 @@ export const es: Messages = {
   'app.opening': 'Abriendo BiteBeacon…',
   'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio',
   'nav.scan': 'Escanear un producto', 'nav.scan.short': 'Escanear',
-  'nav.allergies': 'Mis alergias', 'nav.allergies.short': 'Alergias',
+  'nav.allergies': 'Alergias', 'nav.allergies.short': 'Alergias',
   'nav.history': 'Escaneos recientes', 'nav.history.short': 'Historial',
   'nav.settings': 'Ajustes', 'nav.settings.short': 'Ajustes',
   'nav.about': 'Detalles de la app', 'nav.about.short': 'Detalles',
@@ -54,7 +54,7 @@ export const es: Messages = {
   'samples.title': 'Pruébala', 'samples.body': 'Cuatro productos ficticios. Cuatro resultados útiles.', 'samples.label': 'COLECCIÓN DEMO',
   'samples.try': 'Probar {name}', 'samples.fictional': 'Ejemplo ficticio',
 
-  'allergies.title': 'Tus alergias, en primer plano.', 'allergies.body': 'Elige entre 15 alérgenos alimentarios comunes: los nueve principales de EE. UU. y seis más que se declaran en Europa y Canadá. Selecciona todos los que apliquen.',
+  'allergies.body': 'Elige entre 15 alérgenos alimentarios comunes: los nueve principales de EE. UU. y seis más que se declaran en Europa y Canadá. Selecciona todos los que apliquen.',
   'allergies.notice': 'Esta app no cubre todas las alergias. Trigo solo revisa el trigo; elige Gluten para revisar también cebada, centeno y avena. Mariscos crustáceos no incluye moluscos; elige Moluscos para almejas, ostras y calamares.',
   'allergies.hint': 'Los cambios se aplican después de guardar tu perfil de alergias.',
   'allergies.chooseOne': 'Elige al menos una alergia para usar la revisión por código de barras.',
@@ -64,6 +64,7 @@ export const es: Messages = {
   'allergies.count': '{n} de {total} seleccionadas', 'allergies.unsaved': 'Cambios sin guardar', 'allergies.saved': 'Perfil guardado',
   'allergies.saving': 'Guardando tu perfil de alergias…', 'allergies.profileSaved': 'Perfil guardado', 'allergies.savingShort': 'Guardando…',
   'allergies.save': 'Guardar perfil de alergias', 'allergies.reset': 'Descartar cambios', 'toast.discarded': 'Cambios descartados',
+  'allergies.whose': 'Ver alergias de', 'allergies.saveFor': 'Guardar alergias de {name}',
 
   'scan.title': '¿Qué hay en tu próximo bocado?', 'scan.body': 'Escanea el código de barras de un alimento o ingresa los números que aparecen debajo.',
   'scan.chooseAllergies': 'Elige tus alergias', 'scan.scanner': 'Escáner de códigos de barras',

@@ -4,7 +4,7 @@ export const en = {
   'app.opening': 'Opening BiteBeacon…',
   'nav.overview': 'Overview', 'nav.overview.short': 'Home',
   'nav.scan': 'Scan a Product', 'nav.scan.short': 'Scan',
-  'nav.allergies': 'My Allergies', 'nav.allergies.short': 'Allergies',
+  'nav.allergies': 'Allergies', 'nav.allergies.short': 'Allergies',
   'nav.history': 'Recent Scans', 'nav.history.short': 'History',
   'nav.settings': 'Settings', 'nav.settings.short': 'Settings',
   'nav.about': 'App details', 'nav.about.short': 'Details',
@@ -54,7 +54,7 @@ export const en = {
   'samples.title': 'Give it a try', 'samples.body': 'Four fictional products. Four useful outcomes.', 'samples.label': 'DEMO COLLECTION',
   'samples.try': 'Try {name}', 'samples.fictional': 'Fictional sample',
 
-  'allergies.title': 'Your allergies, front and center.', 'allergies.body': 'Choose from 15 common food allergens: the nine US major allergens plus six more listed in Europe and Canada. Select all that apply.',
+  'allergies.body': 'Choose from 15 common food allergens: the nine US major allergens plus six more listed in Europe and Canada. Select all that apply.',
   'allergies.notice': 'This app does not cover every allergy. Wheat checks wheat only; choose Gluten to also check barley, rye and oats. Crustacean shellfish does not cover mollusks; choose Mollusks for clams, oysters and squid.',
   'allergies.hint': 'Changes apply after saving your allergy profile.',
   'allergies.chooseOne': 'Choose at least one allergy to use barcode checking.',
@@ -64,6 +64,7 @@ export const en = {
   'allergies.count': '{n} of {total} selected', 'allergies.unsaved': 'Unsaved changes', 'allergies.saved': 'Saved profile',
   'allergies.saving': 'Saving your allergy profile…', 'allergies.profileSaved': 'Profile saved', 'allergies.savingShort': 'Saving…',
   'allergies.save': 'Save allergy profile', 'allergies.reset': 'Reset changes', 'toast.discarded': 'Changes discarded',
+  'allergies.whose': 'Whose allergies', 'allergies.saveFor': 'Save {name}’s allergies',
 
   'scan.title': 'What’s in your next bite?', 'scan.body': 'Scan a food barcode or enter the numbers beneath it.',
   'scan.chooseAllergies': 'Choose your allergies', 'scan.scanner': 'Barcode scanner',
