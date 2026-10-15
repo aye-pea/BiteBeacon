@@ -3,21 +3,23 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
 import { titleCase } from './src/domain/names';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
-import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
+import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, localeOf, makeI18n, MessageKey, translate } from './src/i18n';
+import type { AdminStats } from './src/domain/stats';
 import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
 import { cameraAvailable } from './src/lib/webScanner';
+import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 import { CartLogo } from './src/ui/logo';
 
-type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about';
+type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about' | 'admin';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
 const ME = 'me', EVERYONE = 'everyone';
 // Who results show for: [EVERYONE] (everyone, including people added later) or any non-empty mix of person ids.
@@ -40,7 +42,7 @@ const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen }[name];
+  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -159,6 +161,11 @@ function AppContent() {
   const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [pantryBusy, setPantryBusy] = useState(false);
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
+  // Admins are listed in the database by hand; the dashboard shows only for them, never in the demo.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsFailed, setStatsFailed] = useState(false);
+  const [statsBusy, setStatsBusy] = useState(false);
   const today = dayOf(new Date());
   const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
@@ -176,7 +183,9 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
+    setIsAdmin(false); setStats(null); setStatsFailed(false);
     if (!session || !supabase || demo) return;
+    void checkAdmin().then(ok => { if (generation.current === current) setIsAdmin(ok); });
     Promise.all([
       supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, default_include_me, default_member_ids, language').eq('id', session.user.id).maybeSingle(),
       supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
@@ -202,7 +211,7 @@ function AppContent() {
   }, [session?.user.id]);
 
   const enterDemo = () => {
-    ++generation.current; setDemo(true); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
+    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
     resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
     setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
@@ -295,6 +304,8 @@ function AppContent() {
     const current = generation.current;
     try {
       const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
+      // One more for the app-wide total: only the count goes up, nothing about the barcode or person.
+      recordScan();
       if (generation.current !== current) return;
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }
@@ -518,6 +529,20 @@ function AppContent() {
     return () => el.remove();
   }, [docScroll, C.bg]);
   useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
+  const refreshStats = async () => {
+    const current = generation.current;
+    setStatsBusy(true);
+    const next = await loadAdminStats();
+    if (generation.current !== current) return;
+    setStatsBusy(false); setStatsFailed(!next); if (next) setStats(next);
+  };
+  useEffect(() => {
+    if (page !== 'admin' || !isAdmin) return;
+    void refreshStats();
+    const timer = setInterval(() => void refreshStats(), 10000);
+    return () => clearInterval(timer);
+  }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
@@ -550,13 +575,55 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about'] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
-  const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history');
+  const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
   // App details lives in Settings on every screen size.
   const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
+  const big = (n: number) => n.toLocaleString(localeOf(lang));
+  // Horizontal bar rows for the dashboard lists; each bar is its share of the largest value.
+  const barRows = (rows: { key: string; label: string; value: number }[]) => {
+    const max = Math.max(1, ...rows.map(r => r.value));
+    return rows.length ? <View style={{ gap: 10 }}>{rows.map(r => <View key={r.key} style={{ gap: 4 }}><View style={s.between}><Text style={[s.bodySmall, { color: C.ink, flexShrink: 1 }]}>{r.label}</Text><Text style={[s.bodySmall, { color: C.ink, fontWeight: '700' }]}>{big(r.value)}</Text></View>
+      <View accessible={false} style={s.progressTrack}><View style={[s.progressFill, { width: `${(r.value / max) * 100}%` }]} /></View></View>)}</View> : <Text style={s.footnote}>{t('admin.empty')}</Text>;
+  };
+  const statTile = (key: string, label: string, value: number, sub?: string) => <View key={key} testID={`admin-${key}`} style={[s.card, s.statTile, !singleColumn && { flexBasis: '45%' }]}><Text style={s.footnote}>{label}</Text><Text style={s.statNumber}>{big(value)}</Text>{sub ? <Text style={s.footnote}>{sub}</Text> : null}</View>;
+  const signupMax = Math.max(1, ...(stats?.signupsByDay.map(d => d.count) ?? []));
+  const adminPage = <>
+    <View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>{t('nav.admin')}</Text><Button secondary loading={statsBusy && !stats} onPress={() => void refreshStats()} icon={<RotateCcw accessible={false} size={17} color={C.ink} />}>{t('admin.refresh')}</Button></View>
+    <Text style={s.body}>{t('admin.body')}</Text>
+    {statsFailed && <Notice kind="danger">{t('admin.loadFailed')}</Notice>}
+    {!stats ? (statsFailed ? null : <View style={[s.card, { gap: 12 }]}><Skeleton width="40%" height={22} /><Skeleton height={64} /><Skeleton width="70%" /></View>) : <>
+      <View testID="admin-scans" style={[s.hero, { flexDirection: 'column', padding: wide ? 32 : 24, gap: 8 }]}>
+        <View style={s.inline}><View style={[s.navDot, { marginLeft: 0, backgroundColor: C.lime }]} /><Text style={s.heroCaption}>{t('admin.updated', { time: i18n.time(stats.generatedAt || new Date().toISOString()) })}</Text></View>
+        <Text style={s.heroBody}>{t('admin.scans')}</Text>
+        <Text accessibilityLiveRegion="polite" style={[s.heroTitle, { fontSize: wide ? 64 : 48, lineHeight: wide ? 70 : 54 }]}>{big(stats.scans)}</Text>
+        <Text style={s.heroCaption}>{t('admin.scansNote')}</Text>
+      </View>
+      <View style={[s.statGrid, singleColumn && { flexDirection: 'column' }]}>
+        {statTile('accounts', t('admin.accounts'), stats.accounts, t('admin.accountsSub', { n: stats.signups7d, m: stats.signups30d }))}
+        {statTile('active', t('admin.active'), stats.active7d, t('admin.activeSub', { n: stats.active1d, m: stats.active30d }))}
+        {statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
+        {statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
+      </View>
+      <View style={s.card}><Text style={s.cardTitle}>{t('admin.signups')}</Text>
+        <View testID="admin-signups" accessible accessibilityLabel={`${t('admin.signups')}: ${big(stats.signups30d)}`} style={s.signupChart}>{stats.signupsByDay.map(d => <View key={d.day} style={s.signupColumn}><View style={[s.signupBar, { height: `${Math.max(d.count ? 6 : 2, (d.count / signupMax) * 100)}%`, opacity: d.count ? 1 : .35 }]} /></View>)}</View>
+        {stats.signupsByDay.length > 0 && <View style={s.between}><Text style={s.footnote}>{i18n.day(stats.signupsByDay[0].day)}</Text><Text style={s.footnote}>{i18n.day(stats.signupsByDay[stats.signupsByDay.length - 1].day)}</Text></View>}</View>
+      <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
+        <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('admin.allergens')}</Text><Text style={s.footnote}>{t('admin.allergensNote')}</Text>
+          {barRows(ALLERGENS.map(a => ({ key: a.id, label: allergyLabel(a.id), value: stats.allergens[a.id] ?? 0 })).sort((a, b) => b.value - a.value))}</View>
+        <View style={[{ gap: 20 }, wide && { flex: 1 }]}>
+          <View style={s.card}><Text style={s.cardTitle}>{t('admin.households')}</Text>{barRows(stats.householdSizes.map(h => ({ key: String(h.size), label: t('admin.householdSize', { n: h.size }), value: h.accounts })))}</View>
+          <View style={s.card}><Text style={s.cardTitle}>{t('admin.languages')}</Text>{barRows(Object.entries(stats.languages).map(([code, value]) => ({ key: code, label: isLang(code) ? languageName(code) : t('admin.deviceLanguage'), value })).sort((a, b) => b.value - a.value))}</View>
+        </View>
+      </View>
+      <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
+        {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
+          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
+    </>}
+  </>;
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
@@ -704,7 +771,9 @@ function AppContent() {
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
-          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap></>}
+          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
+          {isAdmin && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+        {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sourcesTitle')}</Text><Text style={s.body}>{t('about.sourcesBody')}</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>{t('about.usdaLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>{t('about.offLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>{t('about.license')}</Text></Tap></View>
@@ -781,6 +850,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
+  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }, statTile: { flexGrow: 1, gap: 6 }, statNumber: { ...type.largeTitle, color: C.ink },
+  signupChart: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 120, paddingTop: 8 }, signupColumn: { flex: 1, height: '100%', justifyContent: 'flex-end' }, signupBar: { width: '100%', borderRadius: 3, backgroundColor: C.green },
   pantryAdd: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: C.pale }, hiddenTag: { ...type.footnote, color: C.red, fontWeight: '700' },
   pantryCard: { gap: 12, padding: 14 }, pantryMain: { flexDirection: 'row', alignItems: 'center', gap: 12 }, pantryBadge: { alignSelf: 'flex-start', backgroundColor: C.amberSoft, color: C.amber },
   pantryAction: { flexGrow: 1, flexBasis: '40%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 999 }, pantryActionText: { ...type.subhead, fontWeight: '700' },
