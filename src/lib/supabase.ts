@@ -38,6 +38,11 @@ const storage = {
     try { local()?.removeItem(name); } catch { /* nothing stored */ }
   },
 };
+// Read before the client starts: it clears the link's details from the address bar while it signs the person in.
+const arrivedWith = web && typeof window !== 'undefined' ? `${window.location.hash}&${window.location.search}` : '';
+export const openedResetLink = /type=recovery/.test(arrivedWith);
+export const resetLinkFailed = /error_code=otp_expired/.test(arrivedWith);
+export const resetRedirect = () => web && typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://bitebeacon.org/';
 export const supabase = cloudConfigured ? createClient(url!, key!, {
   // On the web, the sign-up confirmation link lands back on the site with a session; picking it up signs the person in.
   auth: { storage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: web },

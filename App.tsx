@@ -11,7 +11,9 @@ import { titleCase } from './src/domain/names';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, localeOf, makeI18n, MessageKey, translate } from './src/i18n';
 import type { AdminStats } from './src/domain/stats';
-import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
+import { cloudConfigured, openedResetLink, resetLinkFailed, resetRedirect, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
+import { loadUsername, signInAddress, usernameTaken } from './src/lib/account';
+import { cleanUsername, isUsername, looksLikeEmail, usernameEmail, usernameFromEmail } from './src/domain/usernames';
 import { cameraAvailable } from './src/lib/webScanner';
 import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
@@ -140,9 +142,16 @@ function AppContent() {
   const generation = useRef(0);
   const scrollRef = useRef<ScrollView>(null);
   const pendingScroll = useRef(false);
-  const [email, setEmail] = useState('');
+  // Sign-up takes a username; sign-in takes a username or an email added later in Settings.
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : 'signup');
+  // Set while someone who opened a password reset link chooses their new password.
+  const [recovering, setRecovering] = useState(openedResetLink);
+  const [username, setUsername] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState('');
+  const [emailAgain, setEmailAgain] = useState('');
+  const [emailBusy, setEmailBusy] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stay, setStay] = useState(staySignedIn);
@@ -173,7 +182,7 @@ function AppContent() {
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data, error }) => { if (error) say(t('err.sessionRestore')); setSession(data.session); setBooting(false); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); setBooting(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next); setBooting(false); });
     const app = AppState.addEventListener('change', state => {
       if (state === 'active') supabase?.auth.startAutoRefresh();
       else { supabase?.auth.stopAutoRefresh(); setCamera(false); }
@@ -183,9 +192,11 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
-    setIsAdmin(false); setStats(null); setStatsFailed(false);
+    setIsAdmin(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
     if (!session || !supabase || demo) return;
     void checkAdmin().then(ok => { if (generation.current === current) setIsAdmin(ok); });
+    // The username survives switching to a real email; before the usernames table exists it comes from the address.
+    void loadUsername().then(name => { if (generation.current === current) setUsername(name ?? usernameFromEmail(session.user.email)); });
     Promise.all([
       supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, default_include_me, default_member_ids, language').eq('id', session.user.id).maybeSingle(),
       supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
@@ -213,7 +224,7 @@ function AppContent() {
   const enterDemo = () => {
     ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
     resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
-    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
+    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => {
@@ -222,18 +233,57 @@ function AppContent() {
     setLangOpen(false); setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
-    if (!email.trim() || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
+    const typed = authMode === 'signup' ? cleanUsername(login) : login.trim();
+    if (!typed || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
+    if (authMode === 'signup' && !isUsername(typed)) { haptic.warning(); say(t('auth.badUsername')); return; }
     setAuthBusy(true); setFeedback('');
     setStaySignedIn(stay);
     try {
-      const { data, error } = authMode === 'signup'
-        ? await supabase.auth.signUp({ email: email.trim(), password })
-        : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) throw error;
+      if (authMode === 'signup') {
+        // "Confirm email" is off in Supabase, so a new username account is signed in straight away.
+        const { data, error } = await supabase.auth.signUp({ email: usernameEmail(typed), password });
+        if (error) { haptic.error(); say(usernameTaken(error) ? t('auth.taken') : t('auth.failed'), 'danger'); return; }
+        if (!data.session) { haptic.error(); say(t('auth.notReady'), 'danger'); return; }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: await signInAddress(typed, password), password });
+        if (error) throw error;
+      }
       setPassword('');
-      if (!data.session) { haptic.success(); say(t('auth.confirmEmail'), 'success'); setAuthMode('login'); }
     } catch { haptic.error(); say(t('auth.failed'), 'danger'); }
     finally { setAuthBusy(false); }
+  };
+  const sendReset = async () => {
+    if (!supabase) return;
+    if (!looksLikeEmail(login)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
+    setAuthBusy(true); setFeedback('');
+    const { error } = await supabase.auth.resetPasswordForEmail(login.trim(), { redirectTo: resetRedirect() });
+    setAuthBusy(false);
+    if (error) { haptic.error(); say(t('auth.resetFailed'), 'danger'); return; }
+    haptic.success(); say(t('auth.resetSent'), 'success');
+  };
+  const saveNewPassword = async () => {
+    if (!supabase) return;
+    if (password.length < 12) { haptic.warning(); say(t('auth.newPasswordFailed')); return; }
+    setAuthBusy(true); setFeedback('');
+    const { error } = await supabase.auth.updateUser({ password });
+    setAuthBusy(false);
+    if (error) { haptic.error(); say(t('auth.newPasswordFailed'), 'danger'); return; }
+    setPassword(''); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
+  };
+  const accountEmail = session?.user.email && !usernameFromEmail(session.user.email) ? session.user.email : null;
+  const saveRecoveryEmail = async () => {
+    if (!supabase || !session) return;
+    const next = emailDraft.trim();
+    if (!looksLikeEmail(next)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
+    if (next.toLowerCase() !== emailAgain.trim().toLowerCase()) { haptic.warning(); say(t('settings.emailMismatch')); return; }
+    setEmailBusy(true); setFeedback('');
+    const { data, error } = await supabase.auth.updateUser({ email: next }, { emailRedirectTo: resetRedirect() });
+    setEmailBusy(false);
+    if (error) { haptic.error(); say(t('settings.emailFailed'), 'danger'); return; }
+    setEmailDraft(''); setEmailAgain('');
+    // With "Confirm email" off the address changes at once; otherwise Supabase first mails a confirmation link.
+    if (data.user?.email?.toLowerCase() === next.toLowerCase()) { haptic.success(); say(t('settings.emailSaved'), 'success'); }
+    else { haptic.success(); say(t('settings.emailCheck', { email: next }), 'success'); }
   };
   const saveAllergies = async () => {
     if (saving) return;
@@ -546,6 +596,16 @@ function AppContent() {
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
+  if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
+    <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
+      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
+      <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
+      <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />
+      <Button loading={authBusy} onPress={saveNewPassword}>{authBusy ? t('auth.wait') : t('auth.newPasswordSave')}</Button>
+      {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
+    </View>
+  </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
       <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
@@ -556,15 +616,22 @@ function AppContent() {
       <View style={s.welcomeGraphic}><View style={s.welcomeIcon}><ScanBarcode size={54} color={C.green} strokeWidth={1.3} /></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('welcome.graphicTitle')}</Text><Text style={s.bodySmall}>{t('welcome.graphicBody')}</Text></View></View>
     </View>
     <View style={[s.authCard, wide && { width: '39%' }]}>
-      <Text style={s.sectionTitle}>{authMode === 'signup' ? t('auth.signupTitle') : t('auth.loginTitle')}</Text>
-      <Text style={s.body}>{t('auth.tagline')}</Text>
-      {cloudConfigured ? <>
-        <Text style={s.label}>{t('auth.email')}</Text><TextInput accessibilityLabel={t('auth.email')} style={s.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      <Text style={s.sectionTitle}>{authMode === 'signup' ? t('auth.signupTitle') : authMode === 'reset' ? t('auth.resetTitle') : t('auth.loginTitle')}</Text>
+      <Text style={s.body}>{authMode === 'reset' ? t('auth.resetBody') : t('auth.tagline')}</Text>
+      {cloudConfigured ? authMode === 'reset' ? <>
+        {resetLinkFailed && <Notice>{t('auth.resetExpired')}</Notice>}
+        <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="reset-email" accessibilityLabel={t('auth.email')} style={s.input} value={login} onChangeText={setLogin} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" onSubmitEditing={() => void sendReset()} />
+        <Button loading={authBusy} onPress={sendReset}>{authBusy ? t('auth.wait') : t('auth.resetSend')}</Button>
+        <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('login'); setFeedback(''); }}><Text style={s.link}>{t('auth.backToLogin')}</Text></Tap>
+      </> : <>
+        <Text style={s.label}>{authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')}</Text><TextInput testID="auth-login" accessibilityLabel={authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')} style={s.input} value={login} onChangeText={setLogin} placeholder={authMode === 'signup' ? 'alex_p' : ''} placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} autoComplete="username" maxLength={authMode === 'signup' ? 20 : 254} />
+        {authMode === 'signup' && <Text style={s.footnote}>{t('auth.usernameHelp')}</Text>}
         <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
         {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
+        {authMode === 'login' && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('reset'); setLogin(''); setFeedback(''); }}><Text style={s.link}>{t('auth.forgot')}</Text></Tap>}
         <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
       </> : <Notice kind="info">{t('auth.noCloud')}</Notice>}
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
@@ -620,7 +687,7 @@ function AppContent() {
         </View>
       </View>
       <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
-        {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
+        {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{usernameFromEmail(u.email) ?? u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
           : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
     </>}
   </>;
@@ -753,6 +820,13 @@ function AppContent() {
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
             {cleanName(nameDraft) !== myName && <Button loading={settingsBusy} disabled={!settingsReady} onPress={saveMyName}>{t('settings.saveName')}</Button>}</View>
+          {!demo && session && <View testID="sign-in-settings" style={s.card}><View style={s.inline}><LockKeyhole size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.signIn')}</Text></View>
+            {username && <Text style={s.navText}>{t('settings.usernameIs', { name: username })}</Text>}
+            <Text style={s.bodySmall}>{t('settings.recoveryHelp')}</Text>
+            {accountEmail ? <Text style={s.navText}>{t('settings.recoveryCurrent', { email: accountEmail })}</Text> : <Notice>{t('settings.recoveryNone')}</Notice>}
+            <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="recovery-email" accessibilityLabel={t('auth.email')} style={s.input} value={emailDraft} onChangeText={setEmailDraft} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" editable={!emailBusy} />
+            <Text style={s.label}>{t('settings.emailConfirm')}</Text><TextInput testID="recovery-email-again" accessibilityLabel={t('settings.emailConfirm')} style={s.input} value={emailAgain} onChangeText={setEmailAgain} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="off" editable={!emailBusy} onSubmitEditing={() => void saveRecoveryEmail()} />
+            {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}
           <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
             {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>

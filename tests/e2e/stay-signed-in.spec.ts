@@ -15,7 +15,7 @@ async function fakeSupabase(page: Page) {
 }
 async function signIn(page: Page, stay: boolean) {
   await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
-  await page.getByLabel('Email address').fill(USER.email);
+  await page.getByLabel('Username or email').fill(USER.email);
   await page.getByLabel('Password').fill('local-test-only-password');
   const box = page.getByRole('checkbox', { name: /Stay signed in on this browser/ });
   await expect(box).toBeChecked();
@@ -40,12 +40,12 @@ test('stay signed in survives a reload; turning it off ends the session with the
   await page.getByRole('button', { name: /App details/ }).click();
   await page.getByRole('button', { name: 'Sign out & clear session' }).click();
   await page.reload();
-  await expect(page.getByLabel('Email address')).toBeVisible();
+  await expect(page.getByLabel('Username', { exact: true })).toBeVisible();
 
   await signIn(page, false);
   expect(await page.evaluate(() => Object.keys(localStorage).some(k => k.startsWith('sb-')))).toBe(false);
   await page.reload();
-  await expect(page.getByLabel('Email address')).toBeVisible();
+  await expect(page.getByLabel('Username', { exact: true })).toBeVisible();
   // The choice is remembered for next time.
   await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
   await expect(page.getByRole('checkbox', { name: /Stay signed in on this browser/ })).not.toBeChecked();

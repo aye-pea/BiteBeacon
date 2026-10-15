@@ -32,7 +32,7 @@ async function fakeSupabase(page: Page, admin: boolean) {
 }
 async function signIn(page: Page) {
   await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
-  await page.getByLabel('Email address').fill(USER.email);
+  await page.getByLabel('Username or email').fill(USER.email);
   await page.getByLabel('Password').fill('local-test-only-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByTestId('toast')).toContainText('Signed in · profile loaded');
