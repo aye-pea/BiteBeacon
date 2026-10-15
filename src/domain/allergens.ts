@@ -8,6 +8,14 @@ export const ALLERGENS = [
   { id: 'fish', plain: ['fish'] as string[], label: 'Fish', mark: 'Fi', tags: ['fish'], words: ['fish', 'salmon', 'tuna', 'cod', 'anchovy', 'anchovies', 'haddock'] },
   { id: 'shellfish', plain: [] as string[], label: 'Crustacean shellfish', mark: 'Sh', tags: ['crustaceans', 'shrimp', 'crab', 'lobster'], words: ['shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'crayfish'] },
   { id: 'sesame', plain: ['sesame'] as string[], label: 'Sesame', mark: 'Se', tags: ['sesame-seeds', 'sesame'], words: ['sesame', 'tahini', 'benne'] },
+  // The six below complete the EU/UK, Canada and Australia lists. Open Food Facts tags them too; USDA only gives ingredient text.
+  // Gluten covers every gluten grain, wheat included, for people with celiac disease; Wheat stays wheat-only.
+  { id: 'gluten', plain: ['gluten'] as string[], label: 'Gluten', mark: 'Gl', tags: ['gluten'], words: ['gluten', 'wheat', 'semolina', 'spelt', 'durum', 'bulgur', 'farina', 'barley', 'rye', 'oat', 'oats', 'malt', 'malted', 'triticale', 'kamut', 'seitan', 'einkorn', 'emmer', 'farro'] },
+  { id: 'mollusks', plain: ['mollusk', 'mollusks', 'mollusc', 'molluscs'] as string[], label: 'Mollusks', mark: 'Mo', tags: ['molluscs', 'mollusks'], words: ['mollusk', 'mollusks', 'mollusc', 'molluscs', 'clam', 'clams', 'mussel', 'mussels', 'oyster', 'oysters', 'scallop', 'scallops', 'squid', 'calamari', 'octopus', 'cuttlefish', 'abalone', 'snail', 'snails', 'escargot', 'whelk', 'whelks', 'conch'] },
+  { id: 'mustard', plain: ['mustard'] as string[], label: 'Mustard', mark: 'Mu', tags: ['mustard'], words: ['mustard'] },
+  { id: 'celery', plain: ['celery'] as string[], label: 'Celery', mark: 'Ce', tags: ['celery'], words: ['celery', 'celeriac'] },
+  { id: 'sulfites', plain: ['sulfite', 'sulfites', 'sulphite', 'sulphites', 'sulfur dioxide', 'sulphur dioxide'] as string[], label: 'Sulfites', mark: 'Su', tags: ['sulphur-dioxide-and-sulphites', 'sulfites', 'sulphites'], words: ['sulfite', 'sulfites', 'sulphite', 'sulphites', 'sulfur dioxide', 'sulphur dioxide', 'bisulfite', 'bisulphite', 'metabisulfite', 'metabisulphite', 'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228'] },
+  { id: 'lupin', plain: ['lupin', 'lupine'] as string[], label: 'Lupin', mark: 'Lu', tags: ['lupin'], words: ['lupin', 'lupine', 'lupini'] },
 ] as const;
 export type AllergenId = typeof ALLERGENS[number]['id'];
 export type Product = {
@@ -78,8 +86,9 @@ export function explain(product: Product, selected: AllergenId[]): Evidence[] {
     for (const t of product.traces) if ((a.tags as readonly string[]).includes(tag(t))) add({ allergen: a.label, via: 'trace', term: clean(t) });
   }
   // A plain word adds nothing once a tag already names that allergen ("milk" next to tag "milk"); hidden sources always stay.
+  // Each allergen is scanned on its own, so a word shared by two ("wheat" for Wheat and Gluten) is evidence for both.
   const tagged = new Set(out.filter(e => e.via === 'tag').map(e => e.allergen));
-  for (const s of highlightIngredients(product.ingredients, selected)) if (s.allergen && (s.hidden || !tagged.has(s.allergen))) add({ allergen: s.allergen, via: s.hidden ? 'hidden' : 'ingredient', term: s.text.toLowerCase() });
+  for (const id of selected) for (const s of highlightIngredients(product.ingredients, [id])) if (s.allergen && (s.hidden || !tagged.has(s.allergen))) add({ allergen: s.allergen, via: s.hidden ? 'hidden' : 'ingredient', term: s.text.toLowerCase() });
   // Group by allergen so each one's reasons read together; within one, hidden sources lead because they are the ones people miss.
   const order = (e: Evidence) => ALLERGENS.findIndex(a => a.label === e.allergen) * 10 + ['hidden', 'tag', 'ingredient', 'trace'].indexOf(e.via);
   return out.sort((x, y) => order(x) - order(y));

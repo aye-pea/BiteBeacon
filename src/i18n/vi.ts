@@ -11,6 +11,7 @@ export const vi: Messages = {
 
   'allergen.milk': 'Sữa', 'allergen.eggs': 'Trứng', 'allergen.peanuts': 'Đậu phộng (lạc)', 'allergen.tree-nuts': 'Các loại hạt cây', 'allergen.soy': 'Đậu nành',
   'allergen.wheat': 'Lúa mì', 'allergen.fish': 'Cá', 'allergen.shellfish': 'Động vật giáp xác (tôm, cua…)', 'allergen.sesame': 'Mè (vừng)',
+  'allergen.gluten': 'Gluten', 'allergen.mollusks': 'Động vật thân mềm (nghêu, hàu, mực…)', 'allergen.mustard': 'Mù tạt', 'allergen.celery': 'Cần tây', 'allergen.sulfites': 'Sulfit', 'allergen.lupin': 'Đậu lupin',
 
   'common.cancel': 'Hủy', 'common.unknown': 'không rõ', 'common.you': 'Bạn', 'common.listSeparator': ', ',
 
@@ -54,8 +55,8 @@ export const vi: Messages = {
   'samples.title': 'Thử ngay', 'samples.body': 'Bốn sản phẩm hư cấu. Bốn kết quả hữu ích.', 'samples.label': 'BỘ SƯU TẬP DEMO',
   'samples.try': 'Thử {name}', 'samples.fictional': 'Mẫu hư cấu',
 
-  'allergies.title': 'Dị ứng của bạn, luôn được ưu tiên.', 'allergies.body': 'Chọn từ chín chất gây dị ứng thực phẩm chính tại Mỹ. Chọn tất cả những gì áp dụng.',
-  'allergies.notice': 'Ứng dụng này không bao gồm mọi loại dị ứng. Lúa mì không phải là kiểm tra gluten hay bệnh celiac. Động vật giáp xác không bao gồm động vật thân mềm.',
+  'allergies.title': 'Dị ứng của bạn, luôn được ưu tiên.', 'allergies.body': 'Chọn từ 15 chất gây dị ứng thực phẩm phổ biến: chín chất chính tại Mỹ và sáu chất khác được liệt kê ở châu Âu và Canada. Chọn tất cả những gì áp dụng.',
+  'allergies.notice': 'Ứng dụng này không bao gồm mọi loại dị ứng. Lúa mì chỉ kiểm tra lúa mì; hãy chọn Gluten để kiểm tra cả lúa mạch, lúa mạch đen và yến mạch. Động vật giáp xác không bao gồm động vật thân mềm; hãy chọn Động vật thân mềm cho nghêu, hàu và mực.',
   'allergies.hint': 'Thay đổi có hiệu lực sau khi lưu hồ sơ dị ứng.',
   'allergies.chooseOne': 'Chọn ít nhất một loại dị ứng để dùng chức năng kiểm tra mã vạch.',
   'allergies.savedDemo': 'Đã lưu hồ sơ dị ứng. Kết quả giờ dùng các lựa chọn này. Chỉ là demo: thay đổi giữ đến khi phiên này kết thúc.',

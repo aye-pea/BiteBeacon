@@ -13,7 +13,7 @@ This is decision-support information, not a guarantee that a food is safe. A bar
 | Feature | Current status |
 |---|---|
 | Responsive dashboard and navigation | Working React Native screens, browser-tested at desktop and phone widths |
-| Allergy profile editor | Working; nine US major allergen groups, multiple selections |
+| Allergy profile editor | Working; 15 allergen groups (nine US major plus gluten, mollusks, mustard, celery, sulfites, lupin), multiple selections |
 | Demo session | Working without credentials; local memory only, starts with milk and peanuts |
 | Barcode lookup | USDA FoodData Central (manufacturer-submitted) first, Open Food Facts fallback |
 | Native camera scanning | Implemented using Expo Camera; physical-device acceptance still required |

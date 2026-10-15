@@ -11,6 +11,7 @@ export const en = {
 
   'allergen.milk': 'Milk', 'allergen.eggs': 'Eggs', 'allergen.peanuts': 'Peanuts', 'allergen.tree-nuts': 'Tree nuts', 'allergen.soy': 'Soy',
   'allergen.wheat': 'Wheat', 'allergen.fish': 'Fish', 'allergen.shellfish': 'Crustacean shellfish', 'allergen.sesame': 'Sesame',
+  'allergen.gluten': 'Gluten', 'allergen.mollusks': 'Mollusks', 'allergen.mustard': 'Mustard', 'allergen.celery': 'Celery', 'allergen.sulfites': 'Sulfites', 'allergen.lupin': 'Lupin',
 
   'common.cancel': 'Cancel', 'common.unknown': 'unknown', 'common.you': 'You', 'common.listSeparator': ', ',
 
@@ -54,8 +55,8 @@ export const en = {
   'samples.title': 'Give it a try', 'samples.body': 'Four fictional products. Four useful outcomes.', 'samples.label': 'DEMO COLLECTION',
   'samples.try': 'Try {name}', 'samples.fictional': 'Fictional sample',
 
-  'allergies.title': 'Your allergies, front and center.', 'allergies.body': 'Choose from the nine US major food allergens. Select all that apply.',
-  'allergies.notice': 'This app does not cover every allergy. Wheat is not a gluten or celiac-disease check. Crustacean shellfish does not cover mollusks.',
+  'allergies.title': 'Your allergies, front and center.', 'allergies.body': 'Choose from 15 common food allergens: the nine US major allergens plus six more listed in Europe and Canada. Select all that apply.',
+  'allergies.notice': 'This app does not cover every allergy. Wheat checks wheat only; choose Gluten to also check barley, rye and oats. Crustacean shellfish does not cover mollusks; choose Mollusks for clams, oysters and squid.',
   'allergies.hint': 'Changes apply after saving your allergy profile.',
   'allergies.chooseOne': 'Choose at least one allergy to use barcode checking.',
   'allergies.savedDemo': 'Allergy profile saved. Results now use these selections. Demo only: changes last until this session ends.',
