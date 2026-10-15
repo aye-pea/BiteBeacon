@@ -150,6 +150,8 @@ export const ht: Messages = {
   'settings.languageLabel': 'Lang: {name}', 'toast.languageSaved': 'Lang lan chanje an {name}',
   'settings.languageFailed': 'Nou pa t kapab sere lang lan nan kont ou. Li toujou aplike jiskaske ou dekonekte.',
   'settings.translationNote': 'Tradiksyon yo nouvo. Si yon mo sanble pa kòrèk, konte sou etikèt pake a epi fè nou konnen.',
+  'settings.appearance': 'Aparans', 'settings.appearanceHelp': 'Otomatik swiv paramèt klè oswa fonse aparèy ou a. Chwa ou anrejistre sou aparèy sa a.',
+  'settings.appearanceLabel': 'Aparans: {name}', 'settings.appearance.auto': 'Otomatik', 'settings.appearance.light': 'Klè', 'settings.appearance.dark': 'Fonse',
 
   'member.add': 'Ajoute yon moun', 'member.edit': 'Modifye {name}', 'member.name': 'Non', 'member.nameLabel': 'Non moun nan', 'member.namePlaceholder': 'egz. Kha',
   'member.allergies': 'Alèji li yo', 'member.allergyFor': '{allergen} pou moun sa a', 'member.saveChanges': 'Sere chanjman yo', 'member.addToHousehold': 'Ajoute nan fanmi an',

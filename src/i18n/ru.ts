@@ -150,6 +150,8 @@ export const ru: Messages = {
   'settings.languageLabel': 'Язык: {name}', 'toast.languageSaved': 'Язык: {name}',
   'settings.languageFailed': 'Не удалось сохранить язык в аккаунте. Он будет действовать до выхода.',
   'settings.translationNote': 'Переводы новые. Если слово кажется неверным, ориентируйтесь на этикетку и сообщите нам.',
+  'settings.appearance': 'Оформление', 'settings.appearanceHelp': '«Авто» следует светлой или тёмной теме устройства. Выбор сохраняется на этом устройстве.',
+  'settings.appearanceLabel': 'Оформление: {name}', 'settings.appearance.auto': 'Авто', 'settings.appearance.light': 'Светлое', 'settings.appearance.dark': 'Тёмное',
 
   'member.add': 'Добавить человека', 'member.edit': 'Изменить: {name}', 'member.name': 'Имя', 'member.nameLabel': 'Имя человека', 'member.namePlaceholder': 'напр. Кха',
   'member.allergies': 'Его или её аллергии', 'member.allergyFor': '{allergen} — для этого человека', 'member.saveChanges': 'Сохранить изменения', 'member.addToHousehold': 'Добавить в семью',

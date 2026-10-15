@@ -3,7 +3,7 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
@@ -11,7 +11,7 @@ import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, Exp
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
 import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
 import { cameraAvailable } from './src/lib/webScanner';
-import { bothSchemes, C, Palette, themes, Tone, type, useScheme } from './src/ui/theme';
+import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 import { CartLogo } from './src/ui/logo';
@@ -91,7 +91,7 @@ const openLegal = (name: LegalPage) => Linking.openURL(Platform.OS === 'web' ? n
 
 function AppContent() {
   const { width, fontScale } = useWindowDimensions();
-  const scheme = useScheme(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
+  const scheme = useScheme(); const appearance = useAppearance(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
   const toast = useToast();
   const [lang, setLang] = useState<Lang>(detectLanguage);
   const i18n = useMemo(() => makeI18n(lang), [lang]);
@@ -438,7 +438,7 @@ function AppContent() {
   };
 
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
-  if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style="auto" /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
+  if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
       <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
@@ -472,7 +472,7 @@ function AppContent() {
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
-  return <SafeAreaView style={s.root}><StatusBar style="auto" /><View style={s.appFrame}>
+  return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
@@ -613,6 +613,8 @@ function AppContent() {
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{LANGUAGES.map(l => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} disabled={settingsBusy} onPress={() => void chooseLanguage(l.code)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View>
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
+          <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
+            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
           <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap></>}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>

@@ -1,7 +1,16 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 
-// The app follows the device appearance; there is no in-app switch.
-for (const [scheme, background] of [['light', 'rgb(242, 244, 239)'], ['dark', 'rgb(14, 19, 17)']] as const) {
+const LIGHT = 'rgb(242, 244, 239)', DARK = 'rgb(14, 19, 17)';
+const canvas = (page: Page) => page.getByTestId('page-scroll').evaluate(el => {
+  for (let node: Element | null = el; node; node = node.parentElement) {
+    const bg = getComputedStyle(node).backgroundColor;
+    if (bg !== 'rgba(0, 0, 0, 0)') return bg;
+  }
+  return '';
+});
+
+// Auto (the default) follows the device appearance; Settings can pin Light or Dark.
+for (const [scheme, background] of [['light', LIGHT], ['dark', DARK]] as const) {
   test(`${scheme} appearance follows the device setting`, async ({ page }) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.emulateMedia({ colorScheme: scheme });
@@ -10,14 +19,30 @@ for (const [scheme, background] of [['light', 'rgb(242, 244, 239)'], ['dark', 'r
     await page.getByRole('button', { name: 'Explore employer demo' }).click();
     await page.getByRole('button', { name: 'Try Peanut crunch granola' }).click();
     await expect(page.getByTestId('product-result')).toBeVisible();
-    const canvas = await page.getByTestId('page-scroll').evaluate(el => {
-      for (let node: Element | null = el; node; node = node.parentElement) {
-        const bg = getComputedStyle(node).backgroundColor;
-        if (bg !== 'rgba(0, 0, 0, 0)') return bg;
-      }
-      return '';
-    });
-    expect(canvas).toBe(background);
+    expect(await canvas(page)).toBe(background);
     expect(errors).toEqual([]);
   });
 }
+
+test('Settings can pin Dark or Light over the device setting, and it is remembered', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const card = page.getByTestId('appearance-settings');
+  await expect(card.getByRole('radio', { name: 'Appearance: Auto' })).toBeChecked();
+  await card.getByRole('radio', { name: 'Appearance: Dark' }).click();
+  await expect.poll(() => canvas(page)).toBe(DARK);
+  await page.reload();
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await expect.poll(() => canvas(page)).toBe(DARK);
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Light' }).click();
+  await expect.poll(() => canvas(page)).toBe(LIGHT);
+  await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Auto' }).click();
+  await expect.poll(() => canvas(page)).toBe(DARK);
+  expect(errors).toEqual([]);
+});

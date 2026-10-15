@@ -150,6 +150,8 @@ export const ko: Messages = {
   'settings.languageLabel': '언어: {name}', 'toast.languageSaved': '언어를 {name}(으)로 설정했어요',
   'settings.languageFailed': '언어를 계정에 저장할 수 없어요. 로그아웃할 때까지는 계속 적용돼요.',
   'settings.translationNote': '번역은 새로 추가됐어요. 단어가 이상해 보이면 포장 라벨을 기준으로 하고 저희에게 알려 주세요.',
+  'settings.appearance': '화면 모드', 'settings.appearanceHelp': '자동은 기기의 라이트 또는 다크 설정을 따릅니다. 선택한 설정은 이 기기에 저장됩니다.',
+  'settings.appearanceLabel': '화면 모드: {name}', 'settings.appearance.auto': '자동', 'settings.appearance.light': '라이트', 'settings.appearance.dark': '다크',
 
   'member.add': '사람 추가', 'member.edit': '{name} 편집', 'member.name': '이름', 'member.nameLabel': '사람 이름', 'member.namePlaceholder': '예: 민준',
   'member.allergies': '이 사람의 알레르기', 'member.allergyFor': '이 사람의 {allergen}', 'member.saveChanges': '변경 사항 저장', 'member.addToHousehold': '가구에 추가',

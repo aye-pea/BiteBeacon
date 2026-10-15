@@ -150,6 +150,8 @@ export const zhHant: Messages = {
   'settings.languageLabel': '語言：{name}', 'toast.languageSaved': '語言已設為{name}',
   'settings.languageFailed': '無法將語言儲存到你的帳號。在你登出前，該設定仍然有效。',
   'settings.translationNote': '翻譯是新推出的。如果某個詞看起來不對，請以包裝標籤為準，並告訴我們。',
+  'settings.appearance': '外觀', 'settings.appearanceHelp': '「自動」會跟隨裝置的淺色或深色設定。你的選擇會儲存在此裝置上。',
+  'settings.appearanceLabel': '外觀：{name}', 'settings.appearance.auto': '自動', 'settings.appearance.light': '淺色', 'settings.appearance.dark': '深色',
 
   'member.add': '新增成員', 'member.edit': '編輯 {name}', 'member.name': '名字', 'member.nameLabel': '成員名字', 'member.namePlaceholder': '例如：小明',
   'member.allergies': 'TA 的過敏原', 'member.allergyFor': '此成員對{allergen}過敏', 'member.saveChanges': '儲存更改', 'member.addToHousehold': '新增到家庭',

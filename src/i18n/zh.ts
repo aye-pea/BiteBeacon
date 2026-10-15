@@ -150,6 +150,8 @@ export const zh: Messages = {
   'settings.languageLabel': '语言：{name}', 'toast.languageSaved': '语言已设为{name}',
   'settings.languageFailed': '无法将语言保存到你的账户。在你退出登录前，该设置仍然有效。',
   'settings.translationNote': '翻译是新推出的。如果某个词看起来不对，请以包装标签为准，并告诉我们。',
+  'settings.appearance': '外观', 'settings.appearanceHelp': '“自动”会跟随设备的浅色或深色设置。你的选择保存在此设备上。',
+  'settings.appearanceLabel': '外观：{name}', 'settings.appearance.auto': '自动', 'settings.appearance.light': '浅色', 'settings.appearance.dark': '深色',
 
   'member.add': '添加成员', 'member.edit': '编辑 {name}', 'member.name': '名字', 'member.nameLabel': '成员名字', 'member.namePlaceholder': '例如：小明',
   'member.allergies': 'TA 的过敏原', 'member.allergyFor': '此成员对{allergen}过敏', 'member.saveChanges': '保存更改', 'member.addToHousehold': '添加到家庭',
