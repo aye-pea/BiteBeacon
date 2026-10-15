@@ -204,3 +204,7 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - **Language picker** in Settings is a dropdown: a button naming the current language opens the 11-language list.
 - Note: the "Try a sample instead" card on Scan and the sample tiles on Home also show to signed-in users, not only in demo.
 - Validation: TypeScript, unit tests and the Playwright suite (incl. new switcher and card-height checks) pass in Chromium.
+
+## Samples are demo-only (2026-10-15)
+- Signed-in people no longer see the fictional samples: the Home sample tiles and the Scan "Try a sample instead" card render only in demo mode. On Scan, the "only the barcode is sent" privacy line moves into the lookup card when the sample card is hidden. Demo pantry still uses the samples.
+- Validation: TypeScript, 141 unit tests and the Playwright suite pass (demo flows); signed-in layout checked by forcing the non-demo branch locally (not committed).
