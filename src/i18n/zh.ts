@@ -21,7 +21,7 @@ export const zh: Messages = {
   'welcome.graphicTitle': '下次购物，心里更有数。', 'welcome.graphicBody': '先扫条码，始终看标签。',
   'auth.signupTitle': '打造你的专属档案。', 'auth.loginTitle': '欢迎回来。', 'auth.tagline': '你的过敏信息，你的专属空间。',
   'auth.email': '电子邮箱地址', 'auth.password': '密码', 'auth.passwordNew': '至少 12 个字符', 'auth.passwordCurrent': '你的密码',
-  'auth.consent': '我同意将我的过敏原选择以及我加入食品柜的商品保存在我的私人账户中。其他扫描仅保留在本次会话中；条形码会发送到 USDA FoodData Central，若未找到则发送到 Open Food Facts。我可以在“应用详情”中删除账户。',
+  'auth.consent': '我同意将我的过敏原选择以及我加入食品柜的商品保存在我的私人账户中。其他扫描仅保留在本次会话中；条形码会发送到 USDA FoodData Central，若未找到则发送到 Open Food Facts。我可以在“应用详情”中删除账户。我同意《使用条款》和《隐私政策》。',
   'auth.wait': '请稍候…', 'auth.create': '创建账户', 'auth.signIn': '登录',
   'auth.toLogin': '已有账户？登录', 'auth.toSignup': '第一次使用？创建账户',
   'auth.noCloud': '雇主预览 · 云端注册尚未接入。请体验下方的可用演示，无需账户或密码。',
@@ -176,6 +176,7 @@ export const zh: Messages = {
   'about.deleting': '正在删除…', 'about.confirmDelete': '确认永久删除', 'about.cancelDelete': '取消删除', 'about.delete': '删除我的账户',
   'account.deleteFailed': '无法删除账户，请重试。', 'account.deleted': '账户和过敏档案已删除。',
   'footer.disclaimer': '有用的检查工具，绝不是安全保证。请务必阅读标签。', 'footer.version': 'BiteBeacon / 演示版 0.1',
+  'legal.title': '法律与安全', 'legal.english': '页面为英文。', 'legal.disclaimer': '健康免责声明 ↗', 'legal.privacy': '隐私政策 ↗', 'legal.terms': '使用条款 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': '食品柜',

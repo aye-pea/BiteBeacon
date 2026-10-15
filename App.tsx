@@ -84,6 +84,10 @@ function barcodeHint(value: string, { t }: I18n): { text: string; ok: boolean } 
   return validBarcode(digits) ? { text: t('hint.ok', { n: digits.length }), ok: true } : { text: t('hint.bad', { n: digits.length }), ok: false };
 }
 
+type LegalPage = 'disclaimer' | 'privacy' | 'terms';
+// Legal pages are static English HTML in public/, served beside the web app; native opens the hosted copy.
+const openLegal = (name: LegalPage) => Linking.openURL(Platform.OS === 'web' ? new URL(`${name}.html`, document.baseURI).href : `https://bitebeacon.org/${name}.html`);
+
 function AppContent() {
   const { width, fontScale } = useWindowDimensions();
   const scheme = useScheme(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
@@ -449,6 +453,7 @@ function AppContent() {
         <Text style={s.label}>{t('auth.email')}</Text><TextInput accessibilityLabel={t('auth.email')} style={s.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
         <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
+        {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
         <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
@@ -457,6 +462,7 @@ function AppContent() {
       <Button secondary onPress={enterDemo} icon={<Sparkles accessible={false} size={18} color={C.green} />}>{t('demo.explore')}</Button>
       <View style={s.inline}><LockKeyhole size={16} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('demo.memoryOnly')}</Text></View>
       <Text style={s.footnote}>{t('disclaimer.welcome')}</Text>
+      <Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('disclaimer')}><Text style={s.link}>{t('legal.disclaimer')}</Text></Tap>
     </View>
   </ScrollView></SafeAreaView>;
 
@@ -610,10 +616,11 @@ function AppContent() {
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sourcesTitle')}</Text><Text style={s.body}>{t('about.sourcesBody')}</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>{t('about.usdaLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>{t('about.offLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>{t('about.license')}</Text></Tap></View>
+          <View style={s.card}><Text style={s.cardTitle}>{t('legal.title')}</Text>{lang !== 'en' && <Text style={s.footnote}>{t('legal.english')}</Text>}{(['disclaimer', 'privacy', 'terms'] as const).map(name => <Tap key={name} accessibilityRole="link" haptic="select" onPress={() => openLegal(name)}><Text style={s.link}>{t(`legal.${name}`)}</Text></Tap>)}</View>
           <View style={[s.card, { backgroundColor: C.pale }]}><Sparkles size={25} color={C.green} /><Text style={s.cardTitle}>{t('about.nextTitle')}</Text><Text style={s.body}>{t('about.nextBody')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sessionTitle')}</Text><Text style={s.bodySmall}>{demo ? t('about.sessionDemo') : t('about.sessionCloud')}</Text><Button secondary disabled={busy || saving} onPress={leave} icon={<LogOut accessible={false} size={17} color={C.ink} />}>{demo ? t('about.exitDemo') : t('about.signOut')}</Button>
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
-        <View style={s.footer}><Leaf size={15} color={C.muted} /><Text style={[s.footnote, { flexShrink: 1 }]}>{t('footer.disclaimer')}</Text><Text style={s.footnote}>{t('footer.version')}</Text></View>
+        <View style={s.footer}><Leaf size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version')}</Text></View>
       </ScrollView>
       {page === 'allergies' && <View style={s.profileActions}>
         <Text accessibilityLiveRegion="polite" style={[s.bodySmall, profileChanged && { color: C.amber, fontWeight: '600' }]}>{t('allergies.count', { n: draft.length, total: ALLERGENS.length })} · {profileChanged ? t('allergies.unsaved') : t('allergies.saved')}</Text>
@@ -665,7 +672,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   welcomeGraphic: { flexDirection: 'row', gap: 18, padding: 18, backgroundColor: C.greenSoft, borderRadius: 20, alignItems: 'center' }, welcomeIcon: { padding: 12, borderRadius: 16, backgroundColor: C.paper },
   authCard: { width: '100%', maxWidth: 480, padding: 24, borderRadius: 26, backgroundColor: C.paper, gap: 16, boxShadow: shadow.card },
   label: { ...type.headline, color: C.ink, marginTop: 4 }, input: { minHeight: 50, paddingVertical: 13, paddingHorizontal: 16, borderWidth: 1, borderColor: C.fill, borderRadius: 14, ...type.body, color: C.ink, backgroundColor: C.fill }, inputFocused: { borderColor: C.green, backgroundColor: C.paper },
-  link: { ...type.subhead, color: C.green, fontWeight: '600', minHeight: 44, paddingVertical: 11 }, consent: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  link: { ...type.subhead, color: C.green, fontWeight: '600', minHeight: 44, paddingVertical: 11 }, consent: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' }, legalRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 20 },
   allergyGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 }, allergyOption: { minHeight: 56, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14, gap: 14, flexDirection: 'row', alignItems: 'center', backgroundColor: C.paper }, allergySelected: { borderColor: C.green },
   allergenMark: { minWidth: 40, textAlign: 'center', paddingVertical: 8, paddingHorizontal: 6, borderRadius: 12, overflow: 'hidden', fontSize: 14, color: C.green, backgroundColor: C.pale, fontWeight: '800' },
   scannerPlaceholder: { alignItems: 'center', gap: 14, paddingVertical: 22, paddingHorizontal: 14, backgroundColor: C.fill, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.borderStrong },

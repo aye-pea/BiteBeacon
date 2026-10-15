@@ -21,7 +21,7 @@ export const vi: Messages = {
   'welcome.graphicTitle': 'Lần mua sắm tới, thêm hiểu biết.', 'welcome.graphicBody': 'Quét mã vạch trước. Luôn đọc nhãn.',
   'auth.signupTitle': 'Cá nhân hóa cho bạn.', 'auth.loginTitle': 'Chào mừng bạn trở lại.', 'auth.tagline': 'Dị ứng của bạn. Không gian của riêng bạn.',
   'auth.email': 'Địa chỉ email', 'auth.password': 'Mật khẩu', 'auth.passwordNew': 'Ít nhất 12 ký tự', 'auth.passwordCurrent': 'Mật khẩu của bạn',
-  'auth.consent': 'Tôi đồng ý lưu các lựa chọn dị ứng và những sản phẩm tôi thêm vào tủ đồ ăn trong tài khoản riêng của tôi. Các lượt quét khác chỉ giữ trong phiên này; mã vạch được gửi đến USDA FoodData Central và, nếu không có, đến Open Food Facts. Tôi có thể xóa tài khoản trong Chi tiết ứng dụng.',
+  'auth.consent': 'Tôi đồng ý lưu các lựa chọn dị ứng và những sản phẩm tôi thêm vào tủ đồ ăn trong tài khoản riêng của tôi. Các lượt quét khác chỉ giữ trong phiên này; mã vạch được gửi đến USDA FoodData Central và, nếu không có, đến Open Food Facts. Tôi có thể xóa tài khoản trong Chi tiết ứng dụng. Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư.',
   'auth.wait': 'Vui lòng chờ…', 'auth.create': 'Tạo tài khoản', 'auth.signIn': 'Đăng nhập',
   'auth.toLogin': 'Đã có tài khoản? Đăng nhập', 'auth.toSignup': 'Bạn mới? Tạo tài khoản',
   'auth.noCloud': 'Bản xem trước cho nhà tuyển dụng · Chưa kết nối đăng ký trên đám mây. Hãy khám phá bản demo hoạt động bên dưới. Không cần tài khoản hay mật khẩu.',
@@ -176,6 +176,7 @@ export const vi: Messages = {
   'about.deleting': 'Đang xóa…', 'about.confirmDelete': 'Xác nhận xóa vĩnh viễn', 'about.cancelDelete': 'Hủy xóa', 'about.delete': 'Xóa tài khoản của tôi',
   'account.deleteFailed': 'Không thể xóa tài khoản. Vui lòng thử lại.', 'account.deleted': 'Đã xóa tài khoản và hồ sơ dị ứng.',
   'footer.disclaimer': 'Một bước kiểm tra hữu ích, không bao giờ là sự đảm bảo an toàn. Luôn đọc nhãn.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'legal.title': 'Pháp lý và an toàn', 'legal.english': 'Các trang mở bằng tiếng Anh.', 'legal.disclaimer': 'Tuyên bố miễn trừ về sức khỏe ↗', 'legal.privacy': 'Chính sách quyền riêng tư ↗', 'legal.terms': 'Điều khoản sử dụng ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': 'Tủ đồ ăn',

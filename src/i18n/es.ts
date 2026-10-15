@@ -21,7 +21,7 @@ export const es: Messages = {
   'welcome.graphicTitle': 'Tu próxima compra, mejor informada.', 'welcome.graphicBody': 'Primero el código. Siempre la etiqueta.',
   'auth.signupTitle': 'Hazla tuya.', 'auth.loginTitle': 'Hola de nuevo.', 'auth.tagline': 'Tus alergias. Tu propio espacio.',
   'auth.email': 'Correo electrónico', 'auth.password': 'Contraseña', 'auth.passwordNew': 'Al menos 12 caracteres', 'auth.passwordCurrent': 'Tu contraseña',
-  'auth.consent': 'Acepto guardar mis alergias seleccionadas, y los productos que agregue a mi despensa, en mi cuenta privada. Los demás escaneos quedan solo en esta sesión; los códigos de barras se envían a USDA FoodData Central y, si no están allí, a Open Food Facts. Puedo eliminar mi cuenta en Detalles de la app.',
+  'auth.consent': 'Acepto guardar mis alergias seleccionadas, y los productos que agregue a mi despensa, en mi cuenta privada. Los demás escaneos quedan solo en esta sesión; los códigos de barras se envían a USDA FoodData Central y, si no están allí, a Open Food Facts. Puedo eliminar mi cuenta en Detalles de la app. Acepto los Términos de uso y la Política de privacidad.',
   'auth.wait': 'Espera un momento…', 'auth.create': 'Crear cuenta', 'auth.signIn': 'Iniciar sesión',
   'auth.toLogin': '¿Ya tienes una cuenta? Inicia sesión', 'auth.toSignup': '¿Primera vez aquí? Crea una cuenta',
   'auth.noCloud': 'Vista previa para empleadores · El registro en la nube aún no está conectado. Explora la demo funcional abajo. No se requiere cuenta ni contraseña.',
@@ -176,6 +176,7 @@ export const es: Messages = {
   'about.deleting': 'Eliminando…', 'about.confirmDelete': 'Confirmar eliminación permanente', 'about.cancelDelete': 'Cancelar eliminación', 'about.delete': 'Eliminar mi cuenta',
   'account.deleteFailed': 'No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'account.deleted': 'Se eliminaron la cuenta y el perfil de alergias.',
   'footer.disclaimer': 'Una revisión útil, nunca una garantía de seguridad. Siempre lee la etiqueta.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'legal.title': 'Aviso legal y seguridad', 'legal.english': 'Las páginas se abren en inglés.', 'legal.disclaimer': 'Aviso de salud ↗', 'legal.privacy': 'Política de privacidad ↗', 'legal.terms': 'Términos de uso ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': 'Despensa',
