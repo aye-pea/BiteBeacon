@@ -60,3 +60,20 @@ test('desktop sidebar rows light up under the mouse, and the account row has no 
   await expect.poll(shadow).not.toContain('inset');
   await expect(page.getByText('Private allergy profile')).toHaveCount(0);
 });
+
+test('the account holder can save their own list with no allergies and still check for family', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Peanuts', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
+  await page.getByRole('button', { name: /Save allergy profile/ }).click();
+  await expect(page.getByRole('alert')).toContainText('Allergy profile saved.');
+  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
+  await expect(page.getByTestId('product-result')).toBeVisible();
+  await expect(page.getByTestId('product-result').getByText('Alex', { exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

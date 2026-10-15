@@ -314,7 +314,7 @@ function AppContent() {
     if (saving) return;
     setProfileSaved(false);
     if (allergyPerson !== ME) { await saveMemberAllergies(allergyPerson); return; }
-    if (!draft.length) { haptic.warning(); say(t('allergies.chooseOne')); return; }
+    // An empty own list is allowed (migration 202610150010): someone may only shop for family. Members still need one.
     setSaving(true); setFeedback('');
     const current = generation.current;
     try {

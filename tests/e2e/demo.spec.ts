@@ -22,7 +22,8 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await page.getByRole('checkbox', { name: 'Peanuts', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
-  await expect(page.getByText('Choose at least one allergy to use barcode checking.')).toBeVisible();
+  // An empty own list saves too (someone may only shop for family).
+  await expect(page.getByRole('alert')).toContainText('Allergy profile saved.');
   await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
   await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
