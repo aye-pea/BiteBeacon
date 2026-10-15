@@ -55,7 +55,7 @@ test('admins see the live dashboard, and each lookup adds one to the anonymous t
   await lookUp(page);
   await expect.poll(() => calls.scans).toBe(1);
 
-  await page.getByRole('button', { name: 'Admin dashboard', exact: true }).click();
+  await page.getByRole('button', { name: 'Admin Dashboard', exact: true }).click();
   await expect(page.getByTestId('admin-scans')).toContainText('1,205');
   await expect(page.getByTestId('admin-accounts')).toContainText('37');
   await expect(page.getByText('new.person@example.test')).toBeVisible();
@@ -68,7 +68,7 @@ test('limited admins see scans, accounts, activity and sign-ins, without pantry,
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
   await signIn(page);
-  await page.getByRole('button', { name: 'Admin dashboard', exact: true }).click();
+  await page.getByRole('button', { name: 'Admin Dashboard', exact: true }).click();
   await expect(page.getByTestId('admin-scans')).toContainText('1,204');
   await expect(page.getByTestId('admin-accounts')).toContainText('37');
   await expect(page.getByTestId('admin-active')).toBeVisible();

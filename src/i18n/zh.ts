@@ -38,7 +38,7 @@ export const zh: Messages = {
   'toast.demoEnded': '演示已结束 · 会话已清除', 'toast.signedOut': '已退出登录 · 会话已清除',
   'leave.failed': '退出登录失败。请检查网络连接后重试。',
 
-  'account.demo': '演示体验者', 'account.yours': '你的账户', 'account.demoSub': '本地预览会话',
+  'account.demo': '演示体验者', 'account.yours': '退出登录', 'account.demoSub': '本地预览会话',
   'mode.demo': '演示模式', 'mode.connected': '已连接',
   'mode.beta': '测试版', 'beta.notice': '用于测试下一次更新的测试版。只有 BiteBeacon 管理员可以在此登录。其他用户请使用 bitebeacon.org。',
   'beta.adminsOnly': '此测试版仅供 BiteBeacon 管理员使用。请前往 bitebeacon.org 登录。',

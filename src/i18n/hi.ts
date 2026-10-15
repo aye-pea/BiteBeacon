@@ -38,7 +38,7 @@ export const hi: Messages = {
   'toast.demoEnded': 'डेमो खत्म · सेशन साफ़ किया गया', 'toast.signedOut': 'साइन आउट हो गया · सेशन साफ़ किया गया',
   'leave.failed': 'साइन आउट नहीं हो सका। अपना कनेक्शन जांचें और फिर कोशिश करें।',
 
-  'account.demo': 'डेमो उपयोगकर्ता', 'account.yours': 'आपका अकाउंट', 'account.demoSub': 'लोकल प्रीव्यू सेशन',
+  'account.demo': 'डेमो उपयोगकर्ता', 'account.yours': 'लॉग आउट', 'account.demoSub': 'लोकल प्रीव्यू सेशन',
   'mode.demo': 'डेमो मोड', 'mode.connected': 'कनेक्टेड',
   'mode.beta': 'बीटा', 'beta.notice': 'अगले अपडेट की जाँच के लिए बीटा संस्करण। यहाँ केवल BiteBeacon एडमिन साइन इन कर सकते हैं। बाकी सभी कृपया bitebeacon.org का उपयोग करें।',
   'beta.adminsOnly': 'यह बीटा केवल BiteBeacon एडमिन के लिए है। साइन इन करने के लिए कृपया bitebeacon.org का उपयोग करें।',

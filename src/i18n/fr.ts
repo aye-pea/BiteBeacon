@@ -38,7 +38,7 @@ export const fr: Messages = {
   'toast.demoEnded': 'Démo terminée · session effacée', 'toast.signedOut': 'Déconnecté · session effacée',
   'leave.failed': 'La déconnexion a échoué. Vérifiez votre connexion et réessayez.',
 
-  'account.demo': 'Visiteur de la démo', 'account.yours': 'Votre compte', 'account.demoSub': 'Session d’aperçu locale',
+  'account.demo': 'Visiteur de la démo', 'account.yours': 'Se déconnecter', 'account.demoSub': 'Session d’aperçu locale',
   'mode.demo': 'MODE DÉMO', 'mode.connected': 'CONNECTÉ',
   'mode.beta': 'BÊTA', 'beta.notice': 'Version bêta pour tester la prochaine mise à jour. Seuls les administrateurs de BiteBeacon peuvent se connecter ici. Les autres, utilisez bitebeacon.org.',
   'beta.adminsOnly': 'Cette bêta est réservée aux administrateurs de BiteBeacon. Connectez-vous sur bitebeacon.org.',

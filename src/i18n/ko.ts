@@ -38,7 +38,7 @@ export const ko: Messages = {
   'toast.demoEnded': '데모 종료 · 세션 삭제됨', 'toast.signedOut': '로그아웃됨 · 세션 삭제됨',
   'leave.failed': '로그아웃하지 못했어요. 연결을 확인하고 다시 시도하세요.',
 
-  'account.demo': '데모 체험자', 'account.yours': '내 계정', 'account.demoSub': '로컬 미리보기 세션',
+  'account.demo': '데모 체험자', 'account.yours': '로그아웃', 'account.demoSub': '로컬 미리보기 세션',
   'mode.demo': '데모 모드', 'mode.connected': '연결됨',
   'mode.beta': '베타', 'beta.notice': '다음 업데이트를 테스트하기 위한 베타 버전입니다. 여기서는 BiteBeacon 관리자만 로그인할 수 있습니다. 다른 분들은 bitebeacon.org를 이용해 주세요.',
   'beta.adminsOnly': '이 베타는 BiteBeacon 관리자 전용입니다. bitebeacon.org에서 로그인해 주세요.',

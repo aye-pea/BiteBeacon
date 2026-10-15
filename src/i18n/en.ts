@@ -38,7 +38,7 @@ export const en = {
   'toast.demoEnded': 'Demo ended · session cleared', 'toast.signedOut': 'Signed out · session cleared',
   'leave.failed': 'Sign out failed. Check your connection and retry.',
 
-  'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session',
+  'account.demo': 'Demo explorer', 'account.yours': 'Log Out', 'account.demoSub': 'Local preview session',
   'mode.demo': 'DEMO MODE', 'mode.connected': 'CONNECTED',
   'mode.beta': 'BETA', 'beta.notice': 'Beta build for testing the next update. Only BiteBeacon admins can sign in here. Everyone else, please use bitebeacon.org.',
   'beta.adminsOnly': 'This beta is for BiteBeacon admins only. Please use bitebeacon.org to sign in.',
@@ -236,7 +236,7 @@ export const en = {
   'toast.pantryRestored': '{name} is back in your pantry',
   'toast.pantryDeleted': '{name} deleted from history',
   'auth.remember': 'Stay signed in on this browser. Turn off on shared computers.',
-  'nav.admin': 'Admin dashboard',
+  'nav.admin': 'Admin Dashboard',
   'nav.admin.short': 'Admin',
   'settings.adminBody': 'Accounts, sign-ups, allergens and the live scan total',
   'admin.body': 'Totals across every account. Only accounts listed as admins in Supabase can open this page.',
