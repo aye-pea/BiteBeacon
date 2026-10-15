@@ -33,14 +33,14 @@ test('add a scanned product to the pantry, see expiry alerts, mark items used or
   await expect(page.getByTestId('pantry-item-Peanut crunch granola')).toHaveCount(0);
   await expect(page.getByTestId('pantry-alert')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Recent scans', exact: true }).click();
+  await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
   await expect(page.getByTestId('pantry-history-Simply oat crackers')).toContainText('Used');
   await expect(page.getByTestId('pantry-history-Peanut crunch granola')).toContainText('Thrown out');
   await page.getByRole('button', { name: 'Put Simply oat crackers back in the pantry' }).click();
   await expect(page.getByTestId('pantry-history-Simply oat crackers')).toHaveCount(0);
 
   // After a scan: Add to pantry? rejects an impossible date, then adds with a quick date.
-  await page.getByRole('button', { name: 'Scan a product', exact: true }).click();
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await page.getByRole('button', { name: 'Mystery snack', exact: true }).click();
   const add = page.getByTestId('pantry-add');
   await expect(add.getByText('Add to pantry?')).toBeVisible();

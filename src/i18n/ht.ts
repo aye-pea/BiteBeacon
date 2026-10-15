@@ -38,7 +38,6 @@ export const ht: Messages = {
   'toast.demoEnded': 'Demo a fini · sesyon an efase', 'toast.signedOut': 'Ou dekonekte · sesyon an efase',
   'leave.failed': 'Dekoneksyon an pa mache. Verifye koneksyon ou epi eseye ankò.',
 
-  'sidebar.labelFirst': 'Etikèt la an premye. Toujou.', 'sidebar.labelFirstBody': 'Nou ede ou wè siy yo. Pake a se dènye sous ou.',
   'account.demo': 'Vizitè demo', 'account.yours': 'Kont ou', 'account.demoSub': 'Sesyon apèsi lokal', 'account.yoursSub': 'Pwofil alèji prive',
   'mode.demo': 'MÒD DEMO', 'mode.connected': 'KONEKTE',
   'profile.locked': 'Pwofil alèji a ap chaje oswa li pa disponib. Eskanè a rete bloke jiskaske pwofil ou pare.',
