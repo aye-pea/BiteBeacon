@@ -14,6 +14,7 @@ import { cameraAvailable } from './src/lib/webScanner';
 import { bothSchemes, C, Palette, themes, Tone, type, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
+import { CartLogo } from './src/ui/logo';
 
 type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
@@ -436,10 +437,10 @@ function AppContent() {
     </SwipeRow>;
   };
 
-  if (booting) return <View style={s.loading}><View style={[s.logo, { padding: 14 }]}><Leaf size={32} color={C.onAccent} /></View><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
+  if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style="auto" /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
-      <View style={s.brand}><View style={s.logo}><Leaf size={25} color={C.onAccent} /></View><Text style={s.brandText}>BiteBeacon<Text style={{ color: '#8FAD71' }}>.</Text></Text></View>
+      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
       <Text style={[s.welcomeTitle, { fontSize: wide ? 58 : 40, lineHeight: wide ? 64 : 46 }]}>{t('welcome.title')}</Text>
       <Text style={[s.body, { maxWidth: 430 }]}>{t('welcome.body')}</Text>
@@ -473,7 +474,7 @@ function AppContent() {
   const result = product && overallKind ? RESULT[overallKind] : null;
   return <SafeAreaView style={s.root}><StatusBar style="auto" /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
-      <View style={s.brand}><View style={s.logo}><Leaf size={24} color={C.onAccent} /></View><Text style={s.brandText}>BiteBeacon.</Text></View>
+      <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
       {navItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} pressedStyle={!active && { backgroundColor: C.pale }}>
         <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}
@@ -496,7 +497,7 @@ function AppContent() {
             <CalendarClock size={24} color={tone[alerts.expired ? 'danger' : 'warning'].fg} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('pantry.alertTitle')}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{alertText}</Text></View><Text style={s.textLink}>{t('pantry.open')}</Text></Tap>}
           <View style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
             <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: '#C6E26C' }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
-            <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><View style={s.tinyLeaf}><Leaf size={18} color={C.green} /></View><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
+            <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
             <View style={[s.card, { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>{t('profileCard.title')}</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>{t('profileCard.edit')}</Text></Tap></View><Text style={s.bodySmall}>{t('profileCard.personal')}</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{t('profileCard.selected', { n: allergies.length })} · {demo ? t('profileCard.local') : t('profileCard.private')}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('profileCard.household', { names: i18n.list(members.map(m => m.name)) })}</Text><Text style={s.textLink}>{t('profileCard.manage')}</Text></Tap>}</View>
@@ -644,7 +645,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   progressTrack: { height: 4, borderRadius: 4, backgroundColor: C.pale, overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: C.green },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, logo: { padding: 8, borderRadius: 13, backgroundColor: C.green }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
   sidebar: { width: '20%', maxWidth: 290, minWidth: 238, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, padding: 24 },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
   navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },

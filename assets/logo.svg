@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1024" height="1024">
+  <title>BiteBeacon cart mark</title>
+  <g fill="none" stroke="#1F5A45" stroke-width="54" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M123 394V239a95 95 0 0 1 95-95h199"/>
+    <path d="M837 144h198a95 95 0 0 1 95 95v155"/>
+    <path d="M123 838v170a95 95 0 0 0 95 95h199"/>
+    <path d="M837 1103h198a95 95 0 0 0 95-95V838"/>
+    <path d="M267 392h113l111 432h364l113-323H408"/>
+  </g>
+  <g fill="#1F5A45">
+    <circle cx="547" cy="940" r="67"/>
+    <circle cx="755" cy="940" r="67"/>
+  </g>
+</svg>
