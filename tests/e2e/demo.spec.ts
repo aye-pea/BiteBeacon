@@ -9,7 +9,8 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await page.screenshot({ path: 'artifacts/dashboard-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Try Peanut crunch granola' }).click();
   await expect(page.getByText('2 of 3 people have an allergen signal', { exact: true })).toBeVisible();
-  await page.getByRole('radio', { name: 'Check for Alex' }).click();
+  // Unticking Everyone narrows the check back to the account holder.
+  await page.getByRole('checkbox', { name: 'Check for Everyone (3)' }).click();
   await expect(page.getByText('Allergen signal found', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Dark chocolate bites', exact: true }).click();
   await expect(page.getByText('May contain your allergen', { exact: true })).toBeVisible();

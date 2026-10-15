@@ -140,7 +140,7 @@ export const es: Messages = {
   'toast.nameSaved': 'Nombre guardado · los resultados muestran “{name}”', 'toast.nameCleared': 'Nombre borrado · los resultados muestran “{you}”',
   'settings.household': 'Hogar', 'settings.count': '{n} de {max} personas', 'settings.youTag': '(tú)', 'settings.noAllergies': 'Aún no hay alergias guardadas',
   'settings.editYours': 'Editar tus alergias', 'settings.full': 'El hogar está lleno: hasta {n} personas además de ti.',
-  'settings.showFor': 'Mostrar resultados para', 'settings.showForHelp': 'A quién revisa un escaneo de forma predeterminada. Puedes cambiarlo en cualquier resultado.',
+  'settings.showFor': 'Mostrar resultados para', 'settings.showForHelp': 'A quién revisa un escaneo de forma predeterminada. Marca a una persona o cualquier combinación. También puedes cambiarlo en cualquier resultado.', 'settings.keepOne': 'Deja al menos una persona seleccionada.',
   'settings.defaultLabel': 'Predeterminado: {label}', 'settings.addToChoose': 'Agrega a una persona para elegir “{everyone}”.',
   'settings.defaultFailed': 'No se pudo guardar la opción predeterminada. Tu elección anterior sigue activa.',
   'toast.defaultEveryone': 'Ahora los resultados muestran a todos de forma predeterminada', 'toast.defaultPerson': 'Ahora los resultados muestran a {name} de forma predeterminada',

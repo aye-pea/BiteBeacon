@@ -140,7 +140,7 @@ export const vi: Messages = {
   'toast.nameSaved': 'Đã lưu tên · kết quả hiển thị “{name}”', 'toast.nameCleared': 'Đã xóa tên · kết quả hiển thị “{you}”',
   'settings.household': 'Hộ gia đình', 'settings.count': '{n}/{max} người', 'settings.youTag': '(bạn)', 'settings.noAllergies': 'Chưa lưu dị ứng nào',
   'settings.editYours': 'Sửa dị ứng của bạn', 'settings.full': 'Hộ gia đình đã đủ: tối đa {n} người ngoài bạn.',
-  'settings.showFor': 'Hiển thị kết quả cho', 'settings.showForHelp': 'Người được kiểm tra mặc định khi quét. Bạn có thể chuyển đổi trên bất kỳ kết quả nào.',
+  'settings.showFor': 'Hiển thị kết quả cho', 'settings.showForHelp': 'Người được kiểm tra mặc định khi quét. Chọn một người hoặc bất kỳ nhóm nào. Bạn cũng có thể thay đổi trên bất kỳ kết quả nào.', 'settings.keepOne': 'Hãy giữ ít nhất một người được chọn.',
   'settings.defaultLabel': 'Mặc định: {label}', 'settings.addToChoose': 'Thêm một người để chọn “{everyone}”.',
   'settings.defaultFailed': 'Không thể lưu mặc định. Lựa chọn trước đó của bạn vẫn đang có hiệu lực.',
   'toast.defaultEveryone': 'Kết quả giờ mặc định hiển thị cho mọi người', 'toast.defaultPerson': 'Kết quả giờ mặc định hiển thị cho {name}',

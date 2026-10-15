@@ -140,7 +140,7 @@ export const zh: Messages = {
   'toast.nameSaved': '名字已保存 · 结果将显示“{name}”', 'toast.nameCleared': '名字已清除 · 结果将显示“{you}”',
   'settings.household': '家庭成员', 'settings.count': '{n}/{max} 人', 'settings.youTag': '（你）', 'settings.noAllergies': '尚未保存过敏原',
   'settings.editYours': '编辑你的过敏原', 'settings.full': '家庭成员已满：除你之外最多 {n} 人。',
-  'settings.showFor': '显示结果对象', 'settings.showForHelp': '扫描时默认检查的人。你可以在任何结果中切换。',
+  'settings.showFor': '显示结果对象', 'settings.showForHelp': '扫描时默认检查的人。可以选择任何一人或任意组合，也可以在任何结果中更改。', 'settings.keepOne': '请至少保留一人。',
   'settings.defaultLabel': '默认：{label}', 'settings.addToChoose': '添加一位成员后即可选择“{everyone}”。',
   'settings.defaultFailed': '无法保存默认设置。你之前的选择仍然有效。',
   'toast.defaultEveryone': '结果现在默认显示所有人', 'toast.defaultPerson': '结果现在默认显示 {name}',
