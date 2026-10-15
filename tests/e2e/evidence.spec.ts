@@ -7,7 +7,7 @@ test('result explains which words and tags caused an allergen signal', async ({ 
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   // Unticking Everyone narrows the check back to the account holder.
-  await page.getByRole('checkbox', { name: 'Check for Everyone (3)' }).click();
+  await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();
   const result = page.getByTestId('product-result');
   await expect(result.getByText('Allergen signal found', { exact: true })).toBeVisible();
   const why = page.getByTestId('result-evidence');

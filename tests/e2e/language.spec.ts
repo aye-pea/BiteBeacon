@@ -26,7 +26,7 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.getByRole('button', { name: es['nav.overview'], exact: true }).click();
   await page.getByRole('button', { name: es['samples.try'].replace('{name}', 'Peanut Crunch Granola') }).click();
   // Product names and ingredients stay as the source wrote them; everything around them is Spanish.
-  await expect(page.getByTestId('household-summary')).toContainText(es['summary.contains_other'].replace('{c}', '2').replace('{n}', '3'));
+  await expect(page.getByTestId('household-summary')).toContainText(es['summary.contains_other'].replace('{c}', '4').replace('{n}', '8'));
   await expect(page.getByTestId('person-result-Alex')).toContainText(es['allergen.peanuts']);
   await expect(page.getByTestId('person-result-DFK')).toContainText(es['person.noMatchReason']);
   await page.getByTestId('product-result').scrollIntoViewIfNeeded();
