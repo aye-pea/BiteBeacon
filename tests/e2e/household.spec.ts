@@ -62,7 +62,7 @@ test('settings add, edit and remove people and set who results show by default',
   // Default to Sam, then check a product: only Sam is checked.
   await page.getByRole('radio', { name: 'Default: Sam' }).click();
   await expect(page.getByRole('radio', { name: 'Default: Sam' })).toBeChecked();
-  await page.getByRole('button', { name: 'Scan a product', exact: true }).click();
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await page.getByRole('button', { name: 'Simply oat crackers', exact: true }).click();
   await expect(page.getByRole('radio', { name: 'Check for Sam' })).toBeChecked();
   await expect(page.getByText('Checked against Sam’s saved profile: Fish.')).toBeVisible();
