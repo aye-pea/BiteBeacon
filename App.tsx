@@ -325,12 +325,10 @@ function AppContent() {
         hasProfile.current = true;
       }
       if (current !== generation.current) return;
-      setAllergies([...draft]); setProfileReady(true); setProfileSaved(true);
-      const message = demo
-        ? t('allergies.savedDemo')
-        : t('allergies.savedCloud');
-      say(message, 'success'); haptic.success();
-      if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(message);
+      setAllergies([...draft]); setProfileReady(true);
+      // Confirm at the top of the screen and go straight to Scan; the pop-up stays until it fades. Errors stay on this page.
+      haptic.success(); toast(demo ? t('allergies.savedDemo') : t('allergies.savedCloud'), 'success', { title: t('allergies.profileSaved'), duration: 3000 });
+      navigate('scan');
     } catch { haptic.error(); say(t('allergies.saveFailed'), 'danger'); }
     finally { setSaving(false); }
   };

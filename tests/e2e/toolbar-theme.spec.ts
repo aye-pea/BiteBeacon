@@ -70,7 +70,7 @@ test('the account holder can save their own list with no allergies and still che
   await page.getByRole('checkbox', { name: 'Peanuts', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
   await page.getByRole('button', { name: /Save allergy profile/ }).click();
-  await expect(page.getByRole('alert')).toContainText('Allergy profile saved.');
+  await expect(page.getByTestId('toast')).toContainText('Allergy profile saved.');
   await page.getByRole('button', { name: 'Overview', exact: true }).click();
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('product-result')).toBeVisible();

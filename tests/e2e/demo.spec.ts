@@ -23,7 +23,8 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
   // An empty own list saves too (someone may only shop for family).
-  await expect(page.getByRole('alert')).toContainText('Allergy profile saved.');
+  await expect(page.getByTestId('toast')).toContainText('Allergy profile saved.');
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
   await page.getByRole('button', { name: 'Save allergy profile' }).click();
   await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
@@ -71,19 +72,19 @@ test('small phone allergy controls stay reachable and navigation resets scroll',
   await page.getByRole('button', { name: 'Reset changes' }).click();
   await expect(page.getByRole('checkbox', { name: 'Crustacean shellfish', exact: true })).not.toBeChecked();
   await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
-  await save.click();
-  await expect(page.getByTestId('profile-save-feedback')).toContainText('Profile saved');
-  await expect(page.getByTestId('profile-save-feedback')).toContainText('Demo only: changes last until this session ends.');
-  await expect(page.getByRole('alert')).toContainText('Allergy profile saved.');
-  await expect(page.getByRole('alert')).toBeInViewport();
   const sesame = await page.getByRole('checkbox', { name: 'Sesame', exact: true }).boundingBox();
   const saveBox = await save.boundingBox();
   expect(sesame!.y + sesame!.height).toBeLessThan(saveBox!.y);
   await page.screenshot({ path: 'artifacts/allergies-mobile.png' });
+  // Saving pops a notification pinned to the top of the screen and goes to Scan; it fades on its own.
   await save.click();
-  await expect(page.getByTestId('profile-save-feedback')).toBeInViewport();
-  await page.getByRole('checkbox', { name: 'Sesame', exact: true }).click();
-  await expect(page.getByTestId('profile-save-feedback')).toHaveCount(0);
+  const toast = page.getByTestId('toast');
+  await expect(toast).toContainText('Profile saved');
+  await expect(toast).toContainText('Demo only: changes last until this session ends.');
+  await expect(page.getByText('What’s in your next bite?')).toBeVisible();
+  await expect.poll(async () => (await toast.boundingBox())?.y).toBeGreaterThanOrEqual(8);
+  expect((await toast.boundingBox())!.y).toBeLessThan(40);
+  await expect(toast).toHaveCount(0, { timeout: 6000 });
   // Phones open history from the Pantry page; the tab bar keeps five tabs.
   await page.getByRole('button', { name: 'Pantry', exact: true }).click();
   await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
