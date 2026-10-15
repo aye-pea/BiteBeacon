@@ -20,7 +20,7 @@ export const en = {
   'welcome.graphicTitle': 'Your next shop, better informed.', 'welcome.graphicBody': 'Barcode first. Label always.',
   'auth.signupTitle': 'Make it personal.', 'auth.loginTitle': 'Welcome back.', 'auth.tagline': 'Your allergies. Your own space.',
   'auth.email': 'Email address', 'auth.password': 'Password', 'auth.passwordNew': 'At least 12 characters', 'auth.passwordCurrent': 'Your password',
-  'auth.consent': 'I agree to store my allergy selections, and any products I add to my pantry, in my private account. Other scans stay in this session; barcode numbers go to USDA FoodData Central and, if not found there, Open Food Facts. I can delete my account in App details.',
+  'auth.consent': 'I agree to store my allergy selections, and any products I add to my pantry, in my private account. Other scans stay in this session; barcode numbers go to USDA FoodData Central and, if not found there, Open Food Facts. I can delete my account in App details. I agree to the Terms of Use and Privacy Policy.',
   'auth.wait': 'Please wait…', 'auth.create': 'Create account', 'auth.signIn': 'Sign in',
   'auth.toLogin': 'Already have an account? Sign in', 'auth.toSignup': 'New here? Create an account',
   'auth.noCloud': 'Employer preview · Cloud signup is not connected yet. Explore the working demo below. No account or password required.',
@@ -175,6 +175,7 @@ export const en = {
   'about.deleting': 'Deleting…', 'about.confirmDelete': 'Confirm permanent deletion', 'about.cancelDelete': 'Cancel deletion', 'about.delete': 'Delete my account',
   'account.deleteFailed': 'Account could not be deleted. Please retry.', 'account.deleted': 'Account and allergy profile deleted.',
   'footer.disclaimer': 'A helpful check, never a safety guarantee. Always read the label.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'legal.title': 'Legal & safety', 'legal.english': 'Pages open in English.', 'legal.disclaimer': 'Health disclaimer ↗', 'legal.privacy': 'Privacy Policy ↗', 'legal.terms': 'Terms of Use ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': 'Pantry',
