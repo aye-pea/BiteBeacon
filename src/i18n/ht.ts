@@ -38,7 +38,7 @@ export const ht: Messages = {
   'toast.demoEnded': 'Demo a fini · sesyon an efase', 'toast.signedOut': 'Ou dekonekte · sesyon an efase',
   'leave.failed': 'Dekoneksyon an pa mache. Verifye koneksyon ou epi eseye ankò.',
 
-  'account.demo': 'Vizitè demo', 'account.yours': 'Kont ou', 'account.demoSub': 'Sesyon apèsi lokal', 'account.yoursSub': 'Pwofil alèji prive',
+  'account.demo': 'Vizitè demo', 'account.yours': 'Kont ou', 'account.demoSub': 'Sesyon apèsi lokal',
   'mode.demo': 'MÒD DEMO', 'mode.connected': 'KONEKTE',
   'mode.beta': 'BETA', 'beta.notice': 'Vèsyon beta pou teste pwochen mizajou a. Se sèlman administratè BiteBeacon ki ka konekte isit la. Tout lòt moun, tanpri itilize bitebeacon.org.',
   'beta.adminsOnly': 'Beta sa a se pou administratè BiteBeacon sèlman. Tanpri konekte sou bitebeacon.org.',

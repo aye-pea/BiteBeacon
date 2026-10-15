@@ -38,7 +38,7 @@ export const ru: Messages = {
   'toast.demoEnded': 'Демо завершено · сеанс очищен', 'toast.signedOut': 'Вы вышли · сеанс очищен',
   'leave.failed': 'Не удалось выйти. Проверьте подключение и попробуйте снова.',
 
-  'account.demo': 'Демо-пользователь', 'account.yours': 'Ваш аккаунт', 'account.demoSub': 'Локальный демо-сеанс', 'account.yoursSub': 'Личный профиль аллергий',
+  'account.demo': 'Демо-пользователь', 'account.yours': 'Ваш аккаунт', 'account.demoSub': 'Локальный демо-сеанс',
   'mode.demo': 'ДЕМОРЕЖИМ', 'mode.connected': 'ПОДКЛЮЧЕНО',
   'mode.beta': 'БЕТА', 'beta.notice': 'Бета-версия для проверки следующего обновления. Войти здесь могут только администраторы BiteBeacon. Все остальные, пожалуйста, используйте bitebeacon.org.',
   'beta.adminsOnly': 'Эта бета-версия только для администраторов BiteBeacon. Войдите на bitebeacon.org.',

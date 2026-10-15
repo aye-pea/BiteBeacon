@@ -38,7 +38,7 @@ export const vi: Messages = {
   'toast.demoEnded': 'Đã kết thúc demo · đã xóa phiên', 'toast.signedOut': 'Đã đăng xuất · đã xóa phiên',
   'leave.failed': 'Đăng xuất không thành công. Hãy kiểm tra kết nối và thử lại.',
 
-  'account.demo': 'Người dùng demo', 'account.yours': 'Tài khoản của bạn', 'account.demoSub': 'Phiên xem trước cục bộ', 'account.yoursSub': 'Hồ sơ dị ứng riêng tư',
+  'account.demo': 'Người dùng demo', 'account.yours': 'Tài khoản của bạn', 'account.demoSub': 'Phiên xem trước cục bộ',
   'mode.demo': 'CHẾ ĐỘ DEMO', 'mode.connected': 'ĐÃ KẾT NỐI',
   'mode.beta': 'BETA', 'beta.notice': 'Bản beta để thử bản cập nhật tiếp theo. Chỉ quản trị viên BiteBeacon mới đăng nhập được ở đây. Những người khác vui lòng dùng bitebeacon.org.',
   'beta.adminsOnly': 'Bản beta này chỉ dành cho quản trị viên BiteBeacon. Vui lòng đăng nhập tại bitebeacon.org.',

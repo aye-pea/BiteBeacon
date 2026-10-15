@@ -38,7 +38,7 @@ export const es: Messages = {
   'toast.demoEnded': 'Demo terminada · sesión borrada', 'toast.signedOut': 'Sesión cerrada · sesión borrada',
   'leave.failed': 'No se pudo cerrar sesión. Revisa tu conexión e inténtalo de nuevo.',
 
-  'account.demo': 'Explorador de la demo', 'account.yours': 'Tu cuenta', 'account.demoSub': 'Sesión de vista previa local', 'account.yoursSub': 'Perfil de alergias privado',
+  'account.demo': 'Explorador de la demo', 'account.yours': 'Tu cuenta', 'account.demoSub': 'Sesión de vista previa local',
   'mode.demo': 'MODO DEMO', 'mode.connected': 'CONECTADO',
   'mode.beta': 'BETA', 'beta.notice': 'Versión beta para probar la próxima actualización. Aquí solo pueden iniciar sesión los administradores de BiteBeacon. Los demás, usen bitebeacon.org.',
   'beta.adminsOnly': 'Esta beta es solo para administradores de BiteBeacon. Inicia sesión en bitebeacon.org.',

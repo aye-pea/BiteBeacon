@@ -45,3 +45,18 @@ test('the Presentation theme uses the pitch deck colours and the footer shows ve
   await page.getByTestId('appearance-settings').count();
   expect(errors).toEqual([]);
 });
+
+test('desktop sidebar rows light up under the mouse, and the account row has no subtitle', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  const pantry = page.getByRole('button', { name: 'Pantry', exact: true });
+  const shadow = () => pantry.evaluate(el => getComputedStyle(el).boxShadow);
+  expect(await shadow()).not.toContain('inset');
+  await pantry.hover();
+  await expect.poll(shadow).toContain('inset');
+  await page.screenshot({ path: 'artifacts/sidebar-hover.png', clip: { x: 0, y: 0, width: 260, height: 900 } });
+  await page.mouse.move(900, 500);
+  await expect.poll(shadow).not.toContain('inset');
+  await expect(page.getByText('Private allergy profile')).toHaveCount(0);
+});

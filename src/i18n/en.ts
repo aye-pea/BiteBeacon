@@ -38,7 +38,7 @@ export const en = {
   'toast.demoEnded': 'Demo ended · session cleared', 'toast.signedOut': 'Signed out · session cleared',
   'leave.failed': 'Sign out failed. Check your connection and retry.',
 
-  'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session', 'account.yoursSub': 'Private allergy profile',
+  'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session',
   'mode.demo': 'DEMO MODE', 'mode.connected': 'CONNECTED',
   'mode.beta': 'BETA', 'beta.notice': 'Beta build for testing the next update. Only BiteBeacon admins can sign in here. Everyone else, please use bitebeacon.org.',
   'beta.adminsOnly': 'This beta is for BiteBeacon admins only. Please use bitebeacon.org to sign in.',

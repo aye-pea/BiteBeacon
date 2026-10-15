@@ -11,17 +11,20 @@ const ToneIcon = ({ kind, size = 20 }: { kind: Tone; size?: number }) => {
   return <Component accessible={false} size={size} color={tone[kind].fg} strokeWidth={2} />;
 };
 
-/** Pressable with a spring press-in scale, pressed tint and optional haptic on press. */
-export function Tap({ style, pressedStyle, haptic: kind = 'tap', scaleTo = .97, onPress, onPressIn, onPressOut, disabled, children, ...rest }:
-  Omit<PressableProps, 'style' | 'children'> & { style?: StyleProp<ViewStyle>; pressedStyle?: StyleProp<ViewStyle>; haptic?: HapticKind | null; scaleTo?: number; children?: React.ReactNode }) {
+/** Pressable with a spring press-in scale, pressed tint, optional mouse-hover tint and optional haptic on press. */
+export function Tap({ style, pressedStyle, hoverStyle, haptic: kind = 'tap', scaleTo = .97, onPress, onPressIn, onPressOut, onHoverIn, onHoverOut, disabled, children, ...rest }:
+  Omit<PressableProps, 'style' | 'children'> & { style?: StyleProp<ViewStyle>; pressedStyle?: StyleProp<ViewStyle>; hoverStyle?: StyleProp<ViewStyle>; haptic?: HapticKind | null; scaleTo?: number; children?: React.ReactNode }) {
   const scale = useRef(new Animated.Value(1)).current;
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const spring = (toValue: number) => Animated.spring(scale, { toValue, useNativeDriver: nativeDriver, speed: 40, bounciness: toValue === 1 ? 8 : 0 }).start();
   return <AnimatedPressable {...rest} disabled={disabled}
     onPressIn={e => { setPressed(true); spring(scaleTo); onPressIn?.(e); }}
     onPressOut={e => { setPressed(false); spring(1); onPressOut?.(e); }}
     onPress={e => { if (kind) haptic[kind](); onPress?.(e); }}
-    style={[style, pressed && pressedStyle, { transform: [{ scale }] }]}>{children}</AnimatedPressable>;
+    onHoverIn={e => { setHovered(true); onHoverIn?.(e); }}
+    onHoverOut={e => { setHovered(false); onHoverOut?.(e); }}
+    style={[style, hovered && !disabled && hoverStyle, pressed && pressedStyle, { transform: [{ scale }] }]}>{children}</AnimatedPressable>;
 }
 
 type Variant = 'primary' | 'secondary' | 'danger';

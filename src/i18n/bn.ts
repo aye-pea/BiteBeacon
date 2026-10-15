@@ -38,7 +38,7 @@ export const bn: Messages = {
   'toast.demoEnded': 'ডেমো শেষ · সেশন মুছে ফেলা হয়েছে', 'toast.signedOut': 'সাইন আউট হয়েছে · সেশন মুছে ফেলা হয়েছে',
   'leave.failed': 'সাইন আউট করা যায়নি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।',
 
-  'account.demo': 'ডেমো ব্যবহারকারী', 'account.yours': 'আপনার অ্যাকাউন্ট', 'account.demoSub': 'লোকাল প্রিভিউ সেশন', 'account.yoursSub': 'ব্যক্তিগত অ্যালার্জি প্রোফাইল',
+  'account.demo': 'ডেমো ব্যবহারকারী', 'account.yours': 'আপনার অ্যাকাউন্ট', 'account.demoSub': 'লোকাল প্রিভিউ সেশন',
   'mode.demo': 'ডেমো মোড', 'mode.connected': 'সংযুক্ত',
   'mode.beta': 'বিটা', 'beta.notice': 'পরবর্তী আপডেট পরীক্ষার জন্য বিটা সংস্করণ। এখানে শুধু BiteBeacon অ্যাডমিনরা সাইন ইন করতে পারেন। অন্যরা bitebeacon.org ব্যবহার করুন।',
   'beta.adminsOnly': 'এই বিটা শুধু BiteBeacon অ্যাডমিনদের জন্য। সাইন ইন করতে bitebeacon.org ব্যবহার করুন।',
