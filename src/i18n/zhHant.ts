@@ -20,7 +20,7 @@ export const zhHant: Messages = {
   'welcome.graphicTitle': '下次購物，心裡更有數。', 'welcome.graphicBody': '先掃條碼，始終看標籤。',
   'auth.signupTitle': '打造你的專屬檔案。', 'auth.loginTitle': '歡迎回來。', 'auth.tagline': '你的過敏資訊，你的專屬空間。',
   'auth.email': '電子郵件地址', 'auth.password': '密碼', 'auth.passwordNew': '至少 12 個字元', 'auth.passwordCurrent': '你的密碼',
-  'auth.consent': '我同意將我的過敏原選擇以及我加入食品櫃的商品儲存在我的私人帳號中。其他掃描僅保留在本次工作階段中；條碼會傳送到 USDA FoodData Central，若未找到則傳送到 Open Food Facts。我可以在「App 詳細資訊」中刪除帳號。',
+  'auth.consent': '我同意將我的過敏原選擇以及我加入食品櫃的商品儲存在我的私人帳號中。其他掃描僅保留在本次工作階段中；條碼會傳送到 USDA FoodData Central，若未找到則傳送到 Open Food Facts。我可以在「App 詳細資訊」中刪除帳號。我同意《使用條款》和《隱私權政策》。',
   'auth.wait': '請稍候…', 'auth.create': '建立帳號', 'auth.signIn': '登入',
   'auth.toLogin': '已有帳號？登入', 'auth.toSignup': '第一次使用？建立帳號',
   'auth.noCloud': '僱主預覽 · 雲端註冊尚未接入。請體驗下方的可用示範，無需帳號或密碼。',
@@ -175,6 +175,7 @@ export const zhHant: Messages = {
   'about.deleting': '正在刪除…', 'about.confirmDelete': '確認永久刪除', 'about.cancelDelete': '取消刪除', 'about.delete': '刪除我的帳號',
   'account.deleteFailed': '無法刪除帳號，請重試。', 'account.deleted': '帳號和過敏檔案已刪除。',
   'footer.disclaimer': '有用的檢查工具，絕不是安全保證。請務必閱讀標籤。', 'footer.version': 'BiteBeacon / 示範版 0.1',
+  'legal.title': '法律與安全', 'legal.english': '頁面為英文。', 'legal.disclaimer': '健康免責聲明 ↗', 'legal.privacy': '隱私權政策 ↗', 'legal.terms': '使用條款 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': '食品櫃',

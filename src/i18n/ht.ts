@@ -20,7 +20,7 @@ export const ht: Messages = {
   'welcome.graphicTitle': 'Pwochen makèt ou, ak plis enfòmasyon.', 'welcome.graphicBody': 'Kòd ba an premye. Etikèt la toujou.',
   'auth.signupTitle': 'Fè l pou ou.', 'auth.loginTitle': 'Bon retou.', 'auth.tagline': 'Alèji ou. Pwòp espas pa ou.',
   'auth.email': 'Adrès imèl', 'auth.password': 'Modpas', 'auth.passwordNew': 'Omwen 12 karaktè', 'auth.passwordCurrent': 'Modpas ou',
-  'auth.consent': 'Mwen dakò pou alèji mwen chwazi yo, ak pwodui mwen mete nan gadmanje mwen, sere nan kont prive mwen. Lòt eskanè yo rete nan sesyon sa a sèlman; nimewo kòd ba yo ale nan USDA FoodData Central epi, si yo pa jwenn li la, nan Open Food Facts. Mwen ka efase kont mwen nan Detay aplikasyon an.',
+  'auth.consent': 'Mwen dakò pou alèji mwen chwazi yo, ak pwodui mwen mete nan gadmanje mwen, sere nan kont prive mwen. Lòt eskanè yo rete nan sesyon sa a sèlman; nimewo kòd ba yo ale nan USDA FoodData Central epi, si yo pa jwenn li la, nan Open Food Facts. Mwen ka efase kont mwen nan Detay aplikasyon an. Mwen dakò ak Kondisyon Itilizasyon yo ak Politik Konfidansyalite a.',
   'auth.wait': 'Tanpri tann…', 'auth.create': 'Kreye kont', 'auth.signIn': 'Konekte',
   'auth.toLogin': 'Ou gen yon kont deja? Konekte', 'auth.toSignup': 'Ou nouvo isit la? Kreye yon kont',
   'auth.noCloud': 'Apèsi pou anplwayè · Enskripsyon nan nyaj la poko konekte. Eseye demo ki mache a anba a. Ou pa bezwen kont ni modpas.',
@@ -175,6 +175,7 @@ export const ht: Messages = {
   'about.deleting': 'N ap efase…', 'about.confirmDelete': 'Konfime efasman pou tout tan', 'about.cancelDelete': 'Anile efasman an', 'about.delete': 'Efase kont mwen',
   'account.deleteFailed': 'Nou pa t kapab efase kont la. Tanpri eseye ankò.', 'account.deleted': 'Kont ak pwofil alèji efase.',
   'footer.disclaimer': 'Yon verifikasyon ki itil, men pa janm yon garanti sekirite. Toujou li etikèt la.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'legal.title': 'Enfòmasyon legal ak sekirite', 'legal.english': 'Paj yo ap louvri an anglè.', 'legal.disclaimer': 'Avètisman sou sante ↗', 'legal.privacy': 'Politik Konfidansyalite ↗', 'legal.terms': 'Kondisyon Itilizasyon ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': 'Gadmanje',

@@ -20,7 +20,7 @@ export const fr: Messages = {
   'welcome.graphicTitle': 'Vos prochaines courses, mieux informées.', 'welcome.graphicBody': 'D’abord le code-barres. Toujours l’étiquette.',
   'auth.signupTitle': 'Personnalisez-la.', 'auth.loginTitle': 'Bon retour parmi nous.', 'auth.tagline': 'Vos allergies. Votre espace à vous.',
   'auth.email': 'Adresse e-mail', 'auth.password': 'Mot de passe', 'auth.passwordNew': 'Au moins 12 caractères', 'auth.passwordCurrent': 'Votre mot de passe',
-  'auth.consent': 'J’accepte que mes allergies sélectionnées, ainsi que les produits que j’ajoute à mon garde-manger, soient enregistrés dans mon compte privé. Les autres scans restent dans cette session ; les codes-barres sont envoyés à USDA FoodData Central et, s’ils n’y figurent pas, à Open Food Facts. Je peux supprimer mon compte dans Infos sur l’app.',
+  'auth.consent': 'J’accepte que mes allergies sélectionnées, ainsi que les produits que j’ajoute à mon garde-manger, soient enregistrés dans mon compte privé. Les autres scans restent dans cette session ; les codes-barres sont envoyés à USDA FoodData Central et, s’ils n’y figurent pas, à Open Food Facts. Je peux supprimer mon compte dans Infos sur l’app. J’accepte les Conditions d’utilisation et la Politique de confidentialité.',
   'auth.wait': 'Veuillez patienter…', 'auth.create': 'Créer un compte', 'auth.signIn': 'Se connecter',
   'auth.toLogin': 'Vous avez déjà un compte ? Connectez-vous', 'auth.toSignup': 'Nouveau ici ? Créez un compte',
   'auth.noCloud': 'Aperçu pour employeurs · L’inscription en ligne n’est pas encore connectée. Explorez la démo fonctionnelle ci-dessous. Aucun compte ni mot de passe requis.',
@@ -175,6 +175,7 @@ export const fr: Messages = {
   'about.deleting': 'Suppression…', 'about.confirmDelete': 'Confirmer la suppression définitive', 'about.cancelDelete': 'Annuler la suppression', 'about.delete': 'Supprimer mon compte',
   'account.deleteFailed': 'Impossible de supprimer le compte. Veuillez réessayer.', 'account.deleted': 'Compte et profil d’allergies supprimés.',
   'footer.disclaimer': 'Une vérification utile, jamais une garantie de sécurité. Lisez toujours l’étiquette.', 'footer.version': 'BiteBeacon / Démo 0.1',
+  'legal.title': 'Mentions légales et sécurité', 'legal.english': 'Les pages s’ouvrent en anglais.', 'legal.disclaimer': 'Avertissement santé ↗', 'legal.privacy': 'Politique de confidentialité ↗', 'legal.terms': 'Conditions d’utilisation ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': 'Garde-manger',

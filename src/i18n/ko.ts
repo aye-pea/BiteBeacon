@@ -20,7 +20,7 @@ export const ko: Messages = {
   'welcome.graphicTitle': '다음 장보기, 더 잘 알고 하세요.', 'welcome.graphicBody': '먼저 바코드, 언제나 라벨.',
   'auth.signupTitle': '나만의 프로필을 만드세요.', 'auth.loginTitle': '다시 오신 걸 환영해요.', 'auth.tagline': '내 알레르기, 나만의 공간.',
   'auth.email': '이메일 주소', 'auth.password': '비밀번호', 'auth.passwordNew': '12자 이상', 'auth.passwordCurrent': '내 비밀번호',
-  'auth.consent': '내가 선택한 알레르기와 팬트리에 추가한 제품을 내 비공개 계정에 저장하는 데 동의해요. 그 밖의 스캔은 이번 세션에만 남아요. 바코드 번호는 USDA FoodData Central로, 그곳에서 찾지 못하면 Open Food Facts로 전송돼요. 계정은 앱 정보에서 삭제할 수 있어요.',
+  'auth.consent': '내가 선택한 알레르기와 팬트리에 추가한 제품을 내 비공개 계정에 저장하는 데 동의해요. 그 밖의 스캔은 이번 세션에만 남아요. 바코드 번호는 USDA FoodData Central로, 그곳에서 찾지 못하면 Open Food Facts로 전송돼요. 계정은 앱 정보에서 삭제할 수 있어요. 이용약관 및 개인정보 처리방침에 동의합니다.',
   'auth.wait': '잠시만 기다려 주세요…', 'auth.create': '계정 만들기', 'auth.signIn': '로그인',
   'auth.toLogin': '이미 계정이 있나요? 로그인', 'auth.toSignup': '처음이신가요? 계정 만들기',
   'auth.noCloud': '채용 담당자용 미리보기 · 클라우드 가입은 아직 연결되지 않았어요. 아래의 작동하는 데모를 둘러보세요. 계정이나 비밀번호는 필요 없어요.',
@@ -175,6 +175,7 @@ export const ko: Messages = {
   'about.deleting': '삭제 중…', 'about.confirmDelete': '영구 삭제 확인', 'about.cancelDelete': '삭제 취소', 'about.delete': '내 계정 삭제',
   'account.deleteFailed': '계정을 삭제할 수 없어요. 다시 시도하세요.', 'account.deleted': '계정과 알레르기 프로필을 삭제했어요.',
   'footer.disclaimer': '도움이 되는 확인일 뿐, 안전을 보장하지 않아요. 항상 라벨을 읽으세요.', 'footer.version': 'BiteBeacon / 데모 0.1',
+  'legal.title': '법률 및 안전', 'legal.english': '페이지는 영어로 열립니다.', 'legal.disclaimer': '건강 관련 고지 ↗', 'legal.privacy': '개인정보 처리방침 ↗', 'legal.terms': '이용약관 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
   'nav.pantry': '팬트리',
