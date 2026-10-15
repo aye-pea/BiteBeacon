@@ -5,7 +5,7 @@ test('lookup shows progress, inline outcome near the button, and transient confi
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await expect(page.getByTestId('toast')).toContainText('Demo ready');
-  await page.getByRole('button', { name: 'Scan a product', exact: true }).click();
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
 
   // Hold both providers so the in-flight state is observable, then report no match.
   let release!: () => void;

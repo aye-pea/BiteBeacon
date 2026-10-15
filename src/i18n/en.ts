@@ -3,9 +3,9 @@
 export const en = {
   'app.opening': 'Opening BiteBeacon…',
   'nav.overview': 'Overview', 'nav.overview.short': 'Home',
-  'nav.scan': 'Scan a product', 'nav.scan.short': 'Scan',
-  'nav.allergies': 'My allergies', 'nav.allergies.short': 'Allergies',
-  'nav.history': 'Recent scans', 'nav.history.short': 'History',
+  'nav.scan': 'Scan a Product', 'nav.scan.short': 'Scan',
+  'nav.allergies': 'My Allergies', 'nav.allergies.short': 'Allergies',
+  'nav.history': 'Recent Scans', 'nav.history.short': 'History',
   'nav.settings': 'Settings', 'nav.settings.short': 'Settings',
   'nav.about': 'App details', 'nav.about.short': 'Details',
 
@@ -39,7 +39,6 @@ export const en = {
   'toast.demoEnded': 'Demo ended · session cleared', 'toast.signedOut': 'Signed out · session cleared',
   'leave.failed': 'Sign out failed. Check your connection and retry.',
 
-  'sidebar.labelFirst': 'Label first. Always.', 'sidebar.labelFirstBody': 'We help you spot signals. The package is your final source.',
   'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session', 'account.yoursSub': 'Private allergy profile',
   'mode.demo': 'DEMO MODE', 'mode.connected': 'CONNECTED',
   'profile.locked': 'Allergy profile loading or unavailable. Scanning stays locked until your profile is ready.',
@@ -141,7 +140,7 @@ export const en = {
   'toast.nameSaved': 'Name saved · results show “{name}”', 'toast.nameCleared': 'Name cleared · results show “{you}”',
   'settings.household': 'Household', 'settings.count': '{n} of {max} people', 'settings.youTag': '(you)', 'settings.noAllergies': 'No allergies saved yet',
   'settings.editYours': 'Edit your allergies', 'settings.full': 'Household is full: up to {n} people besides you.',
-  'settings.showFor': 'Show results for', 'settings.showForHelp': 'Who a scan checks by default. You can switch on any result.',
+  'settings.showFor': 'Show results for', 'settings.showForHelp': 'Who a scan checks by default. Tick anyone, or any combination. You can also change it on any result.', 'settings.keepOne': 'Keep at least one person selected.',
   'settings.defaultLabel': 'Default: {label}', 'settings.addToChoose': 'Add a person to choose “{everyone}”.',
   'settings.defaultFailed': 'Default could not be saved. Your previous choice is still active.',
   'toast.defaultEveryone': 'Results now show everyone by default', 'toast.defaultPerson': 'Results now show {name} by default',
@@ -151,6 +150,8 @@ export const en = {
   'settings.languageLabel': 'Language: {name}', 'toast.languageSaved': 'Language set to {name}',
   'settings.languageFailed': 'Language could not be saved to your account. It still applies until you sign out.',
   'settings.translationNote': 'Translations are new. If a word looks wrong, rely on the package label and tell us.',
+  'settings.appearance': 'Appearance', 'settings.appearanceHelp': 'Auto matches your device’s light or dark setting. Your choice is saved on this device.',
+  'settings.appearanceLabel': 'Appearance: {name}', 'settings.appearance.auto': 'Auto', 'settings.appearance.light': 'Light', 'settings.appearance.dark': 'Dark',
 
   'member.add': 'Add a person', 'member.edit': 'Edit {name}', 'member.name': 'Name', 'member.nameLabel': "Person's name", 'member.namePlaceholder': 'e.g. Kha',
   'member.allergies': 'Their allergies', 'member.allergyFor': '{allergen} for this person', 'member.saveChanges': 'Save changes', 'member.addToHousehold': 'Add to household',

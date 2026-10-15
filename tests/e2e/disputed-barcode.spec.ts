@@ -9,7 +9,7 @@ test('disputed bottle barcode clears previous assessment and never enters histor
   await page.getByRole('button', { name: 'Look up product' }).click();
   await expect(page.getByText(/Product identity disputed for this barcode/)).toBeVisible();
   await expect(page.getByTestId('product-result')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Recent scans', exact: true }).click();
+  await page.getByRole('button', { name: 'Recent Scans', exact: true }).click();
   await expect(page.getByRole('button', { name: /Peanut crunch granola/ })).toBeVisible();
   await expect(page.getByText(/Light Mayonnaise/)).toHaveCount(0);
 });

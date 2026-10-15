@@ -32,7 +32,7 @@ test('stay signed in survives a reload; turning it off ends the session with the
   await page.goto('/');
   await signIn(page, true);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Scan a product', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Scan a Product', exact: true })).toBeVisible();
   expect(await page.evaluate(() => Object.keys(localStorage).some(k => k.startsWith('sb-')))).toBe(true);
 
   // Sign out clears the stored session.

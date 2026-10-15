@@ -39,7 +39,6 @@ export const bn: Messages = {
   'toast.demoEnded': 'ডেমো শেষ · সেশন মুছে ফেলা হয়েছে', 'toast.signedOut': 'সাইন আউট হয়েছে · সেশন মুছে ফেলা হয়েছে',
   'leave.failed': 'সাইন আউট করা যায়নি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।',
 
-  'sidebar.labelFirst': 'আগে লেবেল। সবসময়।', 'sidebar.labelFirstBody': 'আমরা আপনাকে সংকেত খুঁজে পেতে সাহায্য করি। চূড়ান্ত উৎস হলো প্যাকেট।',
   'account.demo': 'ডেমো ব্যবহারকারী', 'account.yours': 'আপনার অ্যাকাউন্ট', 'account.demoSub': 'লোকাল প্রিভিউ সেশন', 'account.yoursSub': 'ব্যক্তিগত অ্যালার্জি প্রোফাইল',
   'mode.demo': 'ডেমো মোড', 'mode.connected': 'সংযুক্ত',
   'profile.locked': 'অ্যালার্জি প্রোফাইল লোড হচ্ছে বা পাওয়া যাচ্ছে না। প্রোফাইল প্রস্তুত না হওয়া পর্যন্ত স্ক্যান বন্ধ থাকবে।',
@@ -141,7 +140,7 @@ export const bn: Messages = {
   'toast.nameSaved': 'নাম সংরক্ষিত · ফলাফলে “{name}” দেখাবে', 'toast.nameCleared': 'নাম মুছে ফেলা হয়েছে · ফলাফলে “{you}” দেখাবে',
   'settings.household': 'পরিবার', 'settings.count': '{max} জনের মধ্যে {n} জন', 'settings.youTag': '(আপনি)', 'settings.noAllergies': 'এখনো কোনো অ্যালার্জি সংরক্ষিত নেই',
   'settings.editYours': 'আপনার অ্যালার্জি সম্পাদনা করুন', 'settings.full': 'পরিবার পূর্ণ: আপনি ছাড়া সর্বোচ্চ {n} জন।',
-  'settings.showFor': 'যাঁর ফলাফল দেখাবে', 'settings.showForHelp': 'ডিফল্টভাবে একটি স্ক্যান কাকে যাচাই করবে। যেকোনো ফলাফলে আপনি বদলাতে পারবেন।',
+  'settings.showFor': 'যাঁর ফলাফল দেখাবে', 'settings.showForHelp': 'ডিফল্টভাবে একটি স্ক্যান কাকে যাচাই করবে। যেকোনো একজন বা যেকোনো কয়েকজনকে বেছে নিন। যেকোনো ফলাফলেও আপনি বদলাতে পারবেন।', 'settings.keepOne': 'অন্তত একজনকে বেছে রাখুন।',
   'settings.defaultLabel': 'ডিফল্ট: {label}', 'settings.addToChoose': '“{everyone}” বেছে নিতে একজন ব্যক্তি যোগ করুন।',
   'settings.defaultFailed': 'ডিফল্ট সংরক্ষণ করা যায়নি। আপনার আগের পছন্দই এখনো চালু আছে।',
   'toast.defaultEveryone': 'ফলাফলে এখন ডিফল্টভাবে সবাইকে দেখাবে', 'toast.defaultPerson': 'ফলাফলে এখন ডিফল্টভাবে {name}-কে দেখাবে',
@@ -151,6 +150,8 @@ export const bn: Messages = {
   'settings.languageLabel': 'ভাষা: {name}', 'toast.languageSaved': 'ভাষা {name} করা হয়েছে',
   'settings.languageFailed': 'ভাষা আপনার অ্যাকাউন্টে সংরক্ষণ করা যায়নি। সাইন আউট না করা পর্যন্ত এটি চালু থাকবে।',
   'settings.translationNote': 'অনুবাদগুলো নতুন। কোনো শব্দ ভুল মনে হলে প্যাকেটের লেবেলের ওপর নির্ভর করুন এবং আমাদের জানান।',
+  'settings.appearance': 'চেহারা', 'settings.appearanceHelp': 'স্বয়ংক্রিয় আপনার ডিভাইসের হালকা বা গাঢ় সেটিং অনুসরণ করে। আপনার পছন্দ এই ডিভাইসে সংরক্ষিত থাকে।',
+  'settings.appearanceLabel': 'চেহারা: {name}', 'settings.appearance.auto': 'স্বয়ংক্রিয়', 'settings.appearance.light': 'হালকা', 'settings.appearance.dark': 'গাঢ়',
 
   'member.add': 'একজন ব্যক্তি যোগ করুন', 'member.edit': '{name} সম্পাদনা করুন', 'member.name': 'নাম', 'member.nameLabel': 'ব্যক্তির নাম', 'member.namePlaceholder': 'যেমন: রিনা',
   'member.allergies': 'তাঁর অ্যালার্জি', 'member.allergyFor': 'এই ব্যক্তির জন্য {allergen}', 'member.saveChanges': 'পরিবর্তন সংরক্ষণ করুন', 'member.addToHousehold': 'পরিবারে যোগ করুন',

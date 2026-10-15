@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from 'react';
 import { Platform, TextStyle, useColorScheme } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 // Grouped-background palette: tinted canvas, content cards, one green accent kept for actions and selection.
 // Dark values are dimmer canvases with brighter foregrounds, not inversions (dark-mode.md › Dark Mode colors).
@@ -49,8 +51,29 @@ export const themes: Record<Scheme, { C: Palette; tone: Record<Tone, { fg: strin
   light: { C: light, tone: toneOf(light), shadow: shadowOf(light) },
   dark: { C: dark, tone: toneOf(dark), shadow: shadowOf(dark) },
 };
-/** Follows the device's light or dark appearance; there is deliberately no in-app switch (dark-mode.md). */
-export function useScheme(): Scheme { return useColorScheme() === 'dark' ? 'dark' : 'light'; }
+// Light / Dark / Auto choice from Settings. Auto (the default) follows the device. Kept on this device only:
+// localStorage on the web (falls back to memory when blocked), SecureStore on native.
+export type Appearance = 'auto' | Scheme;
+export const APPEARANCES: readonly Appearance[] = ['auto', 'light', 'dark'];
+const APPEARANCE_KEY = 'bitebeacon.appearance';
+const isAppearance = (v: unknown): v is Appearance => APPEARANCES.includes(v as Appearance);
+const web = Platform.OS === 'web';
+let appearance: Appearance = 'auto';
+const listeners = new Set<() => void>();
+if (web) { try { const v = localStorage.getItem(APPEARANCE_KEY); if (isAppearance(v)) appearance = v; } catch { /* storage blocked */ } }
+else SecureStore.getItemAsync(APPEARANCE_KEY).then(v => { if (isAppearance(v) && appearance === 'auto') { appearance = v; listeners.forEach(l => l()); } }, () => {});
+export function setAppearance(next: Appearance) {
+  appearance = next; listeners.forEach(l => l());
+  if (web) { try { localStorage.setItem(APPEARANCE_KEY, next); } catch { /* applies until reload */ } }
+  else SecureStore.setItemAsync(APPEARANCE_KEY, next).catch(() => {});
+}
+const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
+export function useAppearance(): Appearance { return useSyncExternalStore(subscribe, () => appearance, () => appearance); }
+/** The scheme to draw: the Settings choice, or the device's light or dark appearance when that is Auto. */
+export function useScheme(): Scheme {
+  const device = useColorScheme(); const chosen = useAppearance();
+  return chosen === 'auto' ? (device === 'dark' ? 'dark' : 'light') : chosen;
+}
 /** Builds a StyleSheet for both appearances once, at module load. */
 export function bothSchemes<T>(make: (P: Palette, sh: ReturnType<typeof shadowOf>) => T): Record<Scheme, T> {
   return { light: make(light, shadowOf(light)), dark: make(dark, shadowOf(dark)) };

@@ -39,7 +39,6 @@ export const vi: Messages = {
   'toast.demoEnded': 'Đã kết thúc demo · đã xóa phiên', 'toast.signedOut': 'Đã đăng xuất · đã xóa phiên',
   'leave.failed': 'Đăng xuất không thành công. Hãy kiểm tra kết nối và thử lại.',
 
-  'sidebar.labelFirst': 'Nhãn trước tiên. Luôn luôn.', 'sidebar.labelFirstBody': 'Chúng tôi giúp bạn nhận ra dấu hiệu. Bao bì là nguồn thông tin cuối cùng.',
   'account.demo': 'Người dùng demo', 'account.yours': 'Tài khoản của bạn', 'account.demoSub': 'Phiên xem trước cục bộ', 'account.yoursSub': 'Hồ sơ dị ứng riêng tư',
   'mode.demo': 'CHẾ ĐỘ DEMO', 'mode.connected': 'ĐÃ KẾT NỐI',
   'profile.locked': 'Hồ sơ dị ứng đang tải hoặc không khả dụng. Chức năng quét sẽ bị khóa cho đến khi hồ sơ của bạn sẵn sàng.',
@@ -141,7 +140,7 @@ export const vi: Messages = {
   'toast.nameSaved': 'Đã lưu tên · kết quả hiển thị “{name}”', 'toast.nameCleared': 'Đã xóa tên · kết quả hiển thị “{you}”',
   'settings.household': 'Hộ gia đình', 'settings.count': '{n}/{max} người', 'settings.youTag': '(bạn)', 'settings.noAllergies': 'Chưa lưu dị ứng nào',
   'settings.editYours': 'Sửa dị ứng của bạn', 'settings.full': 'Hộ gia đình đã đủ: tối đa {n} người ngoài bạn.',
-  'settings.showFor': 'Hiển thị kết quả cho', 'settings.showForHelp': 'Người được kiểm tra mặc định khi quét. Bạn có thể chuyển đổi trên bất kỳ kết quả nào.',
+  'settings.showFor': 'Hiển thị kết quả cho', 'settings.showForHelp': 'Người được kiểm tra mặc định khi quét. Chọn một người hoặc bất kỳ nhóm nào. Bạn cũng có thể thay đổi trên bất kỳ kết quả nào.', 'settings.keepOne': 'Hãy giữ ít nhất một người được chọn.',
   'settings.defaultLabel': 'Mặc định: {label}', 'settings.addToChoose': 'Thêm một người để chọn “{everyone}”.',
   'settings.defaultFailed': 'Không thể lưu mặc định. Lựa chọn trước đó của bạn vẫn đang có hiệu lực.',
   'toast.defaultEveryone': 'Kết quả giờ mặc định hiển thị cho mọi người', 'toast.defaultPerson': 'Kết quả giờ mặc định hiển thị cho {name}',
@@ -151,6 +150,8 @@ export const vi: Messages = {
   'settings.languageLabel': 'Ngôn ngữ: {name}', 'toast.languageSaved': 'Đã đặt ngôn ngữ thành {name}',
   'settings.languageFailed': 'Không thể lưu ngôn ngữ vào tài khoản của bạn. Ngôn ngữ vẫn được áp dụng cho đến khi bạn đăng xuất.',
   'settings.translationNote': 'Bản dịch còn mới. Nếu một từ có vẻ sai, hãy dựa vào nhãn trên bao bì và báo cho chúng tôi.',
+  'settings.appearance': 'Giao diện', 'settings.appearanceHelp': 'Tự động sẽ theo chế độ sáng hoặc tối của thiết bị. Lựa chọn của bạn được lưu trên thiết bị này.',
+  'settings.appearanceLabel': 'Giao diện: {name}', 'settings.appearance.auto': 'Tự động', 'settings.appearance.light': 'Sáng', 'settings.appearance.dark': 'Tối',
 
   'member.add': 'Thêm người', 'member.edit': 'Sửa {name}', 'member.name': 'Tên', 'member.nameLabel': 'Tên của người này', 'member.namePlaceholder': 'vd: Kha',
   'member.allergies': 'Dị ứng của họ', 'member.allergyFor': '{allergen} cho người này', 'member.saveChanges': 'Lưu thay đổi', 'member.addToHousehold': 'Thêm vào hộ gia đình',

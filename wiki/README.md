@@ -12,7 +12,7 @@ Project second brain. Update after material behavior, architecture or acceptance
 
 - User chose **US first** and **local demo + Supabase setup**.
 - React Native / Expo with TypeScript; no existing project files needed preservation.
-- Working brand: BiteBeacon. Custom calm green/cream UI. Responsive layouts use flex and percentage widths; native text respects system font scaling. Roblox `Scale` / `TextScaled` properties do not exist in React Native.
+- Working brand: BiteBeacon. Custom calm green/cream UI. Responsive layouts use flex and percentage widths; native text respects system font scaling. Roblox `Scale` / `TextScaled` properties do not exist in React Native. Logo: flat green cart inside scan brackets (`assets/logo.svg`, drawn in-app by `CartLogo` in `src/ui/logo.tsx` using the theme green); wordmark "BiteBeacon" has no trailing period. App icon, favicon and Android icons are generated from the same mark on white.
 - Real email auth and PostgreSQL persistence are prepared through Supabase; demo does not simulate successful signup or claim accounts are stored.
 - Nine supported US major-allergen groups; no custom allergy text, celiac classification or severity recommendation in v0.1.
 - Never label products “safe.” Incomplete or unsupported-language data remains uncertain. Structured positives override missing fields; traces remain distinct. Limited English synonym detection is conservative and may flag negated statements.
@@ -175,10 +175,18 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - New keys `legal.*` in all five dictionaries; non-English UIs note the pages are English only. Contact address on the pages is privacy@bitebeacon.org, which needs a real mailbox or forwarding. Not reviewed by a lawyer.
 - Validation: TypeScript passed; 103 unit/database tests passed; 15 Playwright flows passed locally (web-camera flow needs CI's headless shell, live skipped). Built `dist/` contains the pages; screenshots checked at 390 × 844 in light and dark.
 
+## Six more languages — 2026-10-15
+
+- Added Traditional Chinese (`zh-Hant`, shown as 中文（繁體）, Taiwan wording, zh-TW dates), Haitian Creole (`ht`), Russian (`ru`), Korean (`ko`), French (`fr`) and Hindi (`hi`). Picker now lists 11 languages.
+- Devices set to zh-TW, zh-HK, zh-MO or zh-Hant start in Traditional Chinese; other Chinese settings still start in Simplified.
+- New migration `202610150002_more_languages.sql` widens the `profile_language` check to the new codes. Run it after `202610140002_profile_language.sql` on the hosted project.
+- All six are machine-drafted (Traditional Chinese converted from the Simplified file) and need native-speaker review before launch. Points to check: Korean particles next to names (written as 을(를)); Russian "Древесные орехи" for tree nuts; Haitian Creole "pistach", "wowoli", "kontak kwaze"; Hindi long allergen labels and gendered verbs in the consent text; French "garde-manger" and (s) plural forms.
+- Validation: TypeScript passed; 115 unit/database tests passed (translation checks for every language, a `zh-Hant` save test); 16 Playwright flows passed including a new zh-TW device test (web-camera flow could not launch its browser in the cloud sandbox, unrelated). Screens checked in all six languages at 390 × 844.
+
 ## Six more allergens (15 in total) — 2026-10-15
 
 - Added **gluten, mollusks, mustard, celery, sulfites, lupin** to `ALLERGENS` (`src/domain/allergens.ts`). Together with the nine US majors this completes the EU/UK, Canada and Australia lists. Open Food Facts tags all six (`en:gluten`, `en:molluscs`, `en:mustard`, `en:celery`, `en:sulphur-dioxide-and-sulphites`, `en:lupin`); USDA products are matched by ingredient words only.
 - **Gluten** covers every gluten grain (wheat words plus barley, rye, oats, malt, triticale, kamut, seitan, einkorn, emmer, farro) for celiac users. **Wheat** stays wheat-only, so a product tagged only "gluten" still reads "Not enough information" for Wheat. Sulfites also match E220–E228.
 - `explain()` now scans each selected allergen separately, so a word shared by two allergens ("wheat" for Wheat and Gluten) is evidence for both.
-- Migration `202610150003_more_allergens.sql` widens `supported_allergies` (profiles) and `member_supported_allergies` (household members) to the 15 ids and 1–15 entries. Until it runs on the hosted project, saving a new allergen to a signed-in profile fails; demo mode works without it.
-- Allergy page intro and notice rewritten (Wheat vs Gluten, Crustacean shellfish vs Mollusks). Machine-drafted translations in every language; need native review.
+- Migration `202610150005_more_allergens.sql` widens `supported_allergies` (profiles) and `member_supported_allergies` (household members) to the 15 ids and 1–15 entries. Until it runs on the hosted project, saving a new allergen to a signed-in profile fails; demo mode works without it.
+- Allergy page intro and notice rewritten (Wheat vs Gluten, Crustacean shellfish vs Mollusks). Machine-drafted translations in all 11 languages; need native review. Migration is numbered 0005 so it runs after `more_languages` (0002) and `default_view_people` (0004).

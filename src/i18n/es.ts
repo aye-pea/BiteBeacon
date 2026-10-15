@@ -39,7 +39,6 @@ export const es: Messages = {
   'toast.demoEnded': 'Demo terminada · sesión borrada', 'toast.signedOut': 'Sesión cerrada · sesión borrada',
   'leave.failed': 'No se pudo cerrar sesión. Revisa tu conexión e inténtalo de nuevo.',
 
-  'sidebar.labelFirst': 'La etiqueta primero. Siempre.', 'sidebar.labelFirstBody': 'Te ayudamos a detectar señales. El empaque es tu fuente final.',
   'account.demo': 'Explorador de la demo', 'account.yours': 'Tu cuenta', 'account.demoSub': 'Sesión de vista previa local', 'account.yoursSub': 'Perfil de alergias privado',
   'mode.demo': 'MODO DEMO', 'mode.connected': 'CONECTADO',
   'profile.locked': 'El perfil de alergias está cargando o no está disponible. El escaneo seguirá bloqueado hasta que tu perfil esté listo.',
@@ -141,7 +140,7 @@ export const es: Messages = {
   'toast.nameSaved': 'Nombre guardado · los resultados muestran “{name}”', 'toast.nameCleared': 'Nombre borrado · los resultados muestran “{you}”',
   'settings.household': 'Hogar', 'settings.count': '{n} de {max} personas', 'settings.youTag': '(tú)', 'settings.noAllergies': 'Aún no hay alergias guardadas',
   'settings.editYours': 'Editar tus alergias', 'settings.full': 'El hogar está lleno: hasta {n} personas además de ti.',
-  'settings.showFor': 'Mostrar resultados para', 'settings.showForHelp': 'A quién revisa un escaneo de forma predeterminada. Puedes cambiarlo en cualquier resultado.',
+  'settings.showFor': 'Mostrar resultados para', 'settings.showForHelp': 'A quién revisa un escaneo de forma predeterminada. Marca a una persona o cualquier combinación. También puedes cambiarlo en cualquier resultado.', 'settings.keepOne': 'Deja al menos una persona seleccionada.',
   'settings.defaultLabel': 'Predeterminado: {label}', 'settings.addToChoose': 'Agrega a una persona para elegir “{everyone}”.',
   'settings.defaultFailed': 'No se pudo guardar la opción predeterminada. Tu elección anterior sigue activa.',
   'toast.defaultEveryone': 'Ahora los resultados muestran a todos de forma predeterminada', 'toast.defaultPerson': 'Ahora los resultados muestran a {name} de forma predeterminada',
@@ -151,6 +150,8 @@ export const es: Messages = {
   'settings.languageLabel': 'Idioma: {name}', 'toast.languageSaved': 'Idioma cambiado a {name}',
   'settings.languageFailed': 'No se pudo guardar el idioma en tu cuenta. Se seguirá aplicando hasta que cierres sesión.',
   'settings.translationNote': 'Las traducciones son nuevas. Si una palabra parece incorrecta, guíate por la etiqueta del empaque y avísanos.',
+  'settings.appearance': 'Apariencia', 'settings.appearanceHelp': 'Automático sigue el modo claro u oscuro de tu dispositivo. Tu elección se guarda en este dispositivo.',
+  'settings.appearanceLabel': 'Apariencia: {name}', 'settings.appearance.auto': 'Automático', 'settings.appearance.light': 'Claro', 'settings.appearance.dark': 'Oscuro',
 
   'member.add': 'Agregar a una persona', 'member.edit': 'Editar a {name}', 'member.name': 'Nombre', 'member.nameLabel': 'Nombre de la persona', 'member.namePlaceholder': 'p. ej., Kha',
   'member.allergies': 'Sus alergias', 'member.allergyFor': '{allergen} para esta persona', 'member.saveChanges': 'Guardar cambios', 'member.addToHousehold': 'Agregar al hogar',

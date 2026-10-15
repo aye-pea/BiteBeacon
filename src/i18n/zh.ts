@@ -39,7 +39,6 @@ export const zh: Messages = {
   'toast.demoEnded': '演示已结束 · 会话已清除', 'toast.signedOut': '已退出登录 · 会话已清除',
   'leave.failed': '退出登录失败。请检查网络连接后重试。',
 
-  'sidebar.labelFirst': '标签优先，始终如此。', 'sidebar.labelFirstBody': '我们帮你发现提示信号，包装才是最终依据。',
   'account.demo': '演示体验者', 'account.yours': '你的账户', 'account.demoSub': '本地预览会话', 'account.yoursSub': '私密过敏档案',
   'mode.demo': '演示模式', 'mode.connected': '已连接',
   'profile.locked': '过敏档案正在加载或不可用。档案就绪前，扫描功能保持锁定。',
@@ -141,7 +140,7 @@ export const zh: Messages = {
   'toast.nameSaved': '名字已保存 · 结果将显示“{name}”', 'toast.nameCleared': '名字已清除 · 结果将显示“{you}”',
   'settings.household': '家庭成员', 'settings.count': '{n}/{max} 人', 'settings.youTag': '（你）', 'settings.noAllergies': '尚未保存过敏原',
   'settings.editYours': '编辑你的过敏原', 'settings.full': '家庭成员已满：除你之外最多 {n} 人。',
-  'settings.showFor': '显示结果对象', 'settings.showForHelp': '扫描时默认检查的人。你可以在任何结果中切换。',
+  'settings.showFor': '显示结果对象', 'settings.showForHelp': '扫描时默认检查的人。可以选择任何一人或任意组合，也可以在任何结果中更改。', 'settings.keepOne': '请至少保留一人。',
   'settings.defaultLabel': '默认：{label}', 'settings.addToChoose': '添加一位成员后即可选择“{everyone}”。',
   'settings.defaultFailed': '无法保存默认设置。你之前的选择仍然有效。',
   'toast.defaultEveryone': '结果现在默认显示所有人', 'toast.defaultPerson': '结果现在默认显示 {name}',
@@ -151,6 +150,8 @@ export const zh: Messages = {
   'settings.languageLabel': '语言：{name}', 'toast.languageSaved': '语言已设为{name}',
   'settings.languageFailed': '无法将语言保存到你的账户。在你退出登录前，该设置仍然有效。',
   'settings.translationNote': '翻译是新推出的。如果某个词看起来不对，请以包装标签为准，并告诉我们。',
+  'settings.appearance': '外观', 'settings.appearanceHelp': '“自动”会跟随设备的浅色或深色设置。你的选择保存在此设备上。',
+  'settings.appearanceLabel': '外观：{name}', 'settings.appearance.auto': '自动', 'settings.appearance.light': '浅色', 'settings.appearance.dark': '深色',
 
   'member.add': '添加成员', 'member.edit': '编辑 {name}', 'member.name': '名字', 'member.nameLabel': '成员名字', 'member.namePlaceholder': '例如：小明',
   'member.allergies': 'TA 的过敏原', 'member.allergyFor': '此成员对{allergen}过敏', 'member.saveChanges': '保存更改', 'member.addToHousehold': '添加到家庭',
