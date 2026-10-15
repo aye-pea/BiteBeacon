@@ -40,6 +40,8 @@ export const en = {
 
   'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session', 'account.yoursSub': 'Private allergy profile',
   'mode.demo': 'DEMO MODE', 'mode.connected': 'CONNECTED',
+  'mode.beta': 'BETA', 'beta.notice': 'Beta build for testing the next update. Only BiteBeacon admins can sign in here. Everyone else, please use bitebeacon.org.',
+  'beta.adminsOnly': 'This beta is for BiteBeacon admins only. Please use bitebeacon.org to sign in.',
   'profile.locked': 'Allergy profile loading or unavailable. Scanning stays locked until your profile is ready.',
 
   'overview.title': 'Good food starts with a check.', 'overview.subtitle': 'A clearer view of what’s in your next bite.',

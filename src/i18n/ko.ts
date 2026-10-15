@@ -40,6 +40,8 @@ export const ko: Messages = {
 
   'account.demo': '데모 체험자', 'account.yours': '내 계정', 'account.demoSub': '로컬 미리보기 세션', 'account.yoursSub': '비공개 알레르기 프로필',
   'mode.demo': '데모 모드', 'mode.connected': '연결됨',
+  'mode.beta': '베타', 'beta.notice': '다음 업데이트를 테스트하기 위한 베타 버전입니다. 여기서는 BiteBeacon 관리자만 로그인할 수 있습니다. 다른 분들은 bitebeacon.org를 이용해 주세요.',
+  'beta.adminsOnly': '이 베타는 BiteBeacon 관리자 전용입니다. bitebeacon.org에서 로그인해 주세요.',
   'profile.locked': '알레르기 프로필을 불러오는 중이거나 사용할 수 없어요. 프로필이 준비될 때까지 스캔은 잠겨 있어요.',
 
   'overview.title': '좋은 음식은 확인에서 시작돼요.', 'overview.subtitle': '다음 한 입에 무엇이 들었는지 더 분명하게.',

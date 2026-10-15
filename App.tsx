@@ -22,6 +22,7 @@ import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvid
 import { CartLogo } from './src/ui/logo';
 import { setShowHome, useShowHome } from './src/ui/prefs';
 import { APP_VERSION } from './src/version';
+import { IS_BETA } from './src/lib/beta';
 
 type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about' | 'admin';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
@@ -149,7 +150,7 @@ function AppContent() {
   // Sign-up takes a username; sign-in takes a username or an email added later in Settings.
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : 'signup');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : IS_BETA ? 'login' : 'signup');
   // Set while someone who opened a password reset link chooses their new password.
   const [recovering, setRecovering] = useState(openedResetLink);
   const [username, setUsername] = useState<string | null>(null);
@@ -180,6 +181,8 @@ function AppContent() {
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
   // Admins are listed in the database by hand; the dashboard shows only for them, never in the demo.
   const [isAdmin, setIsAdmin] = useState(false);
+  // Beta builds (deploy previews) are for admins only; the app waits for the admin check before showing anything.
+  const [adminChecked, setAdminChecked] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [statsFailed, setStatsFailed] = useState(false);
   const [statsBusy, setStatsBusy] = useState(false);
@@ -200,9 +203,14 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
-    setIsAdmin(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
+    setIsAdmin(false); setAdminChecked(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
     if (!session || !supabase || demo) return;
-    void checkAdmin().then(ok => { if (generation.current === current) setIsAdmin(ok); });
+    void checkAdmin().then(ok => {
+      if (generation.current !== current) return;
+      setIsAdmin(ok); setAdminChecked(true);
+      // Signing out locally keeps the person signed in on bitebeacon.org and their other devices.
+      if (IS_BETA && !ok) { haptic.error(); say(t('beta.adminsOnly'), 'danger'); void supabase?.auth.signOut({ scope: 'local' }); }
+    });
     // The username survives switching to a real email; before the usernames table exists it comes from the address.
     void loadUsername().then(name => { if (generation.current === current) setUsername(name ?? usernameFromEmail(session.user.email)); });
     Promise.all([
@@ -632,6 +640,7 @@ function AppContent() {
     <Tap testID="toggle-password" accessibilityRole="button" accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShowPassword(!showPassword)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
       {showPassword ? <EyeOff accessible={false} size={20} color={C.muted} /> : <Eye accessible={false} size={20} color={C.muted} />}</Tap></View>;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
+  if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
       <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
@@ -669,11 +678,13 @@ function AppContent() {
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
         {authMode === 'login' && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('reset'); setLogin(''); setFeedback(''); }}><Text style={s.link}>{t('auth.forgot')}</Text></Tap>}
-        <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
+        {!IS_BETA && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>}
       </> : <Notice kind="info">{t('auth.noCloud')}</Notice>}
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
-      <Button secondary onPress={enterDemo} icon={<Sparkles accessible={false} size={18} color={C.green} />}>{t('demo.explore')}</Button>
-      <View style={s.inline}><LockKeyhole size={16} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('demo.memoryOnly')}</Text></View>
+      {IS_BETA ? <Notice kind="info">{t('beta.notice')}</Notice> : <>
+        <Button secondary onPress={enterDemo} icon={<Sparkles accessible={false} size={18} color={C.green} />}>{t('demo.explore')}</Button>
+        <View style={s.inline}><LockKeyhole size={16} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('demo.memoryOnly')}</Text></View>
+      </>}
       <Text style={s.footnote}>{t('disclaimer.welcome')}</Text>
       <Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('disclaimer')}><Text style={s.link}>{t('legal.disclaimer')}</Text></Tap>
     </View>
@@ -741,7 +752,7 @@ function AppContent() {
     <View style={s.main}>
       {wide && <View style={s.topbar}>
         <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{navItems.find(n => n.page === page)?.label}</Text></Text></View>
-        <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : t('mode.connected')}</Text></View>
+        <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : IS_BETA ? t('mode.beta') : t('mode.connected')}</Text></View>
       </View>}
       <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}

@@ -40,6 +40,8 @@ export const vi: Messages = {
 
   'account.demo': 'Người dùng demo', 'account.yours': 'Tài khoản của bạn', 'account.demoSub': 'Phiên xem trước cục bộ', 'account.yoursSub': 'Hồ sơ dị ứng riêng tư',
   'mode.demo': 'CHẾ ĐỘ DEMO', 'mode.connected': 'ĐÃ KẾT NỐI',
+  'mode.beta': 'BETA', 'beta.notice': 'Bản beta để thử bản cập nhật tiếp theo. Chỉ quản trị viên BiteBeacon mới đăng nhập được ở đây. Những người khác vui lòng dùng bitebeacon.org.',
+  'beta.adminsOnly': 'Bản beta này chỉ dành cho quản trị viên BiteBeacon. Vui lòng đăng nhập tại bitebeacon.org.',
   'profile.locked': 'Hồ sơ dị ứng đang tải hoặc không khả dụng. Chức năng quét sẽ bị khóa cho đến khi hồ sơ của bạn sẵn sàng.',
 
   'overview.title': 'Ăn ngon bắt đầu từ một bước kiểm tra.', 'overview.subtitle': 'Nhìn rõ hơn những gì có trong miếng ăn tiếp theo.',

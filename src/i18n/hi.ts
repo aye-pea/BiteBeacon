@@ -40,6 +40,8 @@ export const hi: Messages = {
 
   'account.demo': 'डेमो उपयोगकर्ता', 'account.yours': 'आपका अकाउंट', 'account.demoSub': 'लोकल प्रीव्यू सेशन', 'account.yoursSub': 'निजी एलर्जी प्रोफ़ाइल',
   'mode.demo': 'डेमो मोड', 'mode.connected': 'कनेक्टेड',
+  'mode.beta': 'बीटा', 'beta.notice': 'अगले अपडेट की जाँच के लिए बीटा संस्करण। यहाँ केवल BiteBeacon एडमिन साइन इन कर सकते हैं। बाकी सभी कृपया bitebeacon.org का उपयोग करें।',
+  'beta.adminsOnly': 'यह बीटा केवल BiteBeacon एडमिन के लिए है। साइन इन करने के लिए कृपया bitebeacon.org का उपयोग करें।',
   'profile.locked': 'एलर्जी प्रोफ़ाइल लोड हो रही है या उपलब्ध नहीं है। प्रोफ़ाइल तैयार होने तक स्कैनिंग बंद रहेगी।',
 
   'overview.title': 'अच्छा खाना एक जांच से शुरू होता है।', 'overview.subtitle': 'आपके अगले निवाले में क्या है, उसकी साफ़ तस्वीर।',

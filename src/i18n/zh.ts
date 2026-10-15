@@ -40,6 +40,8 @@ export const zh: Messages = {
 
   'account.demo': '演示体验者', 'account.yours': '你的账户', 'account.demoSub': '本地预览会话', 'account.yoursSub': '私密过敏档案',
   'mode.demo': '演示模式', 'mode.connected': '已连接',
+  'mode.beta': '测试版', 'beta.notice': '用于测试下一次更新的测试版。只有 BiteBeacon 管理员可以在此登录。其他用户请使用 bitebeacon.org。',
+  'beta.adminsOnly': '此测试版仅供 BiteBeacon 管理员使用。请前往 bitebeacon.org 登录。',
   'profile.locked': '过敏档案正在加载或不可用。档案就绪前，扫描功能保持锁定。',
 
   'overview.title': '好食物，从检查开始。', 'overview.subtitle': '更清楚地了解你下一口吃的是什么。',

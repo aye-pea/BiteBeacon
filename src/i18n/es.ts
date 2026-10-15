@@ -40,6 +40,8 @@ export const es: Messages = {
 
   'account.demo': 'Explorador de la demo', 'account.yours': 'Tu cuenta', 'account.demoSub': 'Sesión de vista previa local', 'account.yoursSub': 'Perfil de alergias privado',
   'mode.demo': 'MODO DEMO', 'mode.connected': 'CONECTADO',
+  'mode.beta': 'BETA', 'beta.notice': 'Versión beta para probar la próxima actualización. Aquí solo pueden iniciar sesión los administradores de BiteBeacon. Los demás, usen bitebeacon.org.',
+  'beta.adminsOnly': 'Esta beta es solo para administradores de BiteBeacon. Inicia sesión en bitebeacon.org.',
   'profile.locked': 'El perfil de alergias está cargando o no está disponible. El escaneo seguirá bloqueado hasta que tu perfil esté listo.',
 
   'overview.title': 'La buena comida empieza con una revisión.', 'overview.subtitle': 'Una vista más clara de lo que hay en tu próximo bocado.',

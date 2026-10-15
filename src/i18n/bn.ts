@@ -40,6 +40,8 @@ export const bn: Messages = {
 
   'account.demo': 'ডেমো ব্যবহারকারী', 'account.yours': 'আপনার অ্যাকাউন্ট', 'account.demoSub': 'লোকাল প্রিভিউ সেশন', 'account.yoursSub': 'ব্যক্তিগত অ্যালার্জি প্রোফাইল',
   'mode.demo': 'ডেমো মোড', 'mode.connected': 'সংযুক্ত',
+  'mode.beta': 'বিটা', 'beta.notice': 'পরবর্তী আপডেট পরীক্ষার জন্য বিটা সংস্করণ। এখানে শুধু BiteBeacon অ্যাডমিনরা সাইন ইন করতে পারেন। অন্যরা bitebeacon.org ব্যবহার করুন।',
+  'beta.adminsOnly': 'এই বিটা শুধু BiteBeacon অ্যাডমিনদের জন্য। সাইন ইন করতে bitebeacon.org ব্যবহার করুন।',
   'profile.locked': 'অ্যালার্জি প্রোফাইল লোড হচ্ছে বা পাওয়া যাচ্ছে না। প্রোফাইল প্রস্তুত না হওয়া পর্যন্ত স্ক্যান বন্ধ থাকবে।',
 
   'overview.title': 'ভালো খাবারের শুরু একটি যাচাই দিয়ে।', 'overview.subtitle': 'আপনার পরের কামড়ে কী আছে, তার আরও স্পষ্ট ধারণা।',

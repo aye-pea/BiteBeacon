@@ -40,6 +40,8 @@ export const ht: Messages = {
 
   'account.demo': 'Vizitè demo', 'account.yours': 'Kont ou', 'account.demoSub': 'Sesyon apèsi lokal', 'account.yoursSub': 'Pwofil alèji prive',
   'mode.demo': 'MÒD DEMO', 'mode.connected': 'KONEKTE',
+  'mode.beta': 'BETA', 'beta.notice': 'Vèsyon beta pou teste pwochen mizajou a. Se sèlman administratè BiteBeacon ki ka konekte isit la. Tout lòt moun, tanpri itilize bitebeacon.org.',
+  'beta.adminsOnly': 'Beta sa a se pou administratè BiteBeacon sèlman. Tanpri konekte sou bitebeacon.org.',
   'profile.locked': 'Pwofil alèji a ap chaje oswa li pa disponib. Eskanè a rete bloke jiskaske pwofil ou pare.',
 
   'overview.title': 'Bon manje kòmanse ak yon verifikasyon.', 'overview.subtitle': 'Yon pi bon vi sou sa ki nan pwochen bouche ou.',

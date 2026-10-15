@@ -40,6 +40,8 @@ export const zhHant: Messages = {
 
   'account.demo': '示範體驗者', 'account.yours': '你的帳號', 'account.demoSub': '本地預覽工作階段', 'account.yoursSub': '私密過敏檔案',
   'mode.demo': '示範模式', 'mode.connected': '已連線',
+  'mode.beta': '測試版', 'beta.notice': '用於測試下一次更新的測試版。只有 BiteBeacon 管理員可以在此登入。其他使用者請使用 bitebeacon.org。',
+  'beta.adminsOnly': '此測試版僅供 BiteBeacon 管理員使用。請前往 bitebeacon.org 登入。',
   'profile.locked': '過敏檔案正在載入或不可用。檔案就緒前，掃描功能保持鎖定。',
 
   'overview.title': '好食物，從檢查開始。', 'overview.subtitle': '更清楚地了解你下一口吃的是什麼。',

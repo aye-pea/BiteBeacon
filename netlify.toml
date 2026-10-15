@@ -1,0 +1,9 @@
+# Build settings stay in the Netlify dashboard; this file only marks beta builds.
+# Deploy previews (one per pull request) and branch deploys (the "beta" branch behind
+# beta.bitebeacon.org) get EXPO_PUBLIC_BETA=1: admins-only sign-in and no demo.
+# Production (bitebeacon.org) never gets it.
+[context.deploy-preview.environment]
+  EXPO_PUBLIC_BETA = "1"
+
+[context.branch-deploy.environment]
+  EXPO_PUBLIC_BETA = "1"
