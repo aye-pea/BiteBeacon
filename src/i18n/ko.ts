@@ -139,7 +139,7 @@ export const ko: Messages = {
   'toast.nameSaved': '이름 저장됨 · 결과에 “{name}”(으)로 표시돼요', 'toast.nameCleared': '이름 삭제됨 · 결과에 “{you}”(으)로 표시돼요',
   'settings.household': '가구', 'settings.count': '{max}명 중 {n}명', 'settings.youTag': '(나)', 'settings.noAllergies': '아직 저장된 알레르기가 없어요',
   'settings.editYours': '내 알레르기 편집', 'settings.full': '가구가 가득 찼어요: 나를 제외하고 최대 {n}명까지예요.',
-  'settings.showFor': '결과 표시 대상', 'settings.showForHelp': '스캔할 때 기본으로 확인할 사람이에요. 결과마다 바꿀 수 있어요.',
+  'settings.showFor': '결과 표시 대상', 'settings.showForHelp': '스캔할 때 기본으로 확인할 사람이에요. 한 명이나 여러 명을 자유롭게 고를 수 있어요. 결과마다 바꿀 수도 있어요.', 'settings.keepOne': '최소 한 명은 선택해 두세요.',
   'settings.defaultLabel': '기본값: {label}', 'settings.addToChoose': '“{everyone}”을(를) 선택하려면 사람을 추가하세요.',
   'settings.defaultFailed': '기본값을 저장할 수 없어요. 이전 선택이 계속 적용 중이에요.',
   'toast.defaultEveryone': '이제 기본적으로 모두의 결과를 표시해요', 'toast.defaultPerson': '이제 기본적으로 {name}님의 결과를 표시해요',

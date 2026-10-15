@@ -19,6 +19,19 @@ import { CartLogo } from './src/ui/logo';
 type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
 const ME = 'me', EVERYONE = 'everyone';
+// Who results show for: [EVERYONE] (everyone, including people added later) or any non-empty mix of person ids.
+type ViewPick = string[];
+const picked = (pick: ViewPick, people: Person[]) => pick.includes(EVERYONE) ? people : people.filter(p => pick.includes(p.id));
+const samePick = (a: ViewPick, b: ViewPick) => a.length === b.length && a.every(id => b.includes(id));
+// Whether an option shows as ticked; Everyone is ticked whenever every person is.
+const ticked = (pick: ViewPick, id: string, people: Person[]) => { const ids = picked(pick, people).map(p => p.id); return id === EVERYONE ? ids.length === people.length : ids.includes(id); };
+// Ticks or unticks one option. Returns null when that would leave nobody selected.
+const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | null => {
+  const ids = picked(pick, people).map(p => p.id);
+  if (id === EVERYONE) return ids.length === people.length ? [ME] : [EVERYONE];
+  const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
+  return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
+};
 const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }];
 type Entry = { product: Product; at: string };
 // Fictional demo pantry, dated relative to today so the expiry alerts always show.
@@ -132,8 +145,8 @@ function AppContent() {
   const [myName, setMyName] = useState('');
   const [nameDraft, setNameDraft] = useState('');
   const [members, setMembers] = useState<Person[]>([]);
-  const [defaultView, setDefaultView] = useState(ME);
-  const [view, setView] = useState(ME);
+  const [defaultView, setDefaultView] = useState<ViewPick>([ME]);
+  const [view, setView] = useState<ViewPick>([ME]);
   const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [settingsBusy, setSettingsBusy] = useState(false);
@@ -141,7 +154,7 @@ function AppContent() {
   const [pantryBusy, setPantryBusy] = useState(false);
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
   const today = dayOf(new Date());
-  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView(ME); setView(ME); setEditing(null); setRemoving(null); };
+  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
   useEffect(() => {
@@ -159,7 +172,7 @@ function AppContent() {
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
     if (!session || !supabase || demo) return;
     Promise.all([
-      supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, language').eq('id', session.user.id).maybeSingle(),
+      supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, default_include_me, default_member_ids, language').eq('id', session.user.id).maybeSingle(),
       supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
       supabase.from('pantry_items').select('id, product, expires_on, status, added_at, closed_at').order('added_at', { ascending: false }),
     ]).then(([{ data, error }, household, stored]) => {
@@ -169,7 +182,11 @@ function AppContent() {
       setPantry((stored.data ?? []).map(row => toPantryItem(row as Record<string, unknown>)).filter((i): i is PantryItem => i !== null));
       const selected = Array.isArray(data?.allergies) ? data.allergies.filter((id: AllergenId) => ALLERGENS.some(a => a.id === id)) : [];
       const loaded = (household.data ?? []).map(toPerson).filter((p): p is Person => p !== null);
-      const preferred = data?.default_everyone ? EVERYONE : loaded.some(p => p.id === data?.default_member_id) ? data!.default_member_id as string : ME;
+      // Rows saved before multi-select only have default_member_id; ids of removed people are dropped.
+      const listed: ViewPick = Array.isArray(data?.default_member_ids)
+        ? [...(data.default_include_me === false ? [] : [ME]), ...loaded.map(p => p.id).filter(id => data.default_member_ids.includes(id))]
+        : loaded.some(p => p.id === data?.default_member_id) ? [data!.default_member_id as string] : [ME];
+      const preferred: ViewPick = data?.default_everyone ? [EVERYONE] : listed.length ? listed : [ME];
       const name = typeof data?.display_name === 'string' ? data.display_name : '';
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
@@ -180,7 +197,7 @@ function AppContent() {
 
   const enterDemo = () => {
     ++generation.current; setDemo(true); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
-    resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView(EVERYONE); setView(EVERYONE);
+    resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
     setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
@@ -284,13 +301,22 @@ function AppContent() {
     if (!ok) { failSettings(t('settings.nameFailed')); return; }
     setMyName(next); setNameDraft(next); haptic.success(); toast(next ? t('toast.nameSaved', { name: next }) : t('toast.nameCleared', { you: t('common.you') }));
   };
-  const chooseDefault = async (next: string) => {
-    if (settingsBusy || next === defaultView) return;
+  const toggleDefault = async (id: string) => {
+    if (settingsBusy) return;
+    const next = togglePick(defaultView, id, people);
+    if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
+    if (samePick(next, defaultView)) return;
+    const everyone = next.includes(EVERYONE);
     setSettingsBusy(true); setFeedback('');
-    const ok = await saveProfileFields({ default_everyone: next === EVERYONE, default_member_id: next === EVERYONE || next === ME ? null : next });
+    const ok = await saveProfileFields({ default_everyone: everyone, default_member_id: null, default_include_me: everyone || next.includes(ME), default_member_ids: everyone ? [] : next.filter(x => x !== ME) });
     setSettingsBusy(false);
     if (!ok) { failSettings(t('settings.defaultFailed')); return; }
-    setDefaultView(next); setView(next); haptic.select(); toast(next === EVERYONE ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: people.find(p => p.id === next)?.name ?? t('common.you') }), 'info');
+    setDefaultView(next); setView(next); haptic.select(); toast(everyone ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: i18n.list(picked(next, people).map(p => p.name)) }), 'info');
+  };
+  const toggleView = (id: string) => {
+    const next = togglePick(activeView, id, people);
+    if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
+    setView(next);
   };
   const saveMember = async () => {
     if (!editing || settingsBusy) return;
@@ -327,8 +353,8 @@ function AppContent() {
     if (!ok) { failSettings(t('member.removeFailed', { name: person?.name ?? t('member.thisPerson') })); return; }
     // The database clears a default that pointed at this person; mirror that here.
     setMembers(prev => prev.filter(p => p.id !== id)); setRemoving(null);
-    if (defaultView === id) setDefaultView(ME);
-    if (view === id) setView(defaultView === id ? ME : defaultView);
+    const without = (pick: ViewPick) => pick.includes(EVERYONE) ? pick : pick.filter(x => x !== id).length ? pick.filter(x => x !== id) : [ME];
+    setDefaultView(without); setView(without);
     haptic.warning(); toast(t('toast.memberRemoved', { name: person?.name ?? t('member.thisPerson') }), 'info');
   };
   const chooseLanguage = async (next: Lang) => {
@@ -390,8 +416,9 @@ function AppContent() {
               <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? t('member.saveChanges') : t('member.addToHousehold')}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>{t('common.cancel')}</Button></View></Reveal>;
   const people: Person[] = [{ id: ME, name: myName || t('common.you'), allergies }, ...members];
   const household = members.length > 0;
-  const activeView = household && (view === EVERYONE || people.some(p => p.id === view)) ? view : ME;
-  const viewPeople = activeView === EVERYONE ? people : people.filter(p => p.id === activeView);
+  const activeView: ViewPick = household && picked(view, people).length ? view : [ME];
+  const viewPeople = picked(activeView, people);
+  const defaultPeople = picked(defaultView, people);
   const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: people.length }) }, ...people.map(p => ({ id: p.id, label: p.name }))];
   const results = product ? assessPeople(product, viewPeople) : [];
   const single = results.length === 1 ? results[0] : null;
@@ -540,7 +567,7 @@ function AppContent() {
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? t('result.fictional') : t('result.live')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('result.close')} haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
                 <Text style={s.sectionTitle}>{product.name}</Text><Text style={s.bodySmall}>{product.brand} · {product.barcode}</Text>
-                {household && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View accessibilityRole="radiogroup" style={s.chips}>{viewOptions.map(o => { const on = activeView === o.id; return <Tap key={o.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => setView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
+                {household && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
                 {summary ? <>
                   <View testID="household-summary" style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{summaryTitle(summary)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{summaryDetail(summary)}</Text></View></View>
                   {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
@@ -605,12 +632,12 @@ function AppContent() {
             {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
               <Tap accessibilityRole="button" accessibilityLabel={t('member.edit', { name: m.name })} haptic="select" disabled={settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: m.id, name: m.name, allergies: [...m.allergies] }); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap>
               <Tap accessibilityRole="button" accessibilityLabel={t('member.removeLabel', { name: m.name })} haptic="warning" disabled={settingsBusy} onPress={() => { setFeedback(''); setEditing(null); setRemoving(m.id); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><Trash2 size={17} color={C.red} /></Tap></View>
-              {removing === m.id && <Reveal style={{ gap: 10 }}><Notice kind="danger">{t('member.removeConfirm', { name: m.name })}{defaultView === m.id ? ` ${t('member.removeDefault')}` : ''}</Notice><View style={s.actionRow}><View style={{ flex: 1 }}><Button variant="danger" hapticKind="warning" loading={settingsBusy} onPress={() => void removeMember(m.id)}>{t('member.remove', { name: m.name })}</Button></View><Button secondary onPress={() => setRemoving(null)}>{t('member.keep')}</Button></View></Reveal>}</View>)}
+              {removing === m.id && <Reveal style={{ gap: 10 }}><Notice kind="danger">{t('member.removeConfirm', { name: m.name })}{defaultPeople.length === 1 && defaultPeople[0].id === m.id ? ` ${t('member.removeDefault')}` : ''}</Notice><View style={s.actionRow}><View style={{ flex: 1 }}><Button variant="danger" hapticKind="warning" loading={settingsBusy} onPress={() => void removeMember(m.id)}>{t('member.remove', { name: m.name })}</Button></View><Button secondary onPress={() => setRemoving(null)}>{t('member.keep')}</Button></View></Reveal>}</View>)}
             {editing && !editing.id ? memberForm
               : !editing && members.length < MAX_MEMBERS && <Button secondary disabled={!settingsReady || settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: null, name: '', allergies: [] }); }} icon={<Plus accessible={false} size={18} color={C.green} />}>{t('member.add')}</Button>}
             {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>{t('settings.full', { n: MAX_MEMBERS })}</Text>}</View>
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
-            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = defaultView === o.id || (!household && o.id === ME); return <Tap key={o.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void chooseDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
+            <View testID="show-for-settings" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = !household ? o.id === ME : ticked(defaultView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
             {!household && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{LANGUAGES.map(l => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} disabled={settingsBusy} onPress={() => void chooseLanguage(l.code)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View>

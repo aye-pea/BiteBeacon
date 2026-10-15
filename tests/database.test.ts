@@ -20,6 +20,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610140002_profile_language.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150001_pantry_items.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150002_more_languages.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150004_default_view_people.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -107,6 +108,17 @@ describe('household members', () => {
     await db.query('delete from public.household_members where id = $1', [own]);
     const row = (await db.query<{ default_member_id: string | null; display_name: string }>('select default_member_id, display_name from public.profiles where id = $1', [D])).rows[0];
     expect(row).toEqual({ default_member_id: null, display_name: 'DFK' });
+  });
+  it('lets the default view list any mix of the caller own members, and drops a member when removed', async () => {
+    await asUser(C);
+    const other = (await db.query<{ id: string }>(`select id from public.household_members`)).rows[0].id;
+    await asUser(D);
+    const [kha, dfk] = [(await add('Kha')).rows[0].id, (await add('DFK')).rows[0].id];
+    await db.query('update public.profiles set default_include_me = false, default_member_ids = $1 where id = $2', [[kha, dfk], D]);
+    await expect(db.query('update public.profiles set default_member_ids = $1 where id = $2', [[kha, other], D])).rejects.toThrow(/default_members_owned/);
+    await db.query('delete from public.household_members where id = $1', [kha]);
+    const row = (await db.query<{ default_include_me: boolean; default_member_ids: string[] }>('select default_include_me, default_member_ids from public.profiles where id = $1', [D])).rows[0];
+    expect(row).toEqual({ default_include_me: false, default_member_ids: [dfk] });
   });
   it('deletes members with the account', async () => {
     await asUser(C);

@@ -139,7 +139,7 @@ export const bn: Messages = {
   'toast.nameSaved': 'নাম সংরক্ষিত · ফলাফলে “{name}” দেখাবে', 'toast.nameCleared': 'নাম মুছে ফেলা হয়েছে · ফলাফলে “{you}” দেখাবে',
   'settings.household': 'পরিবার', 'settings.count': '{max} জনের মধ্যে {n} জন', 'settings.youTag': '(আপনি)', 'settings.noAllergies': 'এখনো কোনো অ্যালার্জি সংরক্ষিত নেই',
   'settings.editYours': 'আপনার অ্যালার্জি সম্পাদনা করুন', 'settings.full': 'পরিবার পূর্ণ: আপনি ছাড়া সর্বোচ্চ {n} জন।',
-  'settings.showFor': 'যাঁর ফলাফল দেখাবে', 'settings.showForHelp': 'ডিফল্টভাবে একটি স্ক্যান কাকে যাচাই করবে। যেকোনো ফলাফলে আপনি বদলাতে পারবেন।',
+  'settings.showFor': 'যাঁর ফলাফল দেখাবে', 'settings.showForHelp': 'ডিফল্টভাবে একটি স্ক্যান কাকে যাচাই করবে। যেকোনো একজন বা যেকোনো কয়েকজনকে বেছে নিন। যেকোনো ফলাফলেও আপনি বদলাতে পারবেন।', 'settings.keepOne': 'অন্তত একজনকে বেছে রাখুন।',
   'settings.defaultLabel': 'ডিফল্ট: {label}', 'settings.addToChoose': '“{everyone}” বেছে নিতে একজন ব্যক্তি যোগ করুন।',
   'settings.defaultFailed': 'ডিফল্ট সংরক্ষণ করা যায়নি। আপনার আগের পছন্দই এখনো চালু আছে।',
   'toast.defaultEveryone': 'ফলাফলে এখন ডিফল্টভাবে সবাইকে দেখাবে', 'toast.defaultPerson': 'ফলাফলে এখন ডিফল্টভাবে {name}-কে দেখাবে',

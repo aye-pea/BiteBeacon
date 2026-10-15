@@ -139,7 +139,7 @@ export const fr: Messages = {
   'toast.nameSaved': 'Nom enregistré · les résultats affichent « {name} »', 'toast.nameCleared': 'Nom effacé · les résultats affichent « {you} »',
   'settings.household': 'Foyer', 'settings.count': '{n} personne(s) sur {max}', 'settings.youTag': '(vous)', 'settings.noAllergies': 'Aucune allergie enregistrée pour l’instant',
   'settings.editYours': 'Modifier vos allergies', 'settings.full': 'Le foyer est complet : jusqu’à {n} personnes en plus de vous.',
-  'settings.showFor': 'Afficher les résultats pour', 'settings.showForHelp': 'La personne vérifiée par défaut lors d’un scan. Vous pouvez changer sur chaque résultat.',
+  'settings.showFor': 'Afficher les résultats pour', 'settings.showForHelp': 'Les personnes vérifiées par défaut lors d’un scan. Cochez une personne ou n’importe quelle combinaison. Vous pouvez aussi changer sur chaque résultat.', 'settings.keepOne': 'Gardez au moins une personne sélectionnée.',
   'settings.defaultLabel': 'Par défaut : {label}', 'settings.addToChoose': 'Ajoutez une personne pour choisir « {everyone} ».',
   'settings.defaultFailed': 'Impossible d’enregistrer le choix par défaut. Votre choix précédent reste actif.',
   'toast.defaultEveryone': 'Les résultats affichent désormais tout le monde par défaut', 'toast.defaultPerson': 'Les résultats affichent désormais {name} par défaut',

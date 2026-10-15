@@ -139,7 +139,7 @@ export const ht: Messages = {
   'toast.nameSaved': 'Non an sere · rezilta yo montre “{name}”', 'toast.nameCleared': 'Non an efase · rezilta yo montre “{you}”',
   'settings.household': 'Fanmi', 'settings.count': '{n} sou {max} moun', 'settings.youTag': '(ou)', 'settings.noAllergies': 'Poko gen alèji ki sere',
   'settings.editYours': 'Modifye alèji ou', 'settings.full': 'Fanmi an plen: jiska {n} moun anplis ou.',
-  'settings.showFor': 'Montre rezilta pou', 'settings.showForHelp': 'Pou ki moun yon eskanè verifye pa defo. Ou ka chanje sou nenpòt rezilta.',
+  'settings.showFor': 'Montre rezilta pou', 'settings.showForHelp': 'Pou ki moun yon eskanè verifye pa defo. Chwazi nenpòt moun, oswa nenpòt konbinezon. Ou ka chanje l tou sou nenpòt rezilta.', 'settings.keepOne': 'Kite omwen yon moun chwazi.',
   'settings.defaultLabel': 'Pa defo: {label}', 'settings.addToChoose': 'Ajoute yon moun pou ou ka chwazi “{everyone}”.',
   'settings.defaultFailed': 'Nou pa t kapab sere chwa pa defo a. Ansyen chwa ou a toujou aktif.',
   'toast.defaultEveryone': 'Rezilta yo kounye a montre tout moun pa defo', 'toast.defaultPerson': 'Rezilta yo kounye a montre {name} pa defo',
