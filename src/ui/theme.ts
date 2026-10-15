@@ -10,6 +10,8 @@ const light = {
   border: '#E3E8DF', borderStrong: '#C9D4C4', pale: '#EEF1EA', separator: 'rgba(23,51,43,0.12)', fill: '#F4F6F1',
   red: '#A2322C', redPressed: '#7E2521', redSoft: '#FCEBE8', amber: '#86560F', amberSoft: '#FBF0D9', amberPressed: '#F3E3BD', blue: '#2C5872', blueSoft: '#E6EFF4',
   toast: '#17332B', toastText: '#FFFFFF', shadow: 'rgba(23,51,43,0.04)', shadowRaised: 'rgba(23,51,43,0.18)',
+  // Liquid Glass tab bar: see-through tint, bright rim and top highlight, soft outline so it holds on white pages.
+  glass: 'rgba(255,255,255,0.62)', glassSolid: 'rgba(255,255,255,0.94)', glassRim: 'rgba(255,255,255,0.75)', glassHighlight: 'rgba(255,255,255,0.9)', glassEdge: 'rgba(23,51,43,0.10)',
 };
 export type Palette = typeof light;
 const dark: Palette = {
@@ -18,6 +20,7 @@ const dark: Palette = {
   border: '#2A322E', borderStrong: '#3B4640', pale: '#232A26', separator: 'rgba(233,239,234,0.14)', fill: '#242B27',
   red: '#FF928A', redPressed: '#FFB3AD', redSoft: '#3A1E1C', amber: '#F0C46C', amberSoft: '#32280F', amberPressed: '#40341A', blue: '#93C6E8', blueSoft: '#152839',
   toast: '#E9EFEA', toastText: '#0E1311', shadow: 'rgba(0,0,0,0)', shadowRaised: 'rgba(0,0,0,0.5)',
+  glass: 'rgba(34,42,38,0.58)', glassSolid: 'rgba(30,37,33,0.95)', glassRim: 'rgba(255,255,255,0.14)', glassHighlight: 'rgba(255,255,255,0.12)', glassEdge: 'rgba(0,0,0,0.35)',
 };
 /** Light palette, for the few module-level defaults that render before a scheme is known. */
 export const C = light;
