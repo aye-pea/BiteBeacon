@@ -33,7 +33,7 @@ test('signs up with a username, then adds a recovery email in Settings', async (
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
   await page.getByLabel('Username', { exact: true }).fill('Bad Name');
-  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   await page.getByRole('checkbox').first().click();
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByText(/Usernames are 3–20 characters/)).toBeVisible();
@@ -79,7 +79,7 @@ test('signs in with a username via the lookup, and sends a reset link to an adde
 
   await page.getByRole('button', { name: 'Back to sign in' }).click();
   await page.getByLabel('Username or email').fill('sam_k');
-  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByTestId('toast')).toContainText('Signed in · profile loaded');
   expect(seen.lookup).toEqual({ p_username: 'sam_k', p_password: 'local-test-only-password' });
@@ -92,7 +92,7 @@ test('an email typed at sign-up is saved as the recovery email straight away', a
   await page.goto('/');
   await page.getByLabel('Username', { exact: true }).fill('sam_k');
   await page.getByTestId('signup-email').fill(' sam@example.com ');
-  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   await page.getByRole('checkbox').first().click();
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByTestId('toast')).toContainText('Signed in');

@@ -176,7 +176,7 @@ export const fr: Messages = {
   'about.deleteConfirm': 'Supprimer définitivement votre compte et votre profil d’allergies enregistré ? Cette action est irréversible.',
   'about.deleting': 'Suppression…', 'about.confirmDelete': 'Confirmer la suppression définitive', 'about.cancelDelete': 'Annuler la suppression', 'about.delete': 'Supprimer mon compte',
   'account.deleteFailed': 'Impossible de supprimer le compte. Veuillez réessayer.', 'account.deleted': 'Compte et profil d’allergies supprimés.',
-  'footer.disclaimer': 'Une vérification utile, jamais une garantie de sécurité. Lisez toujours l’étiquette.', 'footer.version': 'BiteBeacon / Démo 0.1',
+  'footer.disclaimer': 'Une vérification utile, jamais une garantie de sécurité. Lisez toujours l’étiquette.', 'footer.version': 'BiteBeacon · Version {version}',
   'legal.title': 'Mentions légales et sécurité', 'legal.english': 'Les pages s’ouvrent en anglais.', 'legal.disclaimer': 'Avertissement santé ↗', 'legal.privacy': 'Politique de confidentialité ↗', 'legal.terms': 'Conditions d’utilisation ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const fr: Messages = {
   'auth.emailOptional': 'E-mail (facultatif)',
   'auth.emailOptionalHelp': 'Sert uniquement à réinitialiser votre mot de passe si vous l’oubliez. Vous pourrez l’ajouter ou le modifier plus tard dans Réglages.',
   'auth.emailNotSaved': 'Compte créé, mais cet e-mail n’a pas pu être enregistré. Vous pouvez l’ajouter dans Réglages.',
+  'settings.appearance.presentation': 'Présentation', 'auth.showPassword': 'Afficher le mot de passe', 'auth.hidePassword': 'Masquer le mot de passe',
+  'settings.toolbar': 'Barre d’outils', 'settings.toolbarHelp': 'Choisissez ce qui apparaît dans la barre d’onglets et la barre latérale. Enregistré sur cet appareil.', 'settings.showHome': 'Afficher Accueil dans la barre',
 };

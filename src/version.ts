@@ -1,0 +1,3 @@
+// The version shown in the app footer. Keep it equal to "version" in app.json (tests/version.test.ts checks).
+// Each batch of changes merged to main moves it up by 0.01: 1.01, 1.02, 1.03, …
+export const APP_VERSION = '1.01';

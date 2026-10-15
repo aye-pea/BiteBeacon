@@ -24,6 +24,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610150005_more_allergens.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150006_admin_stats.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150009_admin_levels.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150010_profile_without_allergies.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -42,11 +43,21 @@ describe('owner-only database boundary', () => {
     expect((await db.query('delete from public.profiles where id = $1 returning id', [A])).rows).toHaveLength(0);
     await expect(db.query(`insert into public.profiles(id, allergies, consent_version) values ($1, array['milk'], '2026-09-30')`, [A])).rejects.toThrow(/row-level security/);
   });
-  it('blocks unsupported, empty, and null allergy entries', async () => {
+  it('blocks unsupported and null allergy entries', async () => {
     await asUser(A);
-    for (const value of ["array['banana']", 'array[]::text[]', 'array[null]::text[]']) {
+    for (const value of ["array['banana']", 'array[null]::text[]']) {
       await expect(db.query(`update public.profiles set allergies = ${value} where id = $1`, [A])).rejects.toThrow(/supported_allergies/);
     }
+  });
+  it('allows an empty own allergy list so family can be set up first, but not an empty member', async () => {
+    await asUser(B);
+    await db.query(`insert into public.profiles(id, allergies, consent_version, display_name) values ($1, array[]::text[], '2026-09-30', 'Sam')`, [B]);
+    expect((await db.query<{ allergies: string[] }>('select allergies from public.profiles')).rows[0].allergies).toEqual([]);
+    await db.query(`insert into public.household_members(name, allergies, position) values ('Kid', array['peanuts'], 0)`);
+    await expect(db.query(`insert into public.household_members(name, allergies, position) values ('Empty', array[]::text[], 1)`)).rejects.toThrow(/member_supported_allergies/);
+    await db.exec('reset role;');
+    await db.query('delete from public.household_members where owner_id = $1', [B]);
+    await db.query('delete from public.profiles where id = $1', [B]);
   });
   it('blocks impersonation through changed id', async () => {
     await asUser(A);

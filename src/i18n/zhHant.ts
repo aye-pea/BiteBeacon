@@ -176,7 +176,7 @@ export const zhHant: Messages = {
   'about.deleteConfirm': '要永久刪除你的帳號和已儲存的過敏檔案嗎？此操作無法撤銷。',
   'about.deleting': '正在刪除…', 'about.confirmDelete': '確認永久刪除', 'about.cancelDelete': '取消刪除', 'about.delete': '刪除我的帳號',
   'account.deleteFailed': '無法刪除帳號，請重試。', 'account.deleted': '帳號和過敏檔案已刪除。',
-  'footer.disclaimer': '有用的檢查工具，絕不是安全保證。請務必閱讀標籤。', 'footer.version': 'BiteBeacon / 示範版 0.1',
+  'footer.disclaimer': '有用的檢查工具，絕不是安全保證。請務必閱讀標籤。', 'footer.version': 'BiteBeacon · 版本 {version}',
   'legal.title': '法律與安全', 'legal.english': '頁面為英文。', 'legal.disclaimer': '健康免責聲明 ↗', 'legal.privacy': '隱私權政策 ↗', 'legal.terms': '使用條款 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const zhHant: Messages = {
   'auth.emailOptional': '電子郵件（選填）',
   'auth.emailOptionalHelp': '僅用於在你忘記密碼時重設密碼。之後可在「設定」中新增或變更。',
   'auth.emailNotSaved': '帳號已建立，但此電子郵件未能儲存。你可以在「設定」中新增。',
+  'settings.appearance.presentation': '簡報', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
+  'settings.toolbar': '工具列', 'settings.toolbarHelp': '選擇標籤列和側邊欄中顯示的內容。儲存在此裝置上。', 'settings.showHome': '在工具列中顯示「首頁」',
 };

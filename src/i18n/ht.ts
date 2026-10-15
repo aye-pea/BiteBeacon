@@ -176,7 +176,7 @@ export const ht: Messages = {
   'about.deleteConfirm': 'Efase kont ou ak pwofil alèji ou sere a pou tout tan? Ou p ap ka defèt sa.',
   'about.deleting': 'N ap efase…', 'about.confirmDelete': 'Konfime efasman pou tout tan', 'about.cancelDelete': 'Anile efasman an', 'about.delete': 'Efase kont mwen',
   'account.deleteFailed': 'Nou pa t kapab efase kont la. Tanpri eseye ankò.', 'account.deleted': 'Kont ak pwofil alèji efase.',
-  'footer.disclaimer': 'Yon verifikasyon ki itil, men pa janm yon garanti sekirite. Toujou li etikèt la.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'footer.disclaimer': 'Yon verifikasyon ki itil, men pa janm yon garanti sekirite. Toujou li etikèt la.', 'footer.version': 'BiteBeacon · Vèsyon {version}',
   'legal.title': 'Enfòmasyon legal ak sekirite', 'legal.english': 'Paj yo ap louvri an anglè.', 'legal.disclaimer': 'Avètisman sou sante ↗', 'legal.privacy': 'Politik Konfidansyalite ↗', 'legal.terms': 'Kondisyon Itilizasyon ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const ht: Messages = {
   'auth.emailOptional': 'Imèl (opsyonèl)',
   'auth.emailOptionalHelp': 'Se sèlman pou reyinisyalize modpas ou si ou bliye l. Ou ka ajoute oswa chanje l pita nan Paramèt.',
   'auth.emailNotSaved': 'Kont lan kreye, men nou pa t ka anrejistre imèl sa a. Ou ka ajoute l nan Paramèt.',
+  'settings.appearance.presentation': 'Prezantasyon', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
+  'settings.toolbar': 'Ba zouti', 'settings.toolbarHelp': 'Chwazi sa ki parèt nan ba onglè a ak ba bò a. Li sere sou aparèy sa a.', 'settings.showHome': 'Montre Akèy nan ba zouti a',
 };

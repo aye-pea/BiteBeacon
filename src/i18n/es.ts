@@ -176,7 +176,7 @@ export const es: Messages = {
   'about.deleteConfirm': '¿Eliminar tu cuenta y tu perfil de alergias guardado de forma permanente? Esto no se puede deshacer.',
   'about.deleting': 'Eliminando…', 'about.confirmDelete': 'Confirmar eliminación permanente', 'about.cancelDelete': 'Cancelar eliminación', 'about.delete': 'Eliminar mi cuenta',
   'account.deleteFailed': 'No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'account.deleted': 'Se eliminaron la cuenta y el perfil de alergias.',
-  'footer.disclaimer': 'Una revisión útil, nunca una garantía de seguridad. Siempre lee la etiqueta.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'footer.disclaimer': 'Una revisión útil, nunca una garantía de seguridad. Siempre lee la etiqueta.', 'footer.version': 'BiteBeacon · Versión {version}',
   'legal.title': 'Aviso legal y seguridad', 'legal.english': 'Las páginas se abren en inglés.', 'legal.disclaimer': 'Aviso de salud ↗', 'legal.privacy': 'Política de privacidad ↗', 'legal.terms': 'Términos de uso ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const es: Messages = {
   'auth.emailOptional': 'Correo (opcional)',
   'auth.emailOptionalHelp': 'Solo se usa para restablecer tu contraseña si la olvidas. Puedes añadirlo o cambiarlo después en Configuración.',
   'auth.emailNotSaved': 'Cuenta creada, pero no se pudo guardar ese correo. Puedes añadirlo en Configuración.',
+  'settings.appearance.presentation': 'Presentación', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
+  'settings.toolbar': 'Barra de navegación', 'settings.toolbarHelp': 'Elige qué aparece en la barra de pestañas y la barra lateral. Se guarda en este dispositivo.', 'settings.showHome': 'Mostrar Inicio en la barra',
 };

@@ -176,7 +176,7 @@ export const hi: Messages = {
   'about.deleteConfirm': 'अपना अकाउंट और सेव की गई एलर्जी प्रोफ़ाइल हमेशा के लिए डिलीट करें? इसे वापस नहीं किया जा सकता।',
   'about.deleting': 'डिलीट हो रहा है…', 'about.confirmDelete': 'हमेशा के लिए डिलीट करने की पुष्टि करें', 'about.cancelDelete': 'डिलीट करना रद्द करें', 'about.delete': 'मेरा अकाउंट डिलीट करें',
   'account.deleteFailed': 'अकाउंट डिलीट नहीं हो सका। कृपया फिर कोशिश करें।', 'account.deleted': 'अकाउंट और एलर्जी प्रोफ़ाइल डिलीट हो गए।',
-  'footer.disclaimer': 'एक मददगार जांच, सुरक्षा की गारंटी कभी नहीं। हमेशा लेबल पढ़ें।', 'footer.version': 'BiteBeacon / डेमो 0.1',
+  'footer.disclaimer': 'एक मददगार जांच, सुरक्षा की गारंटी कभी नहीं। हमेशा लेबल पढ़ें।', 'footer.version': 'BiteBeacon · संस्करण {version}',
   'legal.title': 'कानूनी जानकारी और सुरक्षा', 'legal.english': 'ये पेज अंग्रेज़ी में खुलते हैं।', 'legal.disclaimer': 'स्वास्थ्य अस्वीकरण ↗', 'legal.privacy': 'गोपनीयता नीति ↗', 'legal.terms': 'उपयोग की शर्तें ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const hi: Messages = {
   'auth.emailOptional': 'ईमेल (वैकल्पिक)',
   'auth.emailOptionalHelp': 'केवल पासवर्ड भूलने पर उसे रीसेट करने के लिए। आप इसे बाद में सेटिंग्स में जोड़ या बदल सकते हैं।',
   'auth.emailNotSaved': 'खाता बन गया, लेकिन यह ईमेल सहेजा नहीं जा सका। आप इसे सेटिंग्स में जोड़ सकते हैं।',
+  'settings.appearance.presentation': 'प्रेज़ेंटेशन', 'auth.showPassword': 'पासवर्ड दिखाएं', 'auth.hidePassword': 'पासवर्ड छिपाएं',
+  'settings.toolbar': 'टूलबार', 'settings.toolbarHelp': 'चुनें कि टैब बार और साइडबार में क्या दिखे। इस डिवाइस पर सहेजा जाता है।', 'settings.showHome': 'टूलबार में होम दिखाएं',
 };

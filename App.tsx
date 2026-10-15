@@ -3,7 +3,7 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Eye, EyeOff, House, PanelsTopLeft, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
@@ -20,6 +20,8 @@ import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 import { CartLogo } from './src/ui/logo';
+import { setShowHome, useShowHome } from './src/ui/prefs';
+import { APP_VERSION } from './src/version';
 
 type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about' | 'admin';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
@@ -33,7 +35,7 @@ const ticked = (pick: ViewPick, id: string, people: Person[]) => { const ids = p
 // Ticks or unticks one option. Returns null when that would leave nobody selected.
 const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | null => {
   const ids = picked(pick, people).map(p => p.id);
-  if (id === EVERYONE) return ids.length === people.length ? [ME] : [EVERYONE];
+  if (id === EVERYONE) return ids.length === people.length ? [people[0].id] : [EVERYONE];
   const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
   return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
 };
@@ -44,7 +46,7 @@ const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
+  const Component = { overview: House, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -118,7 +120,9 @@ function AppContent() {
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const insets = useSafeAreaInsets();
+  const showHome = useShowHome();
   const [page, setPage] = useState<Page>('overview');
+  const [showPassword, setShowPassword] = useState(false);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -160,6 +164,9 @@ function AppContent() {
   const [myName, setMyName] = useState('');
   const [nameDraft, setNameDraft] = useState('');
   const [members, setMembers] = useState<Person[]>([]);
+  // Whether this account has a profiles row yet. Someone who skips their own allergies can still add family;
+  // the first household setting they save creates the row with an empty allergy list.
+  const hasProfile = useRef(false);
   const [defaultView, setDefaultView] = useState<ViewPick>([ME]);
   const [view, setView] = useState<ViewPick>([ME]);
   const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
@@ -177,7 +184,7 @@ function AppContent() {
   const [statsFailed, setStatsFailed] = useState(false);
   const [statsBusy, setStatsBusy] = useState(false);
   const today = dayOf(new Date());
-  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
+  const resetHousehold = () => { hasProfile.current = false; setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
   useEffect(() => {
@@ -215,10 +222,11 @@ function AppContent() {
         : loaded.some(p => p.id === data?.default_member_id) ? [data!.default_member_id as string] : [ME];
       const preferred: ViewPick = data?.default_everyone ? [EVERYONE] : listed.length ? listed : [ME];
       const name = typeof data?.display_name === 'string' ? data.display_name : '';
+      hasProfile.current = !!data;
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
-      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(selected.length ? 'overview' : 'allergies');
-      toast(selected.length ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
+      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(selected.length || loaded.length ? 'overview' : 'allergies');
+      toast(selected.length || loaded.length ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
     });
   }, [session?.user.id]);
 
@@ -257,7 +265,7 @@ function AppContent() {
         const { error } = await supabase.auth.signInWithPassword({ email: await signInAddress(typed, password), password });
         if (error) throw error;
       }
-      setPassword('');
+      setPassword(''); setShowPassword(false);
     } catch { haptic.error(); say(t('auth.failed'), 'danger'); }
     finally { setAuthBusy(false); }
   };
@@ -277,7 +285,7 @@ function AppContent() {
     const { error } = await supabase.auth.updateUser({ password });
     setAuthBusy(false);
     if (error) { haptic.error(); say(t('auth.newPasswordFailed'), 'danger'); return; }
-    setPassword(''); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
+    setPassword(''); setShowPassword(false); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
   };
   const accountEmail = session?.user.email && !usernameFromEmail(session.user.email) ? session.user.email : null;
   const saveRecoveryEmail = async () => {
@@ -306,6 +314,7 @@ function AppContent() {
         if (!session || !supabase) throw new Error('Sign in again.');
         const { error } = await supabase.from('profiles').upsert({ id: session.user.id, allergies: draft, consent_version: '2026-09-30' });
         if (error) throw error;
+        hasProfile.current = true;
       }
       if (current !== generation.current) return;
       setAllergies([...draft]); setProfileReady(true); setProfileSaved(true);
@@ -356,7 +365,7 @@ function AppContent() {
     toast(viewPeople.length > 1 ? t('toast.checkedPeople', { n: viewPeople.length }) : viewPeople[0].id === ME ? tp('toast.checkedMine', allergies.length) : t('toast.checkedFor', { name: viewPeople[0].name }), 'info');
   };
   const scan = async (code: string, fromCamera = false) => {
-    if (scanLock.current || !profileReady || !allergies.length) return;
+    if (scanLock.current || !canScan) return;
     scanLock.current = true; if (fromCamera) haptic.firm();
     pendingScroll.current = true;
     setBusy(true); setCamera(false); setProduct(null); setFeedback(''); setBarcode(code.trim());
@@ -395,11 +404,18 @@ function AppContent() {
     ++generation.current; setSession(null); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setPantry([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say(t('account.deleted'), 'success');
   };
   // Settings changes are saved straight away; in the demo they only live in memory.
-  const settingsReady = profileReady && (demo || allergies.length > 0);
+  const settingsReady = profileReady;
   const failSettings = (message: string) => { haptic.error(); say(message, 'danger'); };
   const saveProfileFields = async (fields: Record<string, unknown>) => {
     if (demo) return true;
     if (!session || !supabase) return false;
+    if (!hasProfile.current) {
+      // No profiles row yet (own allergies never saved): create it, with the same consent given at sign-up.
+      const { error } = await supabase.from('profiles').insert({ id: session.user.id, allergies: [], consent_version: '2026-09-30', ...fields });
+      if (!error) { hasProfile.current = true; return true; }
+      if (error.code !== '23505') return false;
+      hasProfile.current = true;
+    }
     const { error } = await supabase.from('profiles').update(fields).eq('id', session.user.id);
     return !error;
   };
@@ -414,7 +430,7 @@ function AppContent() {
   };
   const toggleDefault = async (id: string) => {
     if (settingsBusy) return;
-    const next = togglePick(defaultView, id, people);
+    const next = togglePick(defaultView, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
     if (samePick(next, defaultView)) return;
     const everyone = next.includes(EVERYONE);
@@ -422,10 +438,10 @@ function AppContent() {
     const ok = await saveProfileFields({ default_everyone: everyone, default_member_id: null, default_include_me: everyone || next.includes(ME), default_member_ids: everyone ? [] : next.filter(x => x !== ME) });
     setSettingsBusy(false);
     if (!ok) { failSettings(t('settings.defaultFailed')); return; }
-    setDefaultView(next); setView(next); haptic.select(); toast(everyone ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: i18n.list(picked(next, people).map(p => p.name)) }), 'info');
+    setDefaultView(next); setView(next); haptic.select(); toast(everyone ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: i18n.list(picked(next, checkPeople).map(p => p.name)) }), 'info');
   };
   const toggleView = (id: string) => {
-    const next = togglePick(activeView, id, people);
+    const next = togglePick(activeView, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
     setView(next);
   };
@@ -471,7 +487,7 @@ function AppContent() {
   const chooseLanguage = async (next: Lang) => {
     if (settingsBusy || next === lang) return;
     setLang(next); setFeedback(''); haptic.select();
-    if (demo || !allergies.length) { toast(translate(next, 'toast.languageSaved', { name: languageName(next) }), 'info'); return; }
+    if (demo) { toast(translate(next, 'toast.languageSaved', { name: languageName(next) }), 'info'); return; }
     setSettingsBusy(true);
     const ok = await saveProfileFields({ language: next });
     setSettingsBusy(false);
@@ -527,17 +543,22 @@ function AppContent() {
               <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? t('member.saveChanges') : t('member.addToHousehold')}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>{t('common.cancel')}</Button></View></Reveal>;
   const people: Person[] = [{ id: ME, name: myName || t('common.you'), allergies }, ...members];
   const household = members.length > 0;
-  const activeView: ViewPick = household && picked(view, people).length ? view : [ME];
-  const viewPeople = picked(activeView, people);
-  const defaultPeople = picked(defaultView, people);
-  const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: people.length }) }, ...people.map(p => ({ id: p.id, label: p.name }))];
+  // Results are only checked for people with allergies saved, so an account holder without any can still check for family.
+  const checkPeople = allergies.length ? people : members;
+  const multi = checkPeople.length > 1;
+  const firstPick: ViewPick = [checkPeople[0]?.id ?? ME];
+  const activeView: ViewPick = multi && picked(view, checkPeople).length ? view : firstPick;
+  // Nobody has allergies yet: lists still render against the account holder, as before; checking stays off (canScan).
+  const viewPeople = checkPeople.length ? picked(activeView, checkPeople) : [people[0]];
+  const defaultPeople = picked(defaultView, checkPeople);
+  const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: checkPeople.length }) }, ...checkPeople.map(p => ({ id: p.id, label: p.name }))];
   const results = product ? assessPeople(product, viewPeople) : [];
   const single = results.length === 1 ? results[0] : null;
   const summary = results.length > 1 ? householdSummary(results) : null;
   const assessment = single?.assessment ?? null;
   const evidence = single?.evidence ?? [];
   const focusAllergies = unionAllergies(viewPeople);
-  const canScan = profileReady && allergies.length > 0;
+  const canScan = profileReady && checkPeople.length > 0;
   const allergyOwner = allergyPerson === ME ? null : members.find(m => m.id === allergyPerson) ?? null;
   const savedDraft = allergyOwner ? allergyOwner.allergies : allergies;
   const profileChanged = draft.length !== savedDraft.length || draft.some(id => !savedDraft.includes(id));
@@ -583,11 +604,13 @@ function AppContent() {
   useEffect(() => {
     if (!docScroll) return;
     const el = document.createElement('style');
-    el.textContent = `html, body { height: auto; min-height: 100%; overflow: visible; background-color: ${C.bg}; } #root { height: auto; min-height: 100dvh; }`;
+    el.textContent = `html, body { height: auto; min-height: 100%; overflow: visible; background-color: ${C.bg};${C.canvasImage ? ` background-image: ${C.canvasImage}; background-attachment: fixed;` : ''} } #root { height: auto; min-height: 100dvh; }`;
     document.head.appendChild(el);
     return () => el.remove();
-  }, [docScroll, C.bg]);
+  }, [docScroll, C.bg, C.canvasImage]);
   useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  // With Home hidden from the toolbar, Scan is the first page instead.
+  useEffect(() => { if (!showHome && page === 'overview') setPage('scan'); }, [showHome, page]);
   // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
   const refreshStats = async () => {
     const current = generation.current;
@@ -604,13 +627,17 @@ function AppContent() {
   }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
+  // Password box with an eye button that shows or hides what was typed.
+  const passwordField = (input: React.ReactElement) => <View style={s.passwordBox}>{input}
+    <Tap testID="toggle-password" accessibilityRole="button" accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShowPassword(!showPassword)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
+      {showPassword ? <EyeOff accessible={false} size={20} color={C.muted} /> : <Eye accessible={false} size={20} color={C.muted} />}</Tap></View>;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
       <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
       <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
-      <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />
+      <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />)}
       <Button loading={authBusy} onPress={saveNewPassword}>{authBusy ? t('auth.wait') : t('auth.newPasswordSave')}</Button>
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
     </View>
@@ -636,7 +663,7 @@ function AppContent() {
         <Text style={s.label}>{authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')}</Text><TextInput testID="auth-login" accessibilityLabel={authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')} style={s.input} value={login} onChangeText={setLogin} placeholder={authMode === 'signup' ? 'alex_p' : ''} placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} autoComplete="username" maxLength={authMode === 'signup' ? 20 : 254} />
         {authMode === 'signup' && <Text style={s.footnote}>{t('auth.usernameHelp')}</Text>}
         {authMode === 'signup' && <><Text style={s.label}>{t('auth.emailOptional')}</Text><TextInput testID="signup-email" accessibilityLabel={t('auth.emailOptional')} accessibilityHint={t('auth.emailOptionalHelp')} style={s.input} value={signupEmail} onChangeText={setSignupEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" maxLength={254} /><Text style={s.footnote}>{t('auth.emailOptionalHelp')}</Text></>}
-        <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
+        <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />)}
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
         {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
@@ -652,7 +679,7 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  const navItems: { page: Page; label: string; short: string }[] = ([...(showHome ? ['overview'] as const : []), 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
   // App details lives in Settings on every screen size.
@@ -721,11 +748,11 @@ function AppContent() {
         {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
         {page === 'overview' && <>
-          <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><Leaf size={28} color={C.green} /></View>}</View>
+          <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><CartLogo size={28} color={C.green} /></View>}</View>
           {alertCount > 0 && <Tap testID="pantry-alert" accessibilityRole="button" accessibilityHint={t('pantry.open')} haptic="select" scaleTo={.98} onPress={() => navigate('pantry')} style={[s.card, s.historyRow, { backgroundColor: tone[alerts.expired ? 'danger' : 'warning'].bg }]}>
             <CalendarClock size={24} color={tone[alerts.expired ? 'danger' : 'warning'].fg} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('pantry.alertTitle')}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{alertText}</Text></View><Text style={s.textLink}>{t('pantry.open')}</Text></Tap>}
           <View style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
-            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: '#C6E26C' }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
+            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: C.limePressed }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
             <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
@@ -770,7 +797,7 @@ function AppContent() {
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? t('result.fictional') : t('result.live')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('result.close')} haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
                 <Text style={s.sectionTitle}>{product.name}</Text><Text style={s.bodySmall}>{product.brand} · {product.barcode}</Text>
-                {household && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
+                {multi && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
                 {summary ? <>
                   <View testID="household-summary" style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{summaryTitle(summary)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{summaryDetail(summary)}</Text></View></View>
                   {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
@@ -825,7 +852,6 @@ function AppContent() {
               <Tap accessibilityRole="button" accessibilityLabel={t('history.deleteLabel', { name })} haptic={null} onPress={() => void deletePantryItem(item.id)} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><X size={18} color={C.red} /></Tap>
             </View>; })}</>}
         {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('settings.title')}</Text><Text style={s.body}>{t('settings.body')}</Text>
-          {!settingsReady && <Notice>{t('settings.saveFirst')}</Notice>}
           {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
@@ -847,14 +873,16 @@ function AppContent() {
               : !editing && members.length < MAX_MEMBERS && <Button secondary disabled={!settingsReady || settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: null, name: '', allergies: [] }); }} icon={<Plus accessible={false} size={18} color={C.green} />}>{t('member.add')}</Button>}
             {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>{t('settings.full', { n: MAX_MEMBERS })}</Text>}</View>
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
-            <View testID="show-for-settings" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = !household ? o.id === ME : ticked(defaultView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
-            {!household && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>
+            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(defaultView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
+            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>
             {langOpen && <Reveal style={s.dropdownMenu}><View accessibilityRole="radiogroup">{LANGUAGES.map((l, i) => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} scaleTo={.99} disabled={settingsBusy} onPress={() => { setLangOpen(false); void chooseLanguage(l.code); }} style={[s.dropdownRow, i < LANGUAGES.length - 1 && s.groupedSeparator]} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }, on && { color: C.green, fontWeight: '700' }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></Reveal>}
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
+          <View testID="toolbar-settings" style={s.card}><View style={s.inline}><PanelsTopLeft size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.toolbar')}</Text></View><Text style={s.bodySmall}>{t('settings.toolbarHelp')}</Text>
+            <Tap accessibilityRole="switch" aria-checked={showHome} accessibilityState={{ checked: showHome }} accessibilityLabel={t('settings.showHome')} haptic="select" onPress={() => setShowHome(!showHome)} style={[s.radioRow, showHome && s.allergySelected]} pressedStyle={!showHome && { backgroundColor: C.pale }}><CheckMark checked={showHome} /><Text style={[s.navText, { flex: 1 }]}>{t('settings.showHome')}</Text></Tap></View>
           <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
           {isAdmin && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
         {page === 'admin' && isAdmin && adminPage}
@@ -865,7 +893,7 @@ function AppContent() {
           <View style={[s.card, { backgroundColor: C.pale }]}><Sparkles size={25} color={C.green} /><Text style={s.cardTitle}>{t('about.nextTitle')}</Text><Text style={s.body}>{t('about.nextBody')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sessionTitle')}</Text><Text style={s.bodySmall}>{demo ? t('about.sessionDemo') : t('about.sessionCloud')}</Text><Button secondary disabled={busy || saving} onPress={leave} icon={<LogOut accessible={false} size={17} color={C.ink} />}>{demo ? t('about.exitDemo') : t('about.signOut')}</Button>
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
-        <View style={s.footer}><Leaf size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version')}</Text></View>
+        <View style={s.footer}><CartLogo size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version', { version: APP_VERSION })}</Text></View>
       </Scroller>
       <View style={docScroll && [s.fixedBottom, { paddingBottom: insets.bottom }]} onLayout={docScroll ? e => setBottomBarHeight(e.nativeEvent.layout.height) : undefined}>
       {page === 'allergies' && <View style={s.profileActions}>
@@ -886,8 +914,10 @@ export default function App() { return <SafeAreaProvider><ToastProvider><AppCont
 
 // Browsers without backdrop blur get a nearly solid pill so the tab labels stay readable.
 const glassBlur = Platform.OS === 'web' && typeof CSS !== 'undefined' && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)'));
+// Gradient themes paint over their solid colour on the web; native keeps the solid colour.
+const webGradient = (image: string) => (Platform.OS === 'web' && image ? { backgroundImage: image } as object : {});
 const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bg, ...webGradient(C.canvasImage) }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: C.bg },
   appFrame: { flex: 1, flexDirection: 'row' }, main: { flex: 1, minWidth: 0, minHeight: 0 }, pageScroll: { flex: 1, minHeight: 0 },
   saveConfirmation: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.greenSoft },
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
@@ -904,9 +934,9 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   demoBar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4, backgroundColor: C.amberSoft, borderRadius: 16, paddingVertical: 4, paddingLeft: 14, paddingRight: 4 }, demoExit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }, pageTitle: { ...type.largeTitle, color: C.ink, marginBottom: 4, flexShrink: 1 },
   body: { ...type.body, color: C.muted }, bodySmall: { ...type.subhead, color: C.muted }, footnote: { ...type.footnote, color: C.muted }, roundLeaf: { padding: 16, borderWidth: 1, borderColor: C.border, borderRadius: 50, backgroundColor: C.paper },
-  hero: { flexDirection: 'row', backgroundColor: '#214B3C', borderRadius: 26, overflow: 'hidden' }, heroCopy: { flex: 1.35, padding: 32, gap: 16 }, heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: '#CBD9AE' }, heroTitle: { color: '#FAFCF4', fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 }, heroBody: { color: '#C7D4C7', fontSize: 15, lineHeight: 22, maxWidth: 360 }, heroCaption: { color: '#ADC2B0', ...type.footnote },
+  hero: { flexDirection: 'row', backgroundColor: C.hero, ...webGradient(C.heroImage), borderRadius: 26, overflow: 'hidden' }, heroCopy: { flex: 1.35, padding: 32, gap: 16 }, heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: C.heroEyebrow }, heroTitle: { color: '#FAFCF4', fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 }, heroBody: { color: '#C7D4C7', fontSize: 15, lineHeight: 22, maxWidth: 360 }, heroCaption: { color: '#ADC2B0', ...type.footnote },
   limeButton: { backgroundColor: C.lime, minHeight: 50, paddingVertical: 13, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 999 }, limeButtonText: { color: HERO_INK, ...type.headline },
-  heroArt: { flex: .8, padding: 26, backgroundColor: '#2D5A48', alignItems: 'center', justifyContent: 'center' }, scanIllustration: { backgroundColor: '#FCFCF5', borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, transform: [{ rotate: '5deg' }], gap: 12, boxShadow: '0px 14px 35px #183E3333' }, tinyLeaf: { padding: 5, backgroundColor: '#EDF2DD', borderRadius: 30 }, labelMini: { fontSize: 8, letterSpacing: 2, fontWeight: '700', color: C.green }, packageIllustration: { backgroundColor: '#E8EACD', padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 }, packageBrand: { color: '#64754A', fontSize: 14, fontStyle: 'italic' }, packageName: { color: C.green, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 }, packageBottom: { fontSize: 7, letterSpacing: 1, color: C.muted }, illustrationBarcode: { alignItems: 'center' },
+  heroArt: { flex: .8, padding: 26, backgroundColor: C.heroArt, alignItems: 'center', justifyContent: 'center' }, scanIllustration: { backgroundColor: '#FCFCF5', borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, transform: [{ rotate: '5deg' }], gap: 12, boxShadow: '0px 14px 35px #183E3333' }, tinyLeaf: { padding: 5, backgroundColor: '#EDF2DD', borderRadius: 30 }, labelMini: { fontSize: 8, letterSpacing: 2, fontWeight: '700', color: C.green }, packageIllustration: { backgroundColor: '#E8EACD', padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 }, packageBrand: { color: '#64754A', fontSize: 14, fontStyle: 'italic' }, packageName: { color: C.green, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 }, packageBottom: { fontSize: 7, letterSpacing: 1, color: C.muted }, illustrationBarcode: { alignItems: 'center' },
   // Cards share a row's width with flex only when wide. In the phone column a flex basis of 0 squeezed them
   // shorter than their content (clipped Household row, caption spilling under the lookup card).
   columns: { flexDirection: 'row', gap: 20 }, card: { backgroundColor: C.paper, borderRadius: 22, padding: 20, gap: 13, boxShadow: shadow.card },
@@ -931,7 +961,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sampleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, borderBottomWidth: 1, borderColor: C.border }, sampleSwatch: { padding: 7, borderRadius: 9 },
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
-  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
+  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  passwordBox: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 3, borderWidth: 1, borderColor: C.fill, borderRadius: 14, backgroundColor: C.fill }, passwordInput: { flex: 1, minWidth: 0, minHeight: 50, paddingVertical: 13, paddingLeft: 16, ...type.body, color: C.ink }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }, statTile: { flexGrow: 1, gap: 6 }, statNumber: { ...type.largeTitle, color: C.ink },

@@ -176,7 +176,7 @@ export const zh: Messages = {
   'about.deleteConfirm': '要永久删除你的账户和已保存的过敏档案吗？此操作无法撤销。',
   'about.deleting': '正在删除…', 'about.confirmDelete': '确认永久删除', 'about.cancelDelete': '取消删除', 'about.delete': '删除我的账户',
   'account.deleteFailed': '无法删除账户，请重试。', 'account.deleted': '账户和过敏档案已删除。',
-  'footer.disclaimer': '有用的检查工具，绝不是安全保证。请务必阅读标签。', 'footer.version': 'BiteBeacon / 演示版 0.1',
+  'footer.disclaimer': '有用的检查工具，绝不是安全保证。请务必阅读标签。', 'footer.version': 'BiteBeacon · 版本 {version}',
   'legal.title': '法律与安全', 'legal.english': '页面为英文。', 'legal.disclaimer': '健康免责声明 ↗', 'legal.privacy': '隐私政策 ↗', 'legal.terms': '使用条款 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const zh: Messages = {
   'auth.emailOptional': '邮箱（可选）',
   'auth.emailOptionalHelp': '仅用于在你忘记密码时重置密码。之后可在“设置”中添加或更改。',
   'auth.emailNotSaved': '账户已创建，但该邮箱未能保存。你可以在“设置”中添加。',
+  'settings.appearance.presentation': '演示文稿', 'auth.showPassword': '显示密码', 'auth.hidePassword': '隐藏密码',
+  'settings.toolbar': '工具栏', 'settings.toolbarHelp': '选择标签栏和侧边栏中显示的内容。保存在此设备上。', 'settings.showHome': '在工具栏中显示“首页”',
 };

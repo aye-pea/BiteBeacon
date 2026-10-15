@@ -176,7 +176,7 @@ export const ko: Messages = {
   'about.deleteConfirm': '계정과 저장된 알레르기 프로필을 영구적으로 삭제할까요? 되돌릴 수 없어요.',
   'about.deleting': '삭제 중…', 'about.confirmDelete': '영구 삭제 확인', 'about.cancelDelete': '삭제 취소', 'about.delete': '내 계정 삭제',
   'account.deleteFailed': '계정을 삭제할 수 없어요. 다시 시도하세요.', 'account.deleted': '계정과 알레르기 프로필을 삭제했어요.',
-  'footer.disclaimer': '도움이 되는 확인일 뿐, 안전을 보장하지 않아요. 항상 라벨을 읽으세요.', 'footer.version': 'BiteBeacon / 데모 0.1',
+  'footer.disclaimer': '도움이 되는 확인일 뿐, 안전을 보장하지 않아요. 항상 라벨을 읽으세요.', 'footer.version': 'BiteBeacon · 버전 {version}',
   'legal.title': '법률 및 안전', 'legal.english': '페이지는 영어로 열립니다.', 'legal.disclaimer': '건강 관련 고지 ↗', 'legal.privacy': '개인정보 처리방침 ↗', 'legal.terms': '이용약관 ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const ko: Messages = {
   'auth.emailOptional': '이메일 (선택)',
   'auth.emailOptionalHelp': '비밀번호를 잊었을 때 재설정하는 데에만 사용됩니다. 나중에 설정에서 추가하거나 바꿀 수 있습니다.',
   'auth.emailNotSaved': '계정이 만들어졌지만 이메일을 저장하지 못했습니다. 설정에서 추가할 수 있습니다.',
+  'settings.appearance.presentation': '프레젠테이션', 'auth.showPassword': '비밀번호 표시', 'auth.hidePassword': '비밀번호 숨기기',
+  'settings.toolbar': '도구 막대', 'settings.toolbarHelp': '탭 막대와 사이드바에 표시할 항목을 선택하세요. 이 기기에 저장돼요.', 'settings.showHome': '도구 막대에 홈 표시',
 };

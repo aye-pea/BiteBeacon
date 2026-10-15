@@ -176,7 +176,7 @@ export const en = {
   'about.deleteConfirm': 'Delete your account and saved allergy profile permanently? This cannot be undone.',
   'about.deleting': 'Deleting…', 'about.confirmDelete': 'Confirm permanent deletion', 'about.cancelDelete': 'Cancel deletion', 'about.delete': 'Delete my account',
   'account.deleteFailed': 'Account could not be deleted. Please retry.', 'account.deleted': 'Account and allergy profile deleted.',
-  'footer.disclaimer': 'A helpful check, never a safety guarantee. Always read the label.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'footer.disclaimer': 'A helpful check, never a safety guarantee. Always read the label.', 'footer.version': 'BiteBeacon · Version {version}',
   'legal.title': 'Legal & safety', 'legal.english': 'Pages open in English.', 'legal.disclaimer': 'Health disclaimer ↗', 'legal.privacy': 'Privacy Policy ↗', 'legal.terms': 'Terms of Use ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,6 +296,8 @@ export const en = {
   'auth.emailOptional': 'Email (optional)',
   'auth.emailOptionalHelp': 'Only used to reset your password if you forget it. You can add or change it later in Settings.',
   'auth.emailNotSaved': 'Account created, but that email couldn’t be saved. You can add it in Settings.',
+  'settings.appearance.presentation': 'Presentation', 'auth.showPassword': 'Show password', 'auth.hidePassword': 'Hide password',
+  'settings.toolbar': 'Toolbar', 'settings.toolbarHelp': 'Choose what appears in the tab bar and sidebar. Saved on this device.', 'settings.showHome': 'Show Home in the toolbar',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -176,7 +176,7 @@ export const vi: Messages = {
   'about.deleteConfirm': 'Xóa vĩnh viễn tài khoản và hồ sơ dị ứng đã lưu? Thao tác này không thể hoàn tác.',
   'about.deleting': 'Đang xóa…', 'about.confirmDelete': 'Xác nhận xóa vĩnh viễn', 'about.cancelDelete': 'Hủy xóa', 'about.delete': 'Xóa tài khoản của tôi',
   'account.deleteFailed': 'Không thể xóa tài khoản. Vui lòng thử lại.', 'account.deleted': 'Đã xóa tài khoản và hồ sơ dị ứng.',
-  'footer.disclaimer': 'Một bước kiểm tra hữu ích, không bao giờ là sự đảm bảo an toàn. Luôn đọc nhãn.', 'footer.version': 'BiteBeacon / Demo 0.1',
+  'footer.disclaimer': 'Một bước kiểm tra hữu ích, không bao giờ là sự đảm bảo an toàn. Luôn đọc nhãn.', 'footer.version': 'BiteBeacon · Phiên bản {version}',
   'legal.title': 'Pháp lý và an toàn', 'legal.english': 'Các trang mở bằng tiếng Anh.', 'legal.disclaimer': 'Tuyên bố miễn trừ về sức khỏe ↗', 'legal.privacy': 'Chính sách quyền riêng tư ↗', 'legal.terms': 'Điều khoản sử dụng ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const vi: Messages = {
   'auth.emailOptional': 'Email (không bắt buộc)',
   'auth.emailOptionalHelp': 'Chỉ dùng để đặt lại mật khẩu khi bạn quên. Bạn có thể thêm hoặc đổi sau trong Cài đặt.',
   'auth.emailNotSaved': 'Đã tạo tài khoản, nhưng không thể lưu email này. Bạn có thể thêm trong Cài đặt.',
+  'settings.appearance.presentation': 'Bản trình bày', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
+  'settings.toolbar': 'Thanh công cụ', 'settings.toolbarHelp': 'Chọn những gì hiện trên thanh tab và thanh bên. Được lưu trên thiết bị này.', 'settings.showHome': 'Hiện Trang chủ trên thanh công cụ',
 };

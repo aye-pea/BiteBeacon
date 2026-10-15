@@ -176,7 +176,7 @@ export const ru: Messages = {
   'about.deleteConfirm': 'Удалить аккаунт и сохранённый профиль аллергий навсегда? Это действие нельзя отменить.',
   'about.deleting': 'Удаление…', 'about.confirmDelete': 'Подтвердить безвозвратное удаление', 'about.cancelDelete': 'Отменить удаление', 'about.delete': 'Удалить мой аккаунт',
   'account.deleteFailed': 'Не удалось удалить аккаунт. Попробуйте снова.', 'account.deleted': 'Аккаунт и профиль аллергий удалены.',
-  'footer.disclaimer': 'Полезная проверка, но никогда не гарантия безопасности. Всегда читайте этикетку.', 'footer.version': 'BiteBeacon / Демо 0.1',
+  'footer.disclaimer': 'Полезная проверка, но никогда не гарантия безопасности. Всегда читайте этикетку.', 'footer.version': 'BiteBeacon · Версия {version}',
   'legal.title': 'Правовая информация и безопасность', 'legal.english': 'Страницы откроются на английском языке.', 'legal.disclaimer': 'Отказ от ответственности (здоровье) ↗', 'legal.privacy': 'Политика конфиденциальности ↗', 'legal.terms': 'Условия использования ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const ru: Messages = {
   'auth.emailOptional': 'Email (необязательно)',
   'auth.emailOptionalHelp': 'Нужен только для сброса забытого пароля. Его можно добавить или изменить позже в Настройках.',
   'auth.emailNotSaved': 'Аккаунт создан, но этот email сохранить не удалось. Его можно добавить в Настройках.',
+  'settings.appearance.presentation': 'Презентация', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
+  'settings.toolbar': 'Панель навигации', 'settings.toolbarHelp': 'Выберите, что показывать на панели вкладок и в боковом меню. Сохраняется на этом устройстве.', 'settings.showHome': 'Показывать «Главную» на панели',
 };

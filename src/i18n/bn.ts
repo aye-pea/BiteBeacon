@@ -176,7 +176,7 @@ export const bn: Messages = {
   'about.deleteConfirm': 'আপনার অ্যাকাউন্ট ও সংরক্ষিত অ্যালার্জি প্রোফাইল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরানো যাবে না।',
   'about.deleting': 'মুছে ফেলা হচ্ছে…', 'about.confirmDelete': 'স্থায়ীভাবে মুছে ফেলা নিশ্চিত করুন', 'about.cancelDelete': 'মুছে ফেলা বাতিল করুন', 'about.delete': 'আমার অ্যাকাউন্ট মুছে ফেলুন',
   'account.deleteFailed': 'অ্যাকাউন্ট মুছে ফেলা যায়নি। আবার চেষ্টা করুন।', 'account.deleted': 'অ্যাকাউন্ট ও অ্যালার্জি প্রোফাইল মুছে ফেলা হয়েছে।',
-  'footer.disclaimer': 'একটি সহায়ক যাচাই, কখনোই নিরাপত্তার নিশ্চয়তা নয়। সবসময় লেবেল পড়ুন।', 'footer.version': 'BiteBeacon / ডেমো 0.1',
+  'footer.disclaimer': 'একটি সহায়ক যাচাই, কখনোই নিরাপত্তার নিশ্চয়তা নয়। সবসময় লেবেল পড়ুন।', 'footer.version': 'BiteBeacon · সংস্করণ {version}',
   'legal.title': 'আইনি তথ্য ও নিরাপত্তা', 'legal.english': 'পৃষ্ঠাগুলো ইংরেজিতে খুলবে।', 'legal.disclaimer': 'স্বাস্থ্য সংক্রান্ত দাবিত্যাগ ↗', 'legal.privacy': 'গোপনীয়তা নীতি ↗', 'legal.terms': 'ব্যবহারের শর্তাবলি ↗',
 
   // Pantry, expiry tracking and hidden-source evidence — 2026-10-15
@@ -296,4 +296,6 @@ export const bn: Messages = {
   'auth.emailOptional': 'ইমেল (ঐচ্ছিক)',
   'auth.emailOptionalHelp': 'শুধু পাসওয়ার্ড ভুলে গেলে রিসেট করতে ব্যবহার হয়। পরে সেটিংসে যোগ বা পরিবর্তন করতে পারেন।',
   'auth.emailNotSaved': 'অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু ইমেলটি সংরক্ষণ করা যায়নি। সেটিংসে যোগ করতে পারেন।',
+  'settings.appearance.presentation': 'উপস্থাপনা', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
+  'settings.toolbar': 'টুলবার', 'settings.toolbarHelp': 'ট্যাব বার ও সাইডবারে কী দেখাবে তা বেছে নিন। এই ডিভাইসে সংরক্ষিত হয়।', 'settings.showHome': 'টুলবারে হোম দেখান',
 };
