@@ -23,6 +23,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610150004_default_view_people.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150005_more_allergens.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150006_admin_stats.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150009_admin_levels.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -253,5 +254,18 @@ describe('scan total and admin statistics', () => {
     expect(stats.allergens.gluten).toBe(2);
     expect(Object.values(stats.household_sizes as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(stats.profiles);
     expect(stats.pantry.items).toBe(await count('select count(*) as n from public.pantry_items'));
+  });
+  it('gives a limited admin only scans, accounts, activity, sign-ups and recent sign-ins', async () => {
+    const LIMITED = '77777777-aaaa-4777-8777-777777777777';
+    await db.exec(`reset role; insert into auth.users(id, email) values ('${LIMITED}', 'limited@example.com'); insert into public.admins(user_id, full_access) values ('${LIMITED}', false);`);
+    await asUser(LIMITED);
+    const stats = (await db.query<{ s: Record<string, any> }>('select public.admin_stats() as s')).rows[0].s;
+    expect(stats.full).toBe(false);
+    expect(Object.keys(stats).sort()).toEqual(['accounts', 'active_1d', 'active_30d', 'active_7d', 'full', 'generated_at', 'recent_sign_ins', 'scans', 'signups_30d', 'signups_7d', 'signups_by_day']);
+    await asUser('99999999-9999-4999-8999-999999999999');
+    const full = (await db.query<{ s: Record<string, any> }>('select public.admin_stats() as s')).rows[0].s;
+    expect(full.full).toBe(true);
+    expect(full.pantry).toBeDefined();
+    await db.exec('reset role;');
   });
 });

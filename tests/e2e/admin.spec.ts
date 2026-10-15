@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { en as EN } from '../../src/i18n/en';
 
 // Supabase is answered locally by page.route, so no real account or project is touched.
 const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -13,7 +14,7 @@ const STATS = {
   household_sizes: { 1: 18, 2: 7, 3: 5, 4: 3 }, languages: { device: 22, es: 6, zh: 3, en: 2 },
   pantry: { items: 88, active: 52, with_expiry: 61, accounts: 11 },
 };
-async function fakeSupabase(page: Page, admin: boolean) {
+async function fakeSupabase(page: Page, admin: boolean, extra: object = {}) {
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: USER.id, role: 'authenticated', aud: 'authenticated', exp })}.test`;
   const calls = { scans: 0, stats: 0 };
@@ -24,7 +25,7 @@ async function fakeSupabase(page: Page, admin: boolean) {
   await page.route('**/rest/v1/household_members**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/pantry_items**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/rpc/is_admin**', route => route.fulfill({ json: admin }));
-  await page.route('**/rest/v1/rpc/admin_stats**', route => { calls.stats++; return admin ? route.fulfill({ json: { ...STATS, scans: STATS.scans + calls.scans } }) : route.fulfill({ status: 400, json: { message: 'admin_only' } }); });
+  await page.route('**/rest/v1/rpc/admin_stats**', route => { calls.stats++; return admin ? route.fulfill({ json: { ...STATS, ...extra, scans: STATS.scans + calls.scans } }) : route.fulfill({ status: 400, json: { message: 'admin_only' } }); });
   await page.route('**/rest/v1/rpc/record_scan**', async route => { calls.scans++; expect(route.request().postData() ?? '').not.toMatch(/\d{8}/); await route.fulfill({ status: 204, body: '' }); });
   await page.route('**/fdc/v1/**', route => route.fulfill({ json: { foods: [] } }));
   await page.route('**/api/v2/product/**', route => route.fulfill({ json: { status: 0 } }));
@@ -60,6 +61,23 @@ test('admins see the live dashboard, and each lookup adds one to the anonymous t
   await expect(page.getByText('new.person@example.test')).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 1900 });
   await page.screenshot({ path: 'artifacts/admin-dashboard.png' });
+});
+
+test('limited admins see scans, accounts, activity and sign-ins, without pantry, household, allergen or language panes', async ({ page }) => {
+  await fakeSupabase(page, true, { full: false });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'Admin dashboard', exact: true }).click();
+  await expect(page.getByTestId('admin-scans')).toContainText('1,204');
+  await expect(page.getByTestId('admin-accounts')).toContainText('37');
+  await expect(page.getByTestId('admin-active')).toBeVisible();
+  await expect(page.getByTestId('admin-signups')).toBeVisible();
+  await expect(page.getByText('new.person@example.test')).toBeVisible();
+  await expect(page.getByTestId('admin-members')).toHaveCount(0);
+  await expect(page.getByTestId('admin-pantry')).toHaveCount(0);
+  for (const key of ['admin.allergens', 'admin.households', 'admin.languages'] as const) await expect(page.getByText(EN[key], { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/admin-dashboard-limited.png', fullPage: true });
 });
 
 test('the dashboard is hidden from other accounts and from the demo; sample taps are not counted', async ({ page }) => {

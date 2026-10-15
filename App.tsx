@@ -682,20 +682,20 @@ function AppContent() {
       <View style={[s.statGrid, singleColumn && { flexDirection: 'column' }]}>
         {statTile('accounts', t('admin.accounts'), stats.accounts, t('admin.accountsSub', { n: stats.signups7d, m: stats.signups30d }))}
         {statTile('active', t('admin.active'), stats.active7d, t('admin.activeSub', { n: stats.active1d, m: stats.active30d }))}
-        {statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
-        {statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
+        {stats.full && statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
+        {stats.full && statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
       </View>
       <View style={s.card}><Text style={s.cardTitle}>{t('admin.signups')}</Text>
         <View testID="admin-signups" accessible accessibilityLabel={`${t('admin.signups')}: ${big(stats.signups30d)}`} style={s.signupChart}>{stats.signupsByDay.map(d => <View key={d.day} style={s.signupColumn}><View style={[s.signupBar, { height: `${Math.max(d.count ? 6 : 2, (d.count / signupMax) * 100)}%`, opacity: d.count ? 1 : .35 }]} /></View>)}</View>
         {stats.signupsByDay.length > 0 && <View style={s.between}><Text style={s.footnote}>{i18n.day(stats.signupsByDay[0].day)}</Text><Text style={s.footnote}>{i18n.day(stats.signupsByDay[stats.signupsByDay.length - 1].day)}</Text></View>}</View>
-      <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
+      {stats.full && <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
         <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('admin.allergens')}</Text><Text style={s.footnote}>{t('admin.allergensNote')}</Text>
           {barRows(ALLERGENS.map(a => ({ key: a.id, label: allergyLabel(a.id), value: stats.allergens[a.id] ?? 0 })).sort((a, b) => b.value - a.value))}</View>
         <View style={[{ gap: 20 }, wide && { flex: 1 }]}>
           <View style={s.card}><Text style={s.cardTitle}>{t('admin.households')}</Text>{barRows(stats.householdSizes.map(h => ({ key: String(h.size), label: t('admin.householdSize', { n: h.size }), value: h.accounts })))}</View>
           <View style={s.card}><Text style={s.cardTitle}>{t('admin.languages')}</Text>{barRows(Object.entries(stats.languages).map(([code, value]) => ({ key: code, label: isLang(code) ? languageName(code) : t('admin.deviceLanguage'), value })).sort((a, b) => b.value - a.value))}</View>
         </View>
-      </View>
+      </View>}
       <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
         {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{usernameFromEmail(u.email) ?? u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
           : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
