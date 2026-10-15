@@ -4,6 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
+    "barcode-detector": "3.2.2",
     "expo": "~57.0.26",
     "expo-camera": "~57.0.6",
     "expo-haptics": "~57.0.3",

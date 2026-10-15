@@ -62,11 +62,11 @@ describe('result evidence', () => {
   it('highlights the exact ingredient words that matched, keeping the original text', () => {
     const segs = highlightIngredients('Sugar, Whey powder, tahini.', ['milk', 'sesame']);
     expect(segs.map(s => s.text).join('')).toBe('Sugar, Whey powder, tahini.');
-    expect(segs.filter(s => s.allergen)).toEqual([{ text: 'Whey', allergen: 'Milk' }, { text: 'tahini', allergen: 'Sesame' }]);
+    expect(segs.filter(s => s.allergen)).toEqual([{ text: 'Whey', allergen: 'Milk', hidden: true }, { text: 'tahini', allergen: 'Sesame', hidden: true }]);
   });
   it('does not highlight cocoa butter or words inside other words', () => {
     expect(highlightIngredients('Cocoa butter, eggplant.', ['milk', 'eggs']).some(s => s.allergen)).toBe(false);
-    expect(highlightIngredients('Cocoa butter, butter.', ['milk']).filter(s => s.allergen)).toEqual([{ text: 'butter', allergen: 'Milk' }]);
+    expect(highlightIngredients('Cocoa butter, butter.', ['milk']).filter(s => s.allergen)).toEqual([{ text: 'butter', allergen: 'Milk', hidden: true }]);
   });
   it('only highlights selected allergens', () => {
     expect(highlightIngredients('Milk, peanuts.', ['peanuts']).filter(s => s.allergen).map(s => s.text)).toEqual(['peanuts']);
@@ -74,11 +74,20 @@ describe('result evidence', () => {
   it('explains tags, traces and ingredient words separately', () => {
     const e = explain({ ...base, allergens: ['en:milk'], traces: ['en:tree-nuts'], ingredients: 'Whey, whey, almonds.' }, ['milk', 'tree-nuts']);
     expect(e).toEqual([
+      { allergen: 'Milk', via: 'hidden', term: 'whey' },
       { allergen: 'Milk', via: 'tag', term: 'milk' },
-      { allergen: 'Milk', via: 'ingredient', term: 'whey' },
+      { allergen: 'Tree nuts', via: 'hidden', term: 'almonds' },
       { allergen: 'Tree nuts', via: 'trace', term: 'tree nuts' },
-      { allergen: 'Tree nuts', via: 'ingredient', term: 'almonds' },
     ]);
+  });
+  it('marks only words that hide their allergen as hidden', () => {
+    const segs = highlightIngredients('Milk, whey, Eggs, albumen, soy lecithin, tofu.', ['milk', 'eggs', 'soy']).filter(s => s.allergen);
+    expect(segs.map(s => [s.text, !!s.hidden])).toEqual([['Milk', false], ['whey', true], ['Eggs', false], ['albumen', true], ['soy', false], ['tofu', true]]);
+  });
+  it('does not repeat a plain word the tags already name, but keeps hidden sources', () => {
+    const e = explain({ ...base, allergens: ['en:milk'], ingredients: 'Milk, casein.' }, ['milk']);
+    expect(e).toEqual([{ allergen: 'Milk', via: 'hidden', term: 'casein' }, { allergen: 'Milk', via: 'tag', term: 'milk' }]);
+    expect(explain({ ...base, ingredients: 'Milk.' }, ['milk'])).toEqual([{ allergen: 'Milk', via: 'ingredient', term: 'milk' }]);
   });
   it('has evidence for every allergen assess() reports', () => {
     for (const p of SAMPLES) for (const sel of [['milk', 'peanuts'], ALLERGENS.map(a => a.id)] as AllergenId[][]) {

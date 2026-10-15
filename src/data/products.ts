@@ -10,7 +10,7 @@ const sample = (name: string, ingredients: string, allergens: string[], traces: 
   source: 'sample', fetchedAt: new Date().toISOString(), ingredientLanguage: 'en',
 });
 export const SAMPLES: Product[] = [
-  sample('Peanut crunch granola', 'Rolled oats, peanuts, honey, milk powder, sea salt.', ['en:peanuts', 'en:milk'], [], 'SAMPLE-01'),
+  sample('Peanut crunch granola', 'Rolled oats, peanuts, honey, whey powder, sea salt.', ['en:peanuts', 'en:milk'], [], 'SAMPLE-01'),
   sample('Dark chocolate bites', 'Cocoa mass, sugar, cocoa butter.', [], ['en:peanuts', 'en:milk'], 'SAMPLE-02'),
   sample('Simply oat crackers', 'Oats, sunflower oil, sea salt.', [], [], 'SAMPLE-03'),
   sample('Mystery snack', '', [], [], 'SAMPLE-04', false),

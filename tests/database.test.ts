@@ -18,6 +18,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202609300001_profiles.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610140001_household_members.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610140002_profile_language.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150001_pantry_items.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -130,5 +131,51 @@ describe('profile language', () => {
     await db.query('update public.profiles set language = null where id = $1', [E]);
     await asUser(A);
     expect((await db.query(`update public.profiles set language = 'es' where id = $1 returning id`, [E])).rows).toHaveLength(0);
+  });
+});
+
+describe('pantry items', () => {
+  const F = '66666666-6666-4666-8666-666666666666';
+  const G = '77777777-7777-4777-8777-777777777777';
+  const product = JSON.stringify({ barcode: '00000000', name: 'Oats' });
+  const add = (expires: string | null = '2026-10-20') => db.query<{ id: string; owner_id: string; status: string }>(`insert into public.pantry_items(product, expires_on) values ($1::jsonb, $2) returning id, owner_id, status`, [product, expires]);
+  beforeAll(async () => { await db.exec(`reset role; insert into auth.users values ('${F}'), ('${G}');`); });
+  it('stamps the owner, starts active and hides items from other users', async () => {
+    await asUser(F);
+    const row = (await add()).rows[0];
+    expect([row.owner_id, row.status]).toEqual([F, 'active']);
+    await asUser(G);
+    expect((await db.query('select * from public.pantry_items')).rows).toHaveLength(0);
+    expect((await db.query(`update public.pantry_items set status = 'consumed', closed_at = now() where id = $1 returning id`, [row.id])).rows).toHaveLength(0);
+    expect((await db.query('delete from public.pantry_items where id = $1 returning id', [row.id])).rows).toHaveLength(0);
+  });
+  it('refuses a client-supplied owner and bad values', async () => {
+    await asUser(G);
+    await expect(db.query(`insert into public.pantry_items(owner_id, product) values ($1, $2::jsonb)`, [F, product])).rejects.toThrow(/permission denied/);
+    await expect(db.query(`insert into public.pantry_items(product) values ('[]'::jsonb)`)).rejects.toThrow(/check constraint/);
+    await expect(add('1990-01-01')).rejects.toThrow(/check constraint/);
+    const id = (await add(null)).rows[0].id;
+    await expect(db.query(`update public.pantry_items set status = 'eaten', closed_at = now() where id = $1`, [id])).rejects.toThrow(/check constraint/);
+    await expect(db.query(`update public.pantry_items set status = 'consumed' where id = $1`, [id])).rejects.toThrow(/pantry_closed_matches_status/);
+  });
+  it('lets the owner mark used and put back', async () => {
+    await asUser(F);
+    const id = (await db.query<{ id: string }>('select id from public.pantry_items')).rows[0].id;
+    await db.query(`update public.pantry_items set status = 'consumed', closed_at = now() where id = $1`, [id]);
+    await db.query(`update public.pantry_items set status = 'active', closed_at = null where id = $1`, [id]);
+    expect((await db.query<{ status: string }>('select status from public.pantry_items where id = $1', [id])).rows[0].status).toBe('active');
+  });
+  it('caps an account at 300 items', async () => {
+    await asUser(G);
+    await db.query(`insert into public.pantry_items(product) select $1::jsonb from generate_series(1, 299)`, [product]);
+    await expect(add()).rejects.toThrow(/pantry_limit/);
+  });
+  it('deletes items with the account and blocks anonymous access', async () => {
+    await asUser(G);
+    await db.query('select public.delete_my_account()');
+    await db.exec('reset role;');
+    expect((await db.query('select id from public.pantry_items where owner_id = $1', [G])).rows).toHaveLength(0);
+    await db.exec('set role anon;');
+    await expect(db.query('select * from public.pantry_items')).rejects.toThrow(/permission denied/);
   });
 });
