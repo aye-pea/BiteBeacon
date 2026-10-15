@@ -264,7 +264,7 @@ export const es: Messages = {
   'admin.empty': 'Nada todavía.',
   'auth.username': 'Nombre de usuario',
   'auth.usernameOrEmail': 'Usuario o correo',
-  'auth.usernameHelp': 'De 3 a 20 letras minúsculas, números o _. No necesitas correo. Puedes añadir uno después en Configuración para restablecer una contraseña olvidada.',
+  'auth.usernameHelp': 'De 3 a 20 letras minúsculas, números o _.',
   'auth.badUsername': 'Los nombres de usuario tienen de 3 a 20 caracteres: solo letras minúsculas, números y _.',
   'auth.taken': 'Ese nombre de usuario ya está en uso. Prueba con otro.',
   'auth.notReady': 'El registro no está disponible ahora. Inténtalo más tarde.',
@@ -293,4 +293,7 @@ export const es: Messages = {
   'settings.emailSaved': 'Correo de recuperación guardado.',
   'settings.emailCheck': 'Revisa {email} y abre el enlace de confirmación para terminar de añadirlo.',
   'settings.emailFailed': 'No se pudo guardar ese correo. Puede que ya pertenezca a otra cuenta.',
+  'auth.emailOptional': 'Correo (opcional)',
+  'auth.emailOptionalHelp': 'Solo se usa para restablecer tu contraseña si la olvidas. Puedes añadirlo o cambiarlo después en Configuración.',
+  'auth.emailNotSaved': 'Cuenta creada, pero no se pudo guardar ese correo. Puedes añadirlo en Configuración.',
 };

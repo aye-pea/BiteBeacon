@@ -40,9 +40,15 @@ test('signs up with a username, then adds a recovery email in Settings', async (
   expect(seen.signup).toBeUndefined();
 
   await page.getByLabel('Username', { exact: true }).fill('Sam_K');
+  await page.getByTestId('signup-email').fill('not-an-email');
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.getByText('Enter a valid email address.')).toBeVisible();
+  expect(seen.signup).toBeUndefined();
+  await page.getByTestId('signup-email').fill('');
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByTestId('toast')).toContainText('Signed in');
   expect(seen.signup?.email).toBe('sam_k@users.bitebeacon.org');
+  expect(seen.emailChange).toBeUndefined();
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const card = page.getByTestId('sign-in-settings');
@@ -78,4 +84,20 @@ test('signs in with a username via the lookup, and sends a reset link to an adde
   await expect(page.getByTestId('toast')).toContainText('Signed in · profile loaded');
   expect(seen.lookup).toEqual({ p_username: 'sam_k', p_password: 'local-test-only-password' });
   expect(seen.signIn?.email).toBe('sam@example.com');
+});
+
+test('an email typed at sign-up is saved as the recovery email straight away', async ({ page }) => {
+  const seen = await fakeSupabase(page);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await page.getByLabel('Username', { exact: true }).fill('sam_k');
+  await page.getByTestId('signup-email').fill(' sam@example.com ');
+  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByRole('checkbox').first().click();
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.getByTestId('toast')).toContainText('Signed in');
+  expect(seen.signup?.email).toBe('sam_k@users.bitebeacon.org');
+  expect(seen.emailChange?.email).toBe('sam@example.com');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByTestId('sign-in-settings')).toContainText('Recovery email: sam@example.com');
 });

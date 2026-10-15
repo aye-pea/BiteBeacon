@@ -264,7 +264,7 @@ export const fr: Messages = {
   'admin.empty': 'Rien pour l’instant.',
   'auth.username': 'Nom d’utilisateur',
   'auth.usernameOrEmail': 'Nom d’utilisateur ou e-mail',
-  'auth.usernameHelp': '3 à 20 lettres minuscules, chiffres ou _. Aucun e-mail requis. Vous pourrez en ajouter un plus tard dans Réglages pour réinitialiser un mot de passe oublié.',
+  'auth.usernameHelp': '3 à 20 lettres minuscules, chiffres ou _.',
   'auth.badUsername': 'Les noms d’utilisateur font 3 à 20 caractères : lettres minuscules, chiffres et _ uniquement.',
   'auth.taken': 'Ce nom d’utilisateur est déjà pris. Essayez-en un autre.',
   'auth.notReady': 'L’inscription n’est pas disponible pour le moment. Réessayez plus tard.',
@@ -293,4 +293,7 @@ export const fr: Messages = {
   'settings.emailSaved': 'E-mail de récupération enregistré.',
   'settings.emailCheck': 'Ouvrez le lien de confirmation envoyé à {email} pour terminer l’ajout.',
   'settings.emailFailed': 'Impossible d’enregistrer cet e-mail. Il est peut-être déjà utilisé par un autre compte.',
+  'auth.emailOptional': 'E-mail (facultatif)',
+  'auth.emailOptionalHelp': 'Sert uniquement à réinitialiser votre mot de passe si vous l’oubliez. Vous pourrez l’ajouter ou le modifier plus tard dans Réglages.',
+  'auth.emailNotSaved': 'Compte créé, mais cet e-mail n’a pas pu être enregistré. Vous pouvez l’ajouter dans Réglages.',
 };

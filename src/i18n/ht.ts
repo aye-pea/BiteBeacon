@@ -264,7 +264,7 @@ export const ht: Messages = {
   'admin.empty': 'Poko gen anyen.',
   'auth.username': 'Non itilizatè',
   'auth.usernameOrEmail': 'Non itilizatè oswa imèl',
-  'auth.usernameHelp': '3 a 20 lèt miniskil, chif oswa _. Ou pa bezwen imèl. Ou ka ajoute youn pita nan Paramèt pou reyinisyalize yon modpas ou bliye.',
+  'auth.usernameHelp': '3 a 20 lèt miniskil, chif oswa _.',
   'auth.badUsername': 'Non itilizatè gen 3 a 20 karaktè: sèlman lèt miniskil, chif ak _.',
   'auth.taken': 'Yon lòt moun deja pran non itilizatè sa a. Eseye yon lòt.',
   'auth.notReady': 'Ou pa ka kreye kont kounye a. Tanpri eseye ankò pita.',
@@ -293,4 +293,7 @@ export const ht: Messages = {
   'settings.emailSaved': 'Imèl rekiperasyon an anrejistre.',
   'settings.emailCheck': 'Gade {email} pou louvri lyen konfimasyon an epi fini ajoute l.',
   'settings.emailFailed': 'Nou pa t ka anrejistre imèl sa a. Petèt li deja nan yon lòt kont.',
+  'auth.emailOptional': 'Imèl (opsyonèl)',
+  'auth.emailOptionalHelp': 'Se sèlman pou reyinisyalize modpas ou si ou bliye l. Ou ka ajoute oswa chanje l pita nan Paramèt.',
+  'auth.emailNotSaved': 'Kont lan kreye, men nou pa t ka anrejistre imèl sa a. Ou ka ajoute l nan Paramèt.',
 };

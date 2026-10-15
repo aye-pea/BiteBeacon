@@ -264,7 +264,7 @@ export const zh: Messages = {
   'admin.empty': '暂无数据。',
   'auth.username': '用户名',
   'auth.usernameOrEmail': '用户名或邮箱',
-  'auth.usernameHelp': '3–20 个小写字母、数字或 _。无需邮箱。之后可在“设置”中添加邮箱，用于找回忘记的密码。',
+  'auth.usernameHelp': '3–20 个小写字母、数字或 _。',
   'auth.badUsername': '用户名为 3–20 个字符，只能包含小写字母、数字和 _。',
   'auth.taken': '该用户名已被使用，请换一个。',
   'auth.notReady': '暂时无法注册，请稍后再试。',
@@ -293,4 +293,7 @@ export const zh: Messages = {
   'settings.emailSaved': '找回邮箱已保存。',
   'settings.emailCheck': '请查看 {email} 中的确认链接以完成添加。',
   'settings.emailFailed': '无法保存该邮箱，它可能已被其他账户使用。',
+  'auth.emailOptional': '邮箱（可选）',
+  'auth.emailOptionalHelp': '仅用于在你忘记密码时重置密码。之后可在“设置”中添加或更改。',
+  'auth.emailNotSaved': '账户已创建，但该邮箱未能保存。你可以在“设置”中添加。',
 };

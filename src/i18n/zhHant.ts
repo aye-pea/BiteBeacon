@@ -264,7 +264,7 @@ export const zhHant: Messages = {
   'admin.empty': '尚無資料。',
   'auth.username': '使用者名稱',
   'auth.usernameOrEmail': '使用者名稱或電子郵件',
-  'auth.usernameHelp': '3–20 個小寫字母、數字或 _。不需要電子郵件。之後可在「設定」中新增電子郵件，用來重設忘記的密碼。',
+  'auth.usernameHelp': '3–20 個小寫字母、數字或 _。',
   'auth.badUsername': '使用者名稱為 3–20 個字元，只能包含小寫字母、數字和 _。',
   'auth.taken': '此使用者名稱已被使用，請換一個。',
   'auth.notReady': '暫時無法註冊，請稍後再試。',
@@ -293,4 +293,7 @@ export const zhHant: Messages = {
   'settings.emailSaved': '復原電子郵件已儲存。',
   'settings.emailCheck': '請查看 {email} 中的確認連結以完成新增。',
   'settings.emailFailed': '無法儲存此電子郵件，它可能已被其他帳號使用。',
+  'auth.emailOptional': '電子郵件（選填）',
+  'auth.emailOptionalHelp': '僅用於在你忘記密碼時重設密碼。之後可在「設定」中新增或變更。',
+  'auth.emailNotSaved': '帳號已建立，但此電子郵件未能儲存。你可以在「設定」中新增。',
 };

@@ -264,7 +264,7 @@ export const ko: Messages = {
   'admin.empty': '아직 없습니다.',
   'auth.username': '사용자 이름',
   'auth.usernameOrEmail': '사용자 이름 또는 이메일',
-  'auth.usernameHelp': '소문자, 숫자 또는 _ 3–20자. 이메일은 필요 없습니다. 비밀번호를 잊었을 때 재설정할 수 있도록 나중에 설정에서 추가할 수 있습니다.',
+  'auth.usernameHelp': '소문자, 숫자 또는 _ 3–20자.',
   'auth.badUsername': '사용자 이름은 3–20자이며 소문자, 숫자, _만 사용할 수 있습니다.',
   'auth.taken': '이미 사용 중인 사용자 이름입니다. 다른 이름을 입력하세요.',
   'auth.notReady': '지금은 가입할 수 없습니다. 나중에 다시 시도하세요.',
@@ -293,4 +293,7 @@ export const ko: Messages = {
   'settings.emailSaved': '복구 이메일이 저장되었습니다.',
   'settings.emailCheck': '{email}로 보낸 확인 링크를 열어 추가를 완료하세요.',
   'settings.emailFailed': '이 이메일을 저장할 수 없습니다. 이미 다른 계정에서 사용 중일 수 있습니다.',
+  'auth.emailOptional': '이메일 (선택)',
+  'auth.emailOptionalHelp': '비밀번호를 잊었을 때 재설정하는 데에만 사용됩니다. 나중에 설정에서 추가하거나 바꿀 수 있습니다.',
+  'auth.emailNotSaved': '계정이 만들어졌지만 이메일을 저장하지 못했습니다. 설정에서 추가할 수 있습니다.',
 };

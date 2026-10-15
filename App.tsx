@@ -149,6 +149,7 @@ function AppContent() {
   // Set while someone who opened a password reset link chooses their new password.
   const [recovering, setRecovering] = useState(openedResetLink);
   const [username, setUsername] = useState<string | null>(null);
+  const [signupEmail, setSignupEmail] = useState('');
   const [emailDraft, setEmailDraft] = useState('');
   const [emailAgain, setEmailAgain] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
@@ -236,6 +237,8 @@ function AppContent() {
     const typed = authMode === 'signup' ? cleanUsername(login) : login.trim();
     if (!typed || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
     if (authMode === 'signup' && !isUsername(typed)) { haptic.warning(); say(t('auth.badUsername')); return; }
+    const optionalEmail = authMode === 'signup' ? signupEmail.trim() : '';
+    if (optionalEmail && !looksLikeEmail(optionalEmail)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
     setAuthBusy(true); setFeedback('');
     setStaySignedIn(stay);
     try {
@@ -244,6 +247,12 @@ function AppContent() {
         const { data, error } = await supabase.auth.signUp({ email: usernameEmail(typed), password });
         if (error) { haptic.error(); say(usernameTaken(error) ? t('auth.taken') : t('auth.failed'), 'danger'); return; }
         if (!data.session) { haptic.error(); say(t('auth.notReady'), 'danger'); return; }
+        // The optional email is added the same way as in Settings; the account stays created if it can't be saved.
+        if (optionalEmail) {
+          const added = await supabase.auth.updateUser({ email: optionalEmail }, { emailRedirectTo: resetRedirect() });
+          if (added.error) toast(t('auth.emailNotSaved'), 'info');
+        }
+        setSignupEmail('');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: await signInAddress(typed, password), password });
         if (error) throw error;
@@ -626,6 +635,7 @@ function AppContent() {
       </> : <>
         <Text style={s.label}>{authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')}</Text><TextInput testID="auth-login" accessibilityLabel={authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')} style={s.input} value={login} onChangeText={setLogin} placeholder={authMode === 'signup' ? 'alex_p' : ''} placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} autoComplete="username" maxLength={authMode === 'signup' ? 20 : 254} />
         {authMode === 'signup' && <Text style={s.footnote}>{t('auth.usernameHelp')}</Text>}
+        {authMode === 'signup' && <><Text style={s.label}>{t('auth.emailOptional')}</Text><TextInput testID="signup-email" accessibilityLabel={t('auth.emailOptional')} accessibilityHint={t('auth.emailOptionalHelp')} style={s.input} value={signupEmail} onChangeText={setSignupEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" maxLength={254} /><Text style={s.footnote}>{t('auth.emailOptionalHelp')}</Text></>}
         <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
         {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}

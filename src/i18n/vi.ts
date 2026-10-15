@@ -264,7 +264,7 @@ export const vi: Messages = {
   'admin.empty': 'Chưa có gì.',
   'auth.username': 'Tên người dùng',
   'auth.usernameOrEmail': 'Tên người dùng hoặc email',
-  'auth.usernameHelp': '3–20 chữ cái thường, chữ số hoặc _. Không cần email. Bạn có thể thêm email sau trong Cài đặt để đặt lại mật khẩu khi quên.',
+  'auth.usernameHelp': '3–20 chữ cái thường, chữ số hoặc _.',
   'auth.badUsername': 'Tên người dùng dài 3–20 ký tự: chỉ gồm chữ cái thường, chữ số và _.',
   'auth.taken': 'Tên người dùng này đã có người dùng. Hãy thử tên khác.',
   'auth.notReady': 'Hiện chưa thể đăng ký. Vui lòng thử lại sau.',
@@ -293,4 +293,7 @@ export const vi: Messages = {
   'settings.emailSaved': 'Đã lưu email khôi phục.',
   'settings.emailCheck': 'Hãy mở liên kết xác nhận gửi tới {email} để hoàn tất.',
   'settings.emailFailed': 'Không thể lưu email này. Có thể email đã thuộc về tài khoản khác.',
+  'auth.emailOptional': 'Email (không bắt buộc)',
+  'auth.emailOptionalHelp': 'Chỉ dùng để đặt lại mật khẩu khi bạn quên. Bạn có thể thêm hoặc đổi sau trong Cài đặt.',
+  'auth.emailNotSaved': 'Đã tạo tài khoản, nhưng không thể lưu email này. Bạn có thể thêm trong Cài đặt.',
 };

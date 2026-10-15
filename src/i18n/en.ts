@@ -264,7 +264,7 @@ export const en = {
   'admin.empty': 'Nothing yet.',
   'auth.username': 'Username',
   'auth.usernameOrEmail': 'Username or email',
-  'auth.usernameHelp': '3–20 lowercase letters, numbers or _. No email needed. You can add one later in Settings to reset a forgotten password.',
+  'auth.usernameHelp': '3–20 lowercase letters, numbers or _.',
   'auth.badUsername': 'Usernames are 3–20 characters: lowercase letters, numbers and _ only.',
   'auth.taken': 'That username is taken. Try another one.',
   'auth.notReady': 'Sign-up isn’t available right now. Please try again later.',
@@ -293,6 +293,9 @@ export const en = {
   'settings.emailSaved': 'Recovery email saved.',
   'settings.emailCheck': 'Check {email} for a confirmation link to finish adding it.',
   'settings.emailFailed': 'Could not save that email. It may already belong to another account.',
+  'auth.emailOptional': 'Email (optional)',
+  'auth.emailOptionalHelp': 'Only used to reset your password if you forget it. You can add or change it later in Settings.',
+  'auth.emailNotSaved': 'Account created, but that email couldn’t be saved. You can add it in Settings.',
 } as const;
 
 export type MessageKey = keyof typeof en;
