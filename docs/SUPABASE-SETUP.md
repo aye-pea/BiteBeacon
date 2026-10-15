@@ -57,6 +57,16 @@ Use synthetic test accounts and allergy selections, not real patient information
 
 The local automated PostgreSQL policy tests validate migration behavior, but do not replace these hosted checks or a project-configuration audit.
 
+## Username accounts
+
+People sign up with a username, not an email. Supabase Auth still needs an email, so the app signs them up as `name@users.bitebeacon.org`, which never receives mail. Migration `202610150007_usernames.sql` keeps each username claimed in `public.usernames` and adds `username_sign_in_email(username, password)` for username sign-in (10 wrong tries per 15 minutes per username).
+
+Hosted settings this needs:
+
+- Authentication › Sign In / Providers › Email: **Confirm email** off, or username sign-ups never get a session.
+- A custom SMTP sender before launch. Supabase's built-in sender only mails the project's team, so "Forgot password?" emails to anyone else are not delivered.
+- Redirect URLs include every site address people reset passwords from (the reset link returns to the page it was requested on).
+
 ## Troubleshooting
 
 - Signup fields absent: environment values missing or development server needs restart.

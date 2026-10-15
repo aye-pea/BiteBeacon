@@ -3,21 +3,25 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
 import { titleCase } from './src/domain/names';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
-import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, makeI18n, MessageKey, translate } from './src/i18n';
-import { cloudConfigured, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
+import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, localeOf, makeI18n, MessageKey, translate } from './src/i18n';
+import type { AdminStats } from './src/domain/stats';
+import { cloudConfigured, openedResetLink, resetLinkFailed, resetRedirect, setStaySignedIn, staySignedIn, supabase } from './src/lib/supabase';
+import { loadUsername, signInAddress, usernameTaken } from './src/lib/account';
+import { cleanUsername, isUsername, looksLikeEmail, usernameEmail, usernameFromEmail } from './src/domain/usernames';
 import { cameraAvailable } from './src/lib/webScanner';
+import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 import { CartLogo } from './src/ui/logo';
 
-type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about';
+type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about' | 'admin';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
 const ME = 'me', EVERYONE = 'everyone';
 // Who results show for: [EVERYONE] (everyone, including people added later) or any non-empty mix of person ids.
@@ -40,7 +44,7 @@ const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen }[name];
+  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -138,9 +142,17 @@ function AppContent() {
   const generation = useRef(0);
   const scrollRef = useRef<ScrollView>(null);
   const pendingScroll = useRef(false);
-  const [email, setEmail] = useState('');
+  // Sign-up takes a username; sign-in takes a username or an email added later in Settings.
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : 'signup');
+  // Set while someone who opened a password reset link chooses their new password.
+  const [recovering, setRecovering] = useState(openedResetLink);
+  const [username, setUsername] = useState<string | null>(null);
+  const [signupEmail, setSignupEmail] = useState('');
+  const [emailDraft, setEmailDraft] = useState('');
+  const [emailAgain, setEmailAgain] = useState('');
+  const [emailBusy, setEmailBusy] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stay, setStay] = useState(staySignedIn);
@@ -159,6 +171,11 @@ function AppContent() {
   const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [pantryBusy, setPantryBusy] = useState(false);
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
+  // Admins are listed in the database by hand; the dashboard shows only for them, never in the demo.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsFailed, setStatsFailed] = useState(false);
+  const [statsBusy, setStatsBusy] = useState(false);
   const today = dayOf(new Date());
   const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
@@ -166,7 +183,7 @@ function AppContent() {
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data, error }) => { if (error) say(t('err.sessionRestore')); setSession(data.session); setBooting(false); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => { setSession(next); setBooting(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next); setBooting(false); });
     const app = AppState.addEventListener('change', state => {
       if (state === 'active') supabase?.auth.startAutoRefresh();
       else { supabase?.auth.stopAutoRefresh(); setCamera(false); }
@@ -176,7 +193,11 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
+    setIsAdmin(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
     if (!session || !supabase || demo) return;
+    void checkAdmin().then(ok => { if (generation.current === current) setIsAdmin(ok); });
+    // The username survives switching to a real email; before the usernames table exists it comes from the address.
+    void loadUsername().then(name => { if (generation.current === current) setUsername(name ?? usernameFromEmail(session.user.email)); });
     Promise.all([
       supabase.from('profiles').select('allergies, display_name, default_everyone, default_member_id, default_include_me, default_member_ids, language').eq('id', session.user.id).maybeSingle(),
       supabase.from('household_members').select('id, name, allergies').order('position').order('created_at'),
@@ -202,9 +223,9 @@ function AppContent() {
   }, [session?.user.id]);
 
   const enterDemo = () => {
-    ++generation.current; setDemo(true); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
+    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
     resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
-    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setEmail(''); setPassword(''); setPage('overview');
+    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage('overview');
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => {
@@ -213,18 +234,65 @@ function AppContent() {
     setLangOpen(false); setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
-    if (!email.trim() || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
+    const typed = authMode === 'signup' ? cleanUsername(login) : login.trim();
+    if (!typed || !password || (authMode === 'signup' && (password.length < 12 || !consent))) { haptic.warning(); say(t('auth.missing')); return; }
+    if (authMode === 'signup' && !isUsername(typed)) { haptic.warning(); say(t('auth.badUsername')); return; }
+    const optionalEmail = authMode === 'signup' ? signupEmail.trim() : '';
+    if (optionalEmail && !looksLikeEmail(optionalEmail)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
     setAuthBusy(true); setFeedback('');
     setStaySignedIn(stay);
     try {
-      const { data, error } = authMode === 'signup'
-        ? await supabase.auth.signUp({ email: email.trim(), password })
-        : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) throw error;
+      if (authMode === 'signup') {
+        // "Confirm email" is off in Supabase, so a new username account is signed in straight away.
+        const { data, error } = await supabase.auth.signUp({ email: usernameEmail(typed), password });
+        if (error) { haptic.error(); say(usernameTaken(error) ? t('auth.taken') : t('auth.failed'), 'danger'); return; }
+        if (!data.session) { haptic.error(); say(t('auth.notReady'), 'danger'); return; }
+        // The optional email is added the same way as in Settings; the account stays created if it can't be saved.
+        if (optionalEmail) {
+          const added = await supabase.auth.updateUser({ email: optionalEmail }, { emailRedirectTo: resetRedirect() });
+          if (added.error) toast(t('auth.emailNotSaved'), 'info');
+        }
+        setSignupEmail('');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: await signInAddress(typed, password), password });
+        if (error) throw error;
+      }
       setPassword('');
-      if (!data.session) { haptic.success(); say(t('auth.confirmEmail'), 'success'); setAuthMode('login'); }
     } catch { haptic.error(); say(t('auth.failed'), 'danger'); }
     finally { setAuthBusy(false); }
+  };
+  const sendReset = async () => {
+    if (!supabase) return;
+    if (!looksLikeEmail(login)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
+    setAuthBusy(true); setFeedback('');
+    const { error } = await supabase.auth.resetPasswordForEmail(login.trim(), { redirectTo: resetRedirect() });
+    setAuthBusy(false);
+    if (error) { haptic.error(); say(t('auth.resetFailed'), 'danger'); return; }
+    haptic.success(); say(t('auth.resetSent'), 'success');
+  };
+  const saveNewPassword = async () => {
+    if (!supabase) return;
+    if (password.length < 12) { haptic.warning(); say(t('auth.newPasswordFailed')); return; }
+    setAuthBusy(true); setFeedback('');
+    const { error } = await supabase.auth.updateUser({ password });
+    setAuthBusy(false);
+    if (error) { haptic.error(); say(t('auth.newPasswordFailed'), 'danger'); return; }
+    setPassword(''); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
+  };
+  const accountEmail = session?.user.email && !usernameFromEmail(session.user.email) ? session.user.email : null;
+  const saveRecoveryEmail = async () => {
+    if (!supabase || !session) return;
+    const next = emailDraft.trim();
+    if (!looksLikeEmail(next)) { haptic.warning(); say(t('settings.emailInvalid')); return; }
+    if (next.toLowerCase() !== emailAgain.trim().toLowerCase()) { haptic.warning(); say(t('settings.emailMismatch')); return; }
+    setEmailBusy(true); setFeedback('');
+    const { data, error } = await supabase.auth.updateUser({ email: next }, { emailRedirectTo: resetRedirect() });
+    setEmailBusy(false);
+    if (error) { haptic.error(); say(t('settings.emailFailed'), 'danger'); return; }
+    setEmailDraft(''); setEmailAgain('');
+    // With "Confirm email" off the address changes at once; otherwise Supabase first mails a confirmation link.
+    if (data.user?.email?.toLowerCase() === next.toLowerCase()) { haptic.success(); say(t('settings.emailSaved'), 'success'); }
+    else { haptic.success(); say(t('settings.emailCheck', { email: next }), 'success'); }
   };
   const saveAllergies = async () => {
     if (saving) return;
@@ -295,6 +363,8 @@ function AppContent() {
     const current = generation.current;
     try {
       const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
+      // One more for the app-wide total: only the count goes up, nothing about the barcode or person.
+      recordScan();
       if (generation.current !== current) return;
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }
@@ -518,9 +588,33 @@ function AppContent() {
     return () => el.remove();
   }, [docScroll, C.bg]);
   useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
+  const refreshStats = async () => {
+    const current = generation.current;
+    setStatsBusy(true);
+    const next = await loadAdminStats();
+    if (generation.current !== current) return;
+    setStatsBusy(false); setStatsFailed(!next); if (next) setStats(next);
+  };
+  useEffect(() => {
+    if (page !== 'admin' || !isAdmin) return;
+    void refreshStats();
+    const timer = setInterval(() => void refreshStats(), 10000);
+    return () => clearInterval(timer);
+  }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
+  if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
+    <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
+      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
+      <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
+      <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />
+      <Button loading={authBusy} onPress={saveNewPassword}>{authBusy ? t('auth.wait') : t('auth.newPasswordSave')}</Button>
+      {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
+    </View>
+  </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
       <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
@@ -531,15 +625,23 @@ function AppContent() {
       <View style={s.welcomeGraphic}><View style={s.welcomeIcon}><ScanBarcode size={54} color={C.green} strokeWidth={1.3} /></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('welcome.graphicTitle')}</Text><Text style={s.bodySmall}>{t('welcome.graphicBody')}</Text></View></View>
     </View>
     <View style={[s.authCard, wide && { width: '39%' }]}>
-      <Text style={s.sectionTitle}>{authMode === 'signup' ? t('auth.signupTitle') : t('auth.loginTitle')}</Text>
-      <Text style={s.body}>{t('auth.tagline')}</Text>
-      {cloudConfigured ? <>
-        <Text style={s.label}>{t('auth.email')}</Text><TextInput accessibilityLabel={t('auth.email')} style={s.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+      <Text style={s.sectionTitle}>{authMode === 'signup' ? t('auth.signupTitle') : authMode === 'reset' ? t('auth.resetTitle') : t('auth.loginTitle')}</Text>
+      <Text style={s.body}>{authMode === 'reset' ? t('auth.resetBody') : t('auth.tagline')}</Text>
+      {cloudConfigured ? authMode === 'reset' ? <>
+        {resetLinkFailed && <Notice>{t('auth.resetExpired')}</Notice>}
+        <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="reset-email" accessibilityLabel={t('auth.email')} style={s.input} value={login} onChangeText={setLogin} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" keyboardType="email-address" autoComplete="email" onSubmitEditing={() => void sendReset()} />
+        <Button loading={authBusy} onPress={sendReset}>{authBusy ? t('auth.wait') : t('auth.resetSend')}</Button>
+        <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('login'); setFeedback(''); }}><Text style={s.link}>{t('auth.backToLogin')}</Text></Tap>
+      </> : <>
+        <Text style={s.label}>{authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')}</Text><TextInput testID="auth-login" accessibilityLabel={authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')} style={s.input} value={login} onChangeText={setLogin} placeholder={authMode === 'signup' ? 'alex_p' : ''} placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} autoComplete="username" maxLength={authMode === 'signup' ? 20 : 254} />
+        {authMode === 'signup' && <Text style={s.footnote}>{t('auth.usernameHelp')}</Text>}
+        {authMode === 'signup' && <><Text style={s.label}>{t('auth.emailOptional')}</Text><TextInput testID="signup-email" accessibilityLabel={t('auth.emailOptional')} accessibilityHint={t('auth.emailOptionalHelp')} style={s.input} value={signupEmail} onChangeText={setSignupEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" maxLength={254} /><Text style={s.footnote}>{t('auth.emailOptionalHelp')}</Text></>}
         <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
         {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
+        {authMode === 'login' && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('reset'); setLogin(''); setFeedback(''); }}><Text style={s.link}>{t('auth.forgot')}</Text></Tap>}
         <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
       </> : <Notice kind="info">{t('auth.noCloud')}</Notice>}
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
@@ -550,13 +652,55 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about'] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
-  const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history');
+  const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
   // App details lives in Settings on every screen size.
   const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
+  const big = (n: number) => n.toLocaleString(localeOf(lang));
+  // Horizontal bar rows for the dashboard lists; each bar is its share of the largest value.
+  const barRows = (rows: { key: string; label: string; value: number }[]) => {
+    const max = Math.max(1, ...rows.map(r => r.value));
+    return rows.length ? <View style={{ gap: 10 }}>{rows.map(r => <View key={r.key} style={{ gap: 4 }}><View style={s.between}><Text style={[s.bodySmall, { color: C.ink, flexShrink: 1 }]}>{r.label}</Text><Text style={[s.bodySmall, { color: C.ink, fontWeight: '700' }]}>{big(r.value)}</Text></View>
+      <View accessible={false} style={s.progressTrack}><View style={[s.progressFill, { width: `${(r.value / max) * 100}%` }]} /></View></View>)}</View> : <Text style={s.footnote}>{t('admin.empty')}</Text>;
+  };
+  const statTile = (key: string, label: string, value: number, sub?: string) => <View key={key} testID={`admin-${key}`} style={[s.card, s.statTile, !singleColumn && { flexBasis: '45%' }]}><Text style={s.footnote}>{label}</Text><Text style={s.statNumber}>{big(value)}</Text>{sub ? <Text style={s.footnote}>{sub}</Text> : null}</View>;
+  const signupMax = Math.max(1, ...(stats?.signupsByDay.map(d => d.count) ?? []));
+  const adminPage = <>
+    <View style={s.between}><Text accessibilityRole="header" style={s.pageTitle}>{t('nav.admin')}</Text><Button secondary loading={statsBusy && !stats} onPress={() => void refreshStats()} icon={<RotateCcw accessible={false} size={17} color={C.ink} />}>{t('admin.refresh')}</Button></View>
+    <Text style={s.body}>{t('admin.body')}</Text>
+    {statsFailed && <Notice kind="danger">{t('admin.loadFailed')}</Notice>}
+    {!stats ? (statsFailed ? null : <View style={[s.card, { gap: 12 }]}><Skeleton width="40%" height={22} /><Skeleton height={64} /><Skeleton width="70%" /></View>) : <>
+      <View testID="admin-scans" style={[s.hero, { flexDirection: 'column', padding: wide ? 32 : 24, gap: 8 }]}>
+        <View style={s.inline}><View style={[s.navDot, { marginLeft: 0, backgroundColor: C.lime }]} /><Text style={s.heroCaption}>{t('admin.updated', { time: i18n.time(stats.generatedAt || new Date().toISOString()) })}</Text></View>
+        <Text style={s.heroBody}>{t('admin.scans')}</Text>
+        <Text accessibilityLiveRegion="polite" style={[s.heroTitle, { fontSize: wide ? 64 : 48, lineHeight: wide ? 70 : 54 }]}>{big(stats.scans)}</Text>
+        <Text style={s.heroCaption}>{t('admin.scansNote')}</Text>
+      </View>
+      <View style={[s.statGrid, singleColumn && { flexDirection: 'column' }]}>
+        {statTile('accounts', t('admin.accounts'), stats.accounts, t('admin.accountsSub', { n: stats.signups7d, m: stats.signups30d }))}
+        {statTile('active', t('admin.active'), stats.active7d, t('admin.activeSub', { n: stats.active1d, m: stats.active30d }))}
+        {statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
+        {statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
+      </View>
+      <View style={s.card}><Text style={s.cardTitle}>{t('admin.signups')}</Text>
+        <View testID="admin-signups" accessible accessibilityLabel={`${t('admin.signups')}: ${big(stats.signups30d)}`} style={s.signupChart}>{stats.signupsByDay.map(d => <View key={d.day} style={s.signupColumn}><View style={[s.signupBar, { height: `${Math.max(d.count ? 6 : 2, (d.count / signupMax) * 100)}%`, opacity: d.count ? 1 : .35 }]} /></View>)}</View>
+        {stats.signupsByDay.length > 0 && <View style={s.between}><Text style={s.footnote}>{i18n.day(stats.signupsByDay[0].day)}</Text><Text style={s.footnote}>{i18n.day(stats.signupsByDay[stats.signupsByDay.length - 1].day)}</Text></View>}</View>
+      <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
+        <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('admin.allergens')}</Text><Text style={s.footnote}>{t('admin.allergensNote')}</Text>
+          {barRows(ALLERGENS.map(a => ({ key: a.id, label: allergyLabel(a.id), value: stats.allergens[a.id] ?? 0 })).sort((a, b) => b.value - a.value))}</View>
+        <View style={[{ gap: 20 }, wide && { flex: 1 }]}>
+          <View style={s.card}><Text style={s.cardTitle}>{t('admin.households')}</Text>{barRows(stats.householdSizes.map(h => ({ key: String(h.size), label: t('admin.householdSize', { n: h.size }), value: h.accounts })))}</View>
+          <View style={s.card}><Text style={s.cardTitle}>{t('admin.languages')}</Text>{barRows(Object.entries(stats.languages).map(([code, value]) => ({ key: code, label: isLang(code) ? languageName(code) : t('admin.deviceLanguage'), value })).sort((a, b) => b.value - a.value))}</View>
+        </View>
+      </View>
+      <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
+        {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{usernameFromEmail(u.email) ?? u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
+          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
+    </>}
+  </>;
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
@@ -588,11 +732,11 @@ function AppContent() {
             <View style={[s.card, wide && { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>{t('profileCard.title')}</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>{t('profileCard.edit')}</Text></Tap></View><Text style={s.bodySmall}>{t('profileCard.personal')}</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{t('profileCard.selected', { n: allergies.length })} · {demo ? t('profileCard.local') : t('profileCard.private')}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('profileCard.household', { names: i18n.list(members.map(m => m.name)) })}</Text><Text style={s.textLink}>{t('profileCard.manage')}</Text></Tap>}</View>
             <View style={[s.card, wide && { flex: 1 }]}><View style={s.between}><Text style={s.cardTitle}>{t('real.title')}</Text><View style={s.iconTile}><ScanBarcode size={21} color={C.green} /></View></View>{[t('real.step1'), t('real.step2'), t('real.step3')].map((line, i) => <View key={line} style={s.step}><Text style={s.stepNumber}>{i + 1}</Text><Text style={[s.bodySmall, { flex: 1 }]}>{line}</Text></View>)}</View>
           </View>
-          <View style={s.between}><View><Text style={s.sectionTitle}>{t('samples.title')}</Text><Text style={s.bodySmall}>{t('samples.body')}</Text></View><Text style={s.sampleLabel}>{t('samples.label')}</Text></View>
+          {demo && <><View style={s.between}><View><Text style={s.sectionTitle}>{t('samples.title')}</Text><Text style={s.bodySmall}>{t('samples.body')}</Text></View><Text style={s.sampleLabel}>{t('samples.label')}</Text></View>
           <View style={[s.sampleGrid, !wide && { flexDirection: 'column' }]}>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={t('samples.try', { name: item.name })} disabled={!canScan} key={item.barcode} haptic={null} onPress={() => showProduct(item)} style={[s.sampleCard, wide && { flex: 1 }, !canScan && { opacity: .5 }]} pressedStyle={{ borderColor: C.green }}>
             <View style={[s.sampleArt, { backgroundColor: SAMPLE_ART[i].bg }]}><View /><View style={[s.miniPack, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={19} color="white" /><Text style={s.miniPackText}>{SAMPLE_ART[i].word}</Text></View><ArrowUpRight size={17} color={C.muted} /></View>
             <View style={s.sampleInfo}><Text style={s.sampleName}>{item.name}</Text><View style={s.between}><Text style={s.footnote}>{t('samples.fictional')}</Text><ChevronRight size={16} color={C.green} /></View></View>
-          </Tap>)}</View>
+          </Tap>)}</View></>}
         </>}
         {page === 'allergies' && <>
           <Text accessibilityRole="header" style={s.pageTitle}>{t('nav.allergies')}</Text>
@@ -617,9 +761,10 @@ function AppContent() {
             <Button loading={busy} onPress={() => void scan(barcode)} icon={<Search accessible={false} size={18} color={C.onAccent} />}>{busy ? t('scan.checking') : t('scan.lookUp')}</Button>
             {feedback && inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
             <Text style={s.footnote}>{t('scan.sources')}</Text>
-          </View><View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
+            {!demo && <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View>}
+          </View>{/* Fictional samples are for the demo only; signed-in people check real barcodes. */}{demo && <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
             <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color="white" /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
-            <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View></View></View>}
+            <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View></View>}</View>}
           {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollToY(Math.max(0, e.nativeEvent.layout.y - 12)); } }}>
             {busy ? <Reveal style={s.card}><View accessibilityRole="progressbar" aria-busy accessibilityLabel={t('scan.checkingLabel')} style={s.inline}><ActivityIndicator color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('scan.checking')}</Text><Text style={s.bodySmall}>{t('scan.lookingUp', { barcode: barcode || t('scan.barcodeWord') })}</Text></View></View><Skeleton width="60%" height={22} /><Skeleton height={64} /><Skeleton width="85%" /><Skeleton width="70%" /></Reveal>
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
@@ -685,6 +830,13 @@ function AppContent() {
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
             {cleanName(nameDraft) !== myName && <Button loading={settingsBusy} disabled={!settingsReady} onPress={saveMyName}>{t('settings.saveName')}</Button>}</View>
+          {!demo && session && <View testID="sign-in-settings" style={s.card}><View style={s.inline}><LockKeyhole size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.signIn')}</Text></View>
+            {username && <Text style={s.navText}>{t('settings.usernameIs', { name: username })}</Text>}
+            <Text style={s.bodySmall}>{t('settings.recoveryHelp')}</Text>
+            {accountEmail ? <Text style={s.navText}>{t('settings.recoveryCurrent', { email: accountEmail })}</Text> : <Notice>{t('settings.recoveryNone')}</Notice>}
+            <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="recovery-email" accessibilityLabel={t('auth.email')} style={s.input} value={emailDraft} onChangeText={setEmailDraft} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" editable={!emailBusy} />
+            <Text style={s.label}>{t('settings.emailConfirm')}</Text><TextInput testID="recovery-email-again" accessibilityLabel={t('settings.emailConfirm')} style={s.input} value={emailAgain} onChangeText={setEmailAgain} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="off" editable={!emailBusy} onSubmitEditing={() => void saveRecoveryEmail()} />
+            {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}
           <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
             {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
@@ -703,7 +855,9 @@ function AppContent() {
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
-          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap></>}
+          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
+          {isAdmin && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+        {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sourcesTitle')}</Text><Text style={s.body}>{t('about.sourcesBody')}</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>{t('about.usdaLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>{t('about.offLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>{t('about.license')}</Text></Tap></View>
@@ -780,6 +934,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
+  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }, statTile: { flexGrow: 1, gap: 6 }, statNumber: { ...type.largeTitle, color: C.ink },
+  signupChart: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 120, paddingTop: 8 }, signupColumn: { flex: 1, height: '100%', justifyContent: 'flex-end' }, signupBar: { width: '100%', borderRadius: 3, backgroundColor: C.green },
   pantryAdd: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: C.pale }, hiddenTag: { ...type.footnote, color: C.red, fontWeight: '700' },
   pantryCard: { gap: 12, padding: 14 }, pantryMain: { flexDirection: 'row', alignItems: 'center', gap: 12 }, pantryBadge: { alignSelf: 'flex-start', backgroundColor: C.amberSoft, color: C.amber },
   pantryAction: { flexGrow: 1, flexBasis: '40%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 999 }, pantryActionText: { ...type.subhead, fontWeight: '700' },

@@ -9,7 +9,7 @@ beforeAll(async () => {
   db = new PGlite();
   // Supabase Auth fixtures; PostgreSQL RLS and migration execute in a real PG engine.
   await db.exec(`create role anon; create role authenticated;
-    create schema auth; create table auth.users(id uuid primary key);
+    create schema auth; create table auth.users(id uuid primary key, email text, created_at timestamptz not null default now(), last_sign_in_at timestamptz);
     create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema public, auth to authenticated, anon;
@@ -22,6 +22,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610150002_more_languages.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150004_default_view_people.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150005_more_allergens.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150006_admin_stats.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -207,5 +208,50 @@ describe('more allergens', () => {
     await db.query(`insert into public.household_members(name, allergies) values ('Sam', array['gluten','mollusks'])`);
     await expect(db.query(`update public.profiles set allergies = array['banana'] where id = $1`, [H])).rejects.toThrow(/supported_allergies/);
     await expect(db.query(`insert into public.household_members(name, allergies) values ('Kim', array['kiwi'])`)).rejects.toThrow(/member_supported_allergies/);
+  });
+});
+
+describe('scan total and admin statistics', () => {
+  const ADMIN = '99999999-9999-4999-8999-999999999999';
+  const scans = async () => { await db.exec('reset role;'); return Number((await db.query<{ total: string }>('select total from public.scan_total')).rows[0].total); };
+  it('lets anyone add to the scan total but not read or change it directly', async () => {
+    const before = await scans();
+    await db.exec('reset role; set role anon;');
+    await db.query('select public.record_scan()');
+    await expect(db.query('select * from public.scan_total')).rejects.toThrow(/permission denied/);
+    await expect(db.query('update public.scan_total set total = 0')).rejects.toThrow(/permission denied/);
+    await asUser(A);
+    await db.query('select public.record_scan()');
+    await expect(db.query('select * from public.scan_total')).rejects.toThrow(/permission denied/);
+    expect(await scans()).toBe(before + 2);
+  });
+  it('keeps the admin list out of reach of app accounts', async () => {
+    await asUser(A);
+    await expect(db.query('insert into public.admins(user_id) values ($1)', [A])).rejects.toThrow(/permission denied/);
+    await expect(db.query('select * from public.admins')).rejects.toThrow(/permission denied/);
+    expect((await db.query<{ is_admin: boolean }>('select public.is_admin()')).rows[0].is_admin).toBe(false);
+    await expect(db.query('select public.admin_stats()')).rejects.toThrow(/admin_only/);
+    await db.exec('reset role; set role anon;');
+    await expect(db.query('select public.admin_stats()')).rejects.toThrow(/permission denied/);
+    await expect(db.query('select public.is_admin()')).rejects.toThrow(/permission denied/);
+  });
+  it('gives an admin totals across every account', async () => {
+    await db.exec(`reset role; insert into auth.users(id, email, last_sign_in_at) values ('${ADMIN}', 'owner@example.com', now()); insert into public.admins(user_id) values ('${ADMIN}');`);
+    await asUser(ADMIN);
+    expect((await db.query<{ is_admin: boolean }>('select public.is_admin()')).rows[0].is_admin).toBe(true);
+    const stats = (await db.query<{ s: Record<string, any> }>('select public.admin_stats() as s')).rows[0].s;
+    await db.exec('reset role;');
+    const count = async (sql: string) => Number((await db.query<{ n: string }>(sql)).rows[0].n);
+    expect(stats.accounts).toBe(await count('select count(*) as n from auth.users'));
+    expect(stats.profiles).toBe(await count('select count(*) as n from public.profiles'));
+    expect(stats.members).toBe(await count('select count(*) as n from public.household_members'));
+    expect(stats.scans).toBe(await scans());
+    expect(stats.active_1d).toBe(1);
+    expect(stats.signups_by_day).toHaveLength(30);
+    expect(stats.signups_by_day.at(-1).count).toBe(stats.accounts);
+    expect(stats.recent_sign_ins[0].email).toBe('owner@example.com');
+    expect(stats.allergens.gluten).toBe(2);
+    expect(Object.values(stats.household_sizes as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(stats.profiles);
+    expect(stats.pantry.items).toBe(await count('select count(*) as n from public.pantry_items'));
   });
 });

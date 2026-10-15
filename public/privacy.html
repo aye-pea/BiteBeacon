@@ -15,11 +15,11 @@
 <p>This policy explains what BiteBeacon ("we", "us") collects when you use the BiteBeacon website and app, why, and the choices you have. We collect as little as we can, we do not sell your information, and we do not use advertising or analytics trackers.</p>
 
 <h2>Without an account (demo mode)</h2>
-<p>You can try BiteBeacon without signing up. In demo mode your allergy selections, household, pantry and scan history stay in your browser's memory and disappear when you close the tab. Nothing is saved on our servers.</p>
+<p>You can try BiteBeacon without signing up. In demo mode your allergy selections, household, pantry and scan history stay in your browser's memory and disappear when you close the tab. Nothing about you is saved on our servers; a lookup only adds one to the anonymous scan total described below.</p>
 
 <h2>What we store when you create an account</h2>
 <ul>
-<li><strong>Account details:</strong> your email address and a securely hashed password, handled by our sign-in provider, Supabase.</li>
+<li><strong>Account details:</strong> your username, a securely hashed password and, only if you add one in Settings, an email address used to reset your password and sign in. These are handled by our sign-in provider, Supabase.</li>
 <li><strong>Allergy profile:</strong> the allergens you select, and the date you agreed to store them.</li>
 <li><strong>Household:</strong> names you give to other people in your household (up to eight) and the allergens you select for each. This can include information about children. Only add people you are allowed to share information about, and use first names or nicknames if you prefer.</li>
 <li><strong>Language:</strong> the app language you choose.</li>
@@ -30,6 +30,7 @@
 <h2>What we do not store</h2>
 <ul>
 <li>Your general scan history. It stays on your device for the current session only.</li>
+<li>What you scan. We keep one running total of how many barcode lookups have been made across the whole app, with or without an account. Each lookup adds one to that number; the barcode, the product and who looked it up are not recorded with it.</li>
 <li>Camera images. The barcode scanner reads frames on your device; they are not uploaded or saved.</li>
 <li>Your location, contacts or advertising identifiers.</li>
 </ul>
@@ -37,7 +38,7 @@
 <h2>Who else receives information</h2>
 <ul>
 <li><strong>Food databases:</strong> when you look up a product, the barcode number is sent from your device to USDA FoodData Central and, if it is not found there, to Open Food Facts. Like any website, they can see your IP address. Your allergies and account details are never sent to them.</li>
-<li><strong>Supabase</strong> stores account data and sends sign-up and account emails on our behalf.</li>
+<li><strong>Supabase</strong> stores account data and, if you added an email, sends password reset and account emails on our behalf.</li>
 <li><strong>Netlify</strong> hosts the website and, like any web host, keeps short-term technical logs such as IP addresses.</li>
 </ul>
 <p>We do not sell or rent personal information, and we do not share it for advertising. We may disclose information if required by law.</p>
