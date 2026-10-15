@@ -38,7 +38,6 @@ export const hi: Messages = {
   'toast.demoEnded': 'डेमो खत्म · सेशन साफ़ किया गया', 'toast.signedOut': 'साइन आउट हो गया · सेशन साफ़ किया गया',
   'leave.failed': 'साइन आउट नहीं हो सका। अपना कनेक्शन जांचें और फिर कोशिश करें।',
 
-  'sidebar.labelFirst': 'पहले लेबल। हमेशा।', 'sidebar.labelFirstBody': 'हम संकेत पहचानने में मदद करते हैं। आख़िरी स्रोत पैकेट ही है।',
   'account.demo': 'डेमो उपयोगकर्ता', 'account.yours': 'आपका अकाउंट', 'account.demoSub': 'लोकल प्रीव्यू सेशन', 'account.yoursSub': 'निजी एलर्जी प्रोफ़ाइल',
   'mode.demo': 'डेमो मोड', 'mode.connected': 'कनेक्टेड',
   'profile.locked': 'एलर्जी प्रोफ़ाइल लोड हो रही है या उपलब्ध नहीं है। प्रोफ़ाइल तैयार होने तक स्कैनिंग बंद रहेगी।',

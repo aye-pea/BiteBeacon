@@ -38,7 +38,6 @@ export const fr: Messages = {
   'toast.demoEnded': 'Démo terminée · session effacée', 'toast.signedOut': 'Déconnecté · session effacée',
   'leave.failed': 'La déconnexion a échoué. Vérifiez votre connexion et réessayez.',
 
-  'sidebar.labelFirst': 'L’étiquette d’abord. Toujours.', 'sidebar.labelFirstBody': 'Nous vous aidons à repérer des signaux. L’emballage reste votre source finale.',
   'account.demo': 'Visiteur de la démo', 'account.yours': 'Votre compte', 'account.demoSub': 'Session d’aperçu locale', 'account.yoursSub': 'Profil d’allergies privé',
   'mode.demo': 'MODE DÉMO', 'mode.connected': 'CONNECTÉ',
   'profile.locked': 'Profil d’allergies en cours de chargement ou indisponible. Le scan reste bloqué tant que votre profil n’est pas prêt.',

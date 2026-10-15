@@ -42,7 +42,7 @@ test('browser camera scans a barcode and checks the product', async ({ page }) =
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await page.getByRole('button', { name: 'Scan a product', exact: true }).click();
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await expect(page.getByText('Point your camera at a UPC or EAN barcode.')).toBeVisible();
   await page.getByRole('button', { name: 'Open camera' }).click();
   await expect(page.getByTestId('product-result')).toContainText('Camera test spread', { timeout: 20000 });

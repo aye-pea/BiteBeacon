@@ -38,7 +38,6 @@ export const ko: Messages = {
   'toast.demoEnded': '데모 종료 · 세션 삭제됨', 'toast.signedOut': '로그아웃됨 · 세션 삭제됨',
   'leave.failed': '로그아웃하지 못했어요. 연결을 확인하고 다시 시도하세요.',
 
-  'sidebar.labelFirst': '언제나 라벨이 먼저예요.', 'sidebar.labelFirstBody': '저희는 신호를 찾도록 도와드려요. 최종 기준은 포장이에요.',
   'account.demo': '데모 체험자', 'account.yours': '내 계정', 'account.demoSub': '로컬 미리보기 세션', 'account.yoursSub': '비공개 알레르기 프로필',
   'mode.demo': '데모 모드', 'mode.connected': '연결됨',
   'profile.locked': '알레르기 프로필을 불러오는 중이거나 사용할 수 없어요. 프로필이 준비될 때까지 스캔은 잠겨 있어요.',

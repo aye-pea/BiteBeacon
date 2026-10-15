@@ -38,7 +38,6 @@ export const vi: Messages = {
   'toast.demoEnded': 'Đã kết thúc demo · đã xóa phiên', 'toast.signedOut': 'Đã đăng xuất · đã xóa phiên',
   'leave.failed': 'Đăng xuất không thành công. Hãy kiểm tra kết nối và thử lại.',
 
-  'sidebar.labelFirst': 'Nhãn trước tiên. Luôn luôn.', 'sidebar.labelFirstBody': 'Chúng tôi giúp bạn nhận ra dấu hiệu. Bao bì là nguồn thông tin cuối cùng.',
   'account.demo': 'Người dùng demo', 'account.yours': 'Tài khoản của bạn', 'account.demoSub': 'Phiên xem trước cục bộ', 'account.yoursSub': 'Hồ sơ dị ứng riêng tư',
   'mode.demo': 'CHẾ ĐỘ DEMO', 'mode.connected': 'ĐÃ KẾT NỐI',
   'profile.locked': 'Hồ sơ dị ứng đang tải hoặc không khả dụng. Chức năng quét sẽ bị khóa cho đến khi hồ sơ của bạn sẵn sàng.',

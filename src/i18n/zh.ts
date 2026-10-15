@@ -38,7 +38,6 @@ export const zh: Messages = {
   'toast.demoEnded': '演示已结束 · 会话已清除', 'toast.signedOut': '已退出登录 · 会话已清除',
   'leave.failed': '退出登录失败。请检查网络连接后重试。',
 
-  'sidebar.labelFirst': '标签优先，始终如此。', 'sidebar.labelFirstBody': '我们帮你发现提示信号，包装才是最终依据。',
   'account.demo': '演示体验者', 'account.yours': '你的账户', 'account.demoSub': '本地预览会话', 'account.yoursSub': '私密过敏档案',
   'mode.demo': '演示模式', 'mode.connected': '已连接',
   'profile.locked': '过敏档案正在加载或不可用。档案就绪前，扫描功能保持锁定。',

@@ -85,7 +85,7 @@ test('settings add, edit and remove people and set who results show by default',
   await expect(page.getByTestId('toast')).toContainText('Results now show Kha, Sam by default');
   for (const [name, on] of [['Alex P', false], ['Kha', true], ['DFK', false], ['Sam', true]] as const)
     await expect(showFor.getByRole('checkbox', { name: `Default: ${name}` })).toBeChecked({ checked: on });
-  await page.getByRole('button', { name: 'Scan a product', exact: true }).click();
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await page.getByRole('button', { name: 'Simply oat crackers', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Check for Kha' })).toBeChecked();
   await expect(page.getByRole('checkbox', { name: 'Check for Sam' })).toBeChecked();

@@ -3,9 +3,9 @@
 export const en = {
   'app.opening': 'Opening BiteBeacon…',
   'nav.overview': 'Overview', 'nav.overview.short': 'Home',
-  'nav.scan': 'Scan a product', 'nav.scan.short': 'Scan',
-  'nav.allergies': 'My allergies', 'nav.allergies.short': 'Allergies',
-  'nav.history': 'Recent scans', 'nav.history.short': 'History',
+  'nav.scan': 'Scan a Product', 'nav.scan.short': 'Scan',
+  'nav.allergies': 'My Allergies', 'nav.allergies.short': 'Allergies',
+  'nav.history': 'Recent Scans', 'nav.history.short': 'History',
   'nav.settings': 'Settings', 'nav.settings.short': 'Settings',
   'nav.about': 'App details', 'nav.about.short': 'Details',
 
@@ -38,7 +38,6 @@ export const en = {
   'toast.demoEnded': 'Demo ended · session cleared', 'toast.signedOut': 'Signed out · session cleared',
   'leave.failed': 'Sign out failed. Check your connection and retry.',
 
-  'sidebar.labelFirst': 'Label first. Always.', 'sidebar.labelFirstBody': 'We help you spot signals. The package is your final source.',
   'account.demo': 'Demo explorer', 'account.yours': 'Your account', 'account.demoSub': 'Local preview session', 'account.yoursSub': 'Private allergy profile',
   'mode.demo': 'DEMO MODE', 'mode.connected': 'CONNECTED',
   'profile.locked': 'Allergy profile loading or unavailable. Scanning stays locked until your profile is ready.',

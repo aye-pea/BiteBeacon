@@ -38,7 +38,6 @@ export const zhHant: Messages = {
   'toast.demoEnded': '示範已結束 · 工作階段已清除', 'toast.signedOut': '已登出 · 工作階段已清除',
   'leave.failed': '登出失敗。請檢查網路連線後重試。',
 
-  'sidebar.labelFirst': '標籤優先，始終如此。', 'sidebar.labelFirstBody': '我們幫你發現提示訊號，包裝才是最終依據。',
   'account.demo': '示範體驗者', 'account.yours': '你的帳號', 'account.demoSub': '本地預覽工作階段', 'account.yoursSub': '私密過敏檔案',
   'mode.demo': '示範模式', 'mode.connected': '已連線',
   'profile.locked': '過敏檔案正在載入或不可用。檔案就緒前，掃描功能保持鎖定。',

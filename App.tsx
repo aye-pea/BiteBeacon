@@ -497,16 +497,18 @@ function AppContent() {
   const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about'] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history');
+  // App details lives in Settings on every screen size.
+  const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
   return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
-      {navItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} pressedStyle={!active && { backgroundColor: C.pale }}>
+      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} pressedStyle={!active && { backgroundColor: C.pale }}>
         <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}
       </Tap>; })}
-      <View style={{ flex: 1 }} /><View style={s.sidebarNote}><ShieldCheck size={27} color={C.green} /><Text style={s.cardTitle}>{t('sidebar.labelFirst')}</Text><Text style={s.bodySmall}>{t('sidebar.labelFirstBody')}</Text></View>
+      <View style={{ flex: 1 }} />
       <Tap accessibilityRole="button" disabled={busy || saving} onPress={leave} style={s.account} pressedStyle={{ opacity: .7 }}><View style={s.avatar}><UserRound size={19} color={C.green} /></View><View style={{ flex: 1 }}><Text style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text><Text style={s.footnote}>{demo ? t('account.demoSub') : t('account.yoursSub')}</Text></View><LogOut size={18} color={C.muted} /></Tap>
     </View>}
     <View style={s.main}>
@@ -678,7 +680,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sidebar: { width: '20%', maxWidth: 290, minWidth: 238, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, padding: 24 },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
   navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },
-  sidebarNote: { backgroundColor: C.pale, borderRadius: 16, padding: 18, gap: 10, marginTop: 30, marginBottom: 24 }, account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, borderTopWidth: 1, borderColor: C.border }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
+  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, borderTopWidth: 1, borderColor: C.border }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
   topbar: { paddingVertical: 12, paddingHorizontal: 18, flexWrap: 'wrap', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.chrome, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   breadcrumb: { fontSize: 13, color: C.muted, flexShrink: 1 }, modeBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenSoft, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 }, modeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1, color: C.green },
   content: { padding: 36, gap: 24, width: '100%', maxWidth: 1320, alignSelf: 'center' },

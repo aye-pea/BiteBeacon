@@ -38,7 +38,6 @@ export const es: Messages = {
   'toast.demoEnded': 'Demo terminada · sesión borrada', 'toast.signedOut': 'Sesión cerrada · sesión borrada',
   'leave.failed': 'No se pudo cerrar sesión. Revisa tu conexión e inténtalo de nuevo.',
 
-  'sidebar.labelFirst': 'La etiqueta primero. Siempre.', 'sidebar.labelFirstBody': 'Te ayudamos a detectar señales. El empaque es tu fuente final.',
   'account.demo': 'Explorador de la demo', 'account.yours': 'Tu cuenta', 'account.demoSub': 'Sesión de vista previa local', 'account.yoursSub': 'Perfil de alergias privado',
   'mode.demo': 'MODO DEMO', 'mode.connected': 'CONECTADO',
   'profile.locked': 'El perfil de alergias está cargando o no está disponible. El escaneo seguirá bloqueado hasta que tu perfil esté listo.',
