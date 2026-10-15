@@ -64,8 +64,10 @@ test('evidence explains hidden allergen sources instead of repeating the allerge
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
+  // Narrow to Kha alone: untick Everyone (leaves Alex), tick Kha, untick Alex.
+  await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();
+  await page.getByRole('checkbox', { name: 'Check for Kha' }).click();
   await page.getByRole('checkbox', { name: 'Check for Alex' }).click();
-  await page.getByRole('checkbox', { name: 'Check for DFK' }).click();
   const why = page.getByTestId('result-evidence');
   await expect(why.getByText('"whey" comes from milk')).toBeVisible();
   await expect(why.getByText(/appears in the ingredients/)).toHaveCount(0);

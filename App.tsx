@@ -33,7 +33,7 @@ const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | nu
   const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
   return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
 };
-const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }];
+const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }, { id: 'demo-jonathan', name: 'Jonathan', allergies: ['tree-nuts', 'soy'] }, { id: 'demo-nafis', name: 'Nafis', allergies: ['gluten', 'mustard'] }, { id: 'demo-banjo', name: 'Banjo', allergies: ['eggs', 'shellfish', 'mollusks'] }, { id: 'demo-bitebeacon', name: 'BiteBeacon', allergies: ['peanuts', 'sesame'] }, { id: 'demo-capstone', name: 'Capstone', allergies: ['fish', 'celery', 'sulfites'] }];
 type Entry = { product: Product; at: string };
 // Fictional demo pantry, dated relative to today so the expiry alerts always show.
 const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[0], 1], [SAMPLES[1], 20]].map(([product, days], i) =>
