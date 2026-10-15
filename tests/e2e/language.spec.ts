@@ -10,8 +10,13 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.goto('/');
   await page.getByRole('button', { name: en['demo.explore'] }).click();
   await page.getByRole('button', { name: en['nav.settings'], exact: true }).click();
+  // A dropdown: the closed button names the current language; opening it lists every language.
+  await expect(page.getByRole('radio', { name: 'Language: Español' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Language: English' }).click();
   await expect(page.getByRole('radio', { name: 'Language: English' })).toBeChecked();
   await page.getByRole('radio', { name: 'Language: Español' }).click();
+  await expect(page.getByRole('radio', { name: 'Language: English' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: es['settings.languageLabel'].replace('{name}', 'Español') })).toBeVisible();
   await expect(page.getByRole('heading', { name: es['settings.title'] })).toBeVisible();
   await expect(page.getByTestId('toast')).toContainText('Español');
   await expect(page.getByText(es['settings.translationNote'])).toBeVisible();
@@ -19,7 +24,7 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.screenshot({ path: 'artifacts/language-settings-es.png' });
 
   await page.getByRole('button', { name: es['nav.overview'], exact: true }).click();
-  await page.getByRole('button', { name: es['samples.try'].replace('{name}', 'Peanut crunch granola') }).click();
+  await page.getByRole('button', { name: es['samples.try'].replace('{name}', 'Peanut Crunch Granola') }).click();
   // Product names and ingredients stay as the source wrote them; everything around them is Spanish.
   await expect(page.getByTestId('household-summary')).toContainText(es['summary.contains_other'].replace('{c}', '2').replace('{n}', '3'));
   await expect(page.getByTestId('person-result-Alex')).toContainText(es['allergen.peanuts']);
@@ -36,7 +41,7 @@ test.describe('device language', () => {
     await expect(page.getByRole('button', { name: vi['demo.explore'] })).toBeVisible();
     await page.getByRole('button', { name: vi['demo.explore'] }).click();
     await page.getByRole('button', { name: vi['nav.settings'], exact: true }).click();
-    await expect(page.getByRole('radio', { name: vi['settings.languageLabel'].replace('{name}', 'Tiếng Việt') })).toBeChecked();
+    await expect(page.getByRole('button', { name: vi['settings.languageLabel'].replace('{name}', 'Tiếng Việt') })).toBeVisible();
   });
 });
 
@@ -46,6 +51,6 @@ test.describe('Traditional Chinese device', () => {
     await page.goto('/');
     await page.getByRole('button', { name: zhHant['demo.explore'] }).click();
     await page.getByRole('button', { name: zhHant['nav.settings'], exact: true }).click();
-    await expect(page.getByRole('radio', { name: zhHant['settings.languageLabel'].replace('{name}', '中文（繁體）') })).toBeChecked();
+    await expect(page.getByRole('button', { name: zhHant['settings.languageLabel'].replace('{name}', '中文（繁體）') })).toBeVisible();
   });
 });

@@ -4,7 +4,7 @@ export const zhHant: Messages = {
   'app.opening': '正在開啟 BiteBeacon…',
   'nav.overview': '概覽', 'nav.overview.short': '首頁',
   'nav.scan': '掃描商品', 'nav.scan.short': '掃描',
-  'nav.allergies': '我的過敏原', 'nav.allergies.short': '過敏原',
+  'nav.allergies': '過敏原', 'nav.allergies.short': '過敏原',
   'nav.history': '最近掃描', 'nav.history.short': '記錄',
   'nav.settings': '設定', 'nav.settings.short': '設定',
   'nav.about': 'App 詳細資訊', 'nav.about.short': '詳情',
@@ -54,7 +54,7 @@ export const zhHant: Messages = {
   'samples.title': '試一試', 'samples.body': '四款虛構商品，四種實用結果。', 'samples.label': '示範合集',
   'samples.try': '試試 {name}', 'samples.fictional': '虛構示例',
 
-  'allergies.title': '你的過敏原，一目瞭然。', 'allergies.body': '從15種常見食物過敏原中選擇：美國九大主要過敏原，另加歐洲和加拿大列出的六種。可複選。',
+  'allergies.body': '從15種常見食物過敏原中選擇：美國九大主要過敏原，另加歐洲和加拿大列出的六種。可複選。',
   'allergies.notice': '本應用程式無法涵蓋所有過敏。「小麥」只檢查小麥；如需同時檢查大麥、黑麥和燕麥，請選擇「麩質」。甲殼類水產不包括軟體動物；如需檢查蛤蜊、牡蠣和魷魚，請選擇「軟體動物」。',
   'allergies.hint': '儲存過敏檔案後，更改才會生效。',
   'allergies.chooseOne': '請至少選擇一種過敏原，才能使用條碼檢查。',
@@ -64,6 +64,7 @@ export const zhHant: Messages = {
   'allergies.count': '已選 {n}/{total} 項', 'allergies.unsaved': '有未儲存的更改', 'allergies.saved': '已儲存的檔案',
   'allergies.saving': '正在儲存你的過敏檔案…', 'allergies.profileSaved': '檔案已儲存', 'allergies.savingShort': '正在儲存…',
   'allergies.save': '儲存過敏檔案', 'allergies.reset': '撤銷更改', 'toast.discarded': '已放棄更改',
+  'allergies.whose': '查看誰的過敏原', 'allergies.saveFor': '儲存{name}的過敏原',
 
   'scan.title': '你下一口吃的是什麼？', 'scan.body': '掃描食品條碼，或輸入條碼下方的數字。',
   'scan.chooseAllergies': '選擇你的過敏原', 'scan.scanner': '條碼掃描器',

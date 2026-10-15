@@ -4,7 +4,7 @@ export const bn: Messages = {
   'app.opening': 'BiteBeacon খোলা হচ্ছে…',
   'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম',
   'nav.scan': 'পণ্য স্ক্যান করুন', 'nav.scan.short': 'স্ক্যান',
-  'nav.allergies': 'আমার অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
+  'nav.allergies': 'অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
   'nav.history': 'সাম্প্রতিক স্ক্যান', 'nav.history.short': 'ইতিহাস',
   'nav.settings': 'সেটিংস', 'nav.settings.short': 'সেটিংস',
   'nav.about': 'অ্যাপের বিবরণ', 'nav.about.short': 'বিবরণ',
@@ -54,7 +54,7 @@ export const bn: Messages = {
   'samples.title': 'চেষ্টা করে দেখুন', 'samples.body': 'চারটি কাল্পনিক পণ্য। চারটি কাজের ফলাফল।', 'samples.label': 'ডেমো সংগ্রহ',
   'samples.try': '{name} চেষ্টা করুন', 'samples.fictional': 'কাল্পনিক নমুনা',
 
-  'allergies.title': 'আপনার অ্যালার্জি, সবার আগে।', 'allergies.body': '১৫টি সাধারণ খাদ্য অ্যালার্জেন থেকে বেছে নিন: যুক্তরাষ্ট্রের নয়টি প্রধান অ্যালার্জেন এবং ইউরোপ ও কানাডায় তালিকাভুক্ত আরও ছয়টি। প্রযোজ্য সবগুলো নির্বাচন করুন।',
+  'allergies.body': '১৫টি সাধারণ খাদ্য অ্যালার্জেন থেকে বেছে নিন: যুক্তরাষ্ট্রের নয়টি প্রধান অ্যালার্জেন এবং ইউরোপ ও কানাডায় তালিকাভুক্ত আরও ছয়টি। প্রযোজ্য সবগুলো নির্বাচন করুন।',
   'allergies.notice': 'এই অ্যাপ সব অ্যালার্জি কভার করে না। গম শুধু গম যাচাই করে; বার্লি, রাই ও ওটসও যাচাই করতে গ্লুটেন বেছে নিন। খোলসযুক্ত প্রাণী (চিংড়ি, কাঁকড়া) বলতে মলাস্ক বোঝায় না; ঝিনুক, শামুক বা স্কুইডের জন্য মলাস্ক বেছে নিন।',
   'allergies.hint': 'অ্যালার্জি প্রোফাইল সংরক্ষণ করার পর পরিবর্তন কার্যকর হবে।',
   'allergies.chooseOne': 'বারকোড যাচাই ব্যবহার করতে অন্তত একটি অ্যালার্জি বেছে নিন।',
@@ -64,6 +64,7 @@ export const bn: Messages = {
   'allergies.count': '{total}টির মধ্যে {n}টি নির্বাচিত', 'allergies.unsaved': 'অসংরক্ষিত পরিবর্তন', 'allergies.saved': 'সংরক্ষিত প্রোফাইল',
   'allergies.saving': 'আপনার অ্যালার্জি প্রোফাইল সংরক্ষণ হচ্ছে…', 'allergies.profileSaved': 'প্রোফাইল সংরক্ষিত', 'allergies.savingShort': 'সংরক্ষণ হচ্ছে…',
   'allergies.save': 'অ্যালার্জি প্রোফাইল সংরক্ষণ করুন', 'allergies.reset': 'পরিবর্তন বাতিল করুন', 'toast.discarded': 'পরিবর্তন বাতিল হয়েছে',
+  'allergies.whose': 'কার অ্যালার্জি', 'allergies.saveFor': '{name}-এর অ্যালার্জি সংরক্ষণ করুন',
 
   'scan.title': 'আপনার পরের কামড়ে কী আছে?', 'scan.body': 'খাবারের বারকোড স্ক্যান করুন বা তার নিচের নম্বরগুলো লিখুন।',
   'scan.chooseAllergies': 'আপনার অ্যালার্জি বেছে নিন', 'scan.scanner': 'বারকোড স্ক্যানার',

@@ -6,7 +6,7 @@ test('one scan shows a result for each household member', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await expect(page.getByTestId('toast')).toContainText('household of 3');
-  await page.getByRole('button', { name: 'Try Peanut crunch granola' }).click();
+  await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('household-summary')).toContainText('2 of 3 people have an allergen signal');
   await expect(page.getByTestId('person-result-Alex')).toContainText('Allergen signal found: Peanuts');
   await expect(page.getByTestId('person-result-Kha')).toContainText('Allergen signal found: Milk');
@@ -86,7 +86,7 @@ test('settings add, edit and remove people and set who results show by default',
   for (const [name, on] of [['Alex P', false], ['Kha', true], ['DFK', false], ['Sam', true]] as const)
     await expect(showFor.getByRole('checkbox', { name: `Default: ${name}` })).toBeChecked({ checked: on });
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
-  await page.getByRole('button', { name: 'Simply oat crackers', exact: true }).click();
+  await page.getByRole('button', { name: 'Simply Oat Crackers', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Check for Kha' })).toBeChecked();
   await expect(page.getByRole('checkbox', { name: 'Check for Sam' })).toBeChecked();
   await expect(page.getByRole('checkbox', { name: 'Check for Alex P' })).not.toBeChecked();
@@ -108,4 +108,46 @@ test('settings add, edit and remove people and set who results show by default',
   await expect(page.getByText('2 of 9 people')).toBeVisible();
   await expect(showFor.getByRole('checkbox', { name: 'Default: Alex P' })).toBeChecked();
   expect(errors).toEqual([]);
+});
+
+test('the Allergies page switches between household members and saves each list', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Allergies', exact: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Alex', exact: true })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Peanuts' })).toBeChecked();
+
+  await page.getByRole('radio', { name: 'Kha', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Milk' })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Peanuts' })).not.toBeChecked();
+  await page.getByRole('checkbox', { name: 'Soy' }).click();
+  await page.getByRole('button', { name: 'Save Kha’s allergies' }).click();
+  await expect(page.getByTestId('profile-save-feedback')).toContainText('Kha updated');
+
+  // Your own list is untouched, and Settings shows Kha's new list.
+  await page.getByRole('radio', { name: 'Alex', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Soy' })).not.toBeChecked();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByText('Milk · Eggs · Soy')).toBeVisible();
+  // Leaving the page brings it back to your own list.
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Alex', exact: true })).toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test('phone home and scan cards fit their content', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  // Each card must be at least as tall as its last line of content (nothing clipped or spilling out).
+  const fits = async (inner: string) => page.getByText(inner, { exact: false }).first().evaluate(el => {
+    let card = el.parentElement!; while (card && getComputedStyle(card).borderTopLeftRadius !== '22px') card = card.parentElement!;
+    return el.getBoundingClientRect().bottom <= card.getBoundingClientRect().bottom;
+  });
+  expect(await fits('Household: Kha, DFK')).toBe(true);
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
+  expect(await fits('Manufacturer-submitted USDA FoodData Central records')).toBe(true);
 });

@@ -40,7 +40,7 @@ it('rejects malformed USDA responses', () => {
 it('falls back to Open Food Facts when USDA has no exact match', async () => {
   const body = { code: '0012345678905', product: { code: '0012345678905', product_name: 'Test product' } };
   vi.stubGlobal('fetch', route(noUsda, () => json(body)));
-  expect(await lookupProduct('012345678905')).toMatchObject({ source: 'openfoodfacts', name: 'Test product' });
+  expect(await lookupProduct('012345678905')).toMatchObject({ source: 'openfoodfacts', name: 'Test Product' });
 });
 it('falls back to Open Food Facts when USDA is unavailable', async () => {
   const body = { code: '3017620422003', product: { code: '3017620422003', product_name: 'Nutella' } };
