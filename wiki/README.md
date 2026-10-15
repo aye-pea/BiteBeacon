@@ -174,3 +174,11 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - App links (`openLegal` in `App.tsx`): Legal & safety card in App details; Terms + Privacy links under the sign-up consent checkbox; "Health disclaimer" link under the welcome disclaimer; footer disclaimer opens the health disclaimer. Sign-up consent text now ends with agreeing to the Terms and Privacy Policy (`consent_version` unchanged; the DB check pins it).
 - New keys `legal.*` in all five dictionaries; non-English UIs note the pages are English only. Contact address on the pages is privacy@bitebeacon.org, which needs a real mailbox or forwarding. Not reviewed by a lawyer.
 - Validation: TypeScript passed; 103 unit/database tests passed; 15 Playwright flows passed locally (web-camera flow needs CI's headless shell, live skipped). Built `dist/` contains the pages; screenshots checked at 390 × 844 in light and dark.
+
+## Six more languages — 2026-10-15
+
+- Added Traditional Chinese (`zh-Hant`, shown as 中文（繁體）, Taiwan wording, zh-TW dates), Haitian Creole (`ht`), Russian (`ru`), Korean (`ko`), French (`fr`) and Hindi (`hi`). Picker now lists 11 languages.
+- Devices set to zh-TW, zh-HK, zh-MO or zh-Hant start in Traditional Chinese; other Chinese settings still start in Simplified.
+- New migration `202610150002_more_languages.sql` widens the `profile_language` check to the new codes. Run it after `202610140002_profile_language.sql` on the hosted project.
+- All six are machine-drafted (Traditional Chinese converted from the Simplified file) and need native-speaker review before launch. Points to check: Korean particles next to names (written as 을(를)); Russian "Древесные орехи" for tree nuts; Haitian Creole "pistach", "wowoli", "kontak kwaze"; Hindi long allergen labels and gendered verbs in the consent text; French "garde-manger" and (s) plural forms.
+- Validation: TypeScript passed; 115 unit/database tests passed (translation checks for every language, a `zh-Hant` save test); 16 Playwright flows passed including a new zh-TW device test (web-camera flow could not launch its browser in the cloud sandbox, unrelated). Screens checked in all six languages at 390 × 844.

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { en } from '../../src/i18n/en';
 import { es } from '../../src/i18n/es';
 import { vi } from '../../src/i18n/vi';
+import { zhHant } from '../../src/i18n/zhHant';
 
 test('choosing Español in Settings translates the app and results', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
@@ -36,5 +37,15 @@ test.describe('device language', () => {
     await page.getByRole('button', { name: vi['demo.explore'] }).click();
     await page.getByRole('button', { name: vi['nav.settings'], exact: true }).click();
     await expect(page.getByRole('radio', { name: vi['settings.languageLabel'].replace('{name}', 'Tiếng Việt') })).toBeChecked();
+  });
+});
+
+test.describe('Traditional Chinese device', () => {
+  test.use({ locale: 'zh-TW' });
+  test('a Taiwan device starts in Traditional, not Simplified, Chinese', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: zhHant['demo.explore'] }).click();
+    await page.getByRole('button', { name: zhHant['nav.settings'], exact: true }).click();
+    await expect(page.getByRole('radio', { name: zhHant['settings.languageLabel'].replace('{name}', '中文（繁體）') })).toBeChecked();
   });
 });

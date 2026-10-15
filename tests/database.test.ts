@@ -19,6 +19,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610140001_household_members.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610140002_profile_language.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150001_pantry_items.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150002_more_languages.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -127,7 +128,9 @@ describe('profile language', () => {
     await db.query(`insert into public.profiles(id, allergies, consent_version) values ($1, array['fish'], '2026-09-30')`, [E]);
     await db.query('update public.profiles set language = $1 where id = $2', ['vi', E]);
     expect((await db.query<{ language: string }>('select language from public.profiles where id = $1', [E])).rows[0].language).toBe('vi');
-    await expect(db.query('update public.profiles set language = $1 where id = $2', ['fr', E])).rejects.toThrow(/profile_language/);
+    await db.query('update public.profiles set language = $1 where id = $2', ['zh-Hant', E]);
+    expect((await db.query<{ language: string }>('select language from public.profiles where id = $1', [E])).rows[0].language).toBe('zh-Hant');
+    await expect(db.query('update public.profiles set language = $1 where id = $2', ['xx', E])).rejects.toThrow(/profile_language/);
     await db.query('update public.profiles set language = null where id = $1', [E]);
     await asUser(A);
     expect((await db.query(`update public.profiles set language = 'es' where id = $1 returning id`, [E])).rows).toHaveLength(0);
