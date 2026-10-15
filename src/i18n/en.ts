@@ -150,6 +150,8 @@ export const en = {
   'settings.languageLabel': 'Language: {name}', 'toast.languageSaved': 'Language set to {name}',
   'settings.languageFailed': 'Language could not be saved to your account. It still applies until you sign out.',
   'settings.translationNote': 'Translations are new. If a word looks wrong, rely on the package label and tell us.',
+  'settings.appearance': 'Appearance', 'settings.appearanceHelp': 'Auto matches your device’s light or dark setting. Your choice is saved on this device.',
+  'settings.appearanceLabel': 'Appearance: {name}', 'settings.appearance.auto': 'Auto', 'settings.appearance.light': 'Light', 'settings.appearance.dark': 'Dark',
 
   'member.add': 'Add a person', 'member.edit': 'Edit {name}', 'member.name': 'Name', 'member.nameLabel': "Person's name", 'member.namePlaceholder': 'e.g. Kha',
   'member.allergies': 'Their allergies', 'member.allergyFor': '{allergen} for this person', 'member.saveChanges': 'Save changes', 'member.addToHousehold': 'Add to household',

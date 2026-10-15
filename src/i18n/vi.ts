@@ -150,6 +150,8 @@ export const vi: Messages = {
   'settings.languageLabel': 'Ngôn ngữ: {name}', 'toast.languageSaved': 'Đã đặt ngôn ngữ thành {name}',
   'settings.languageFailed': 'Không thể lưu ngôn ngữ vào tài khoản của bạn. Ngôn ngữ vẫn được áp dụng cho đến khi bạn đăng xuất.',
   'settings.translationNote': 'Bản dịch còn mới. Nếu một từ có vẻ sai, hãy dựa vào nhãn trên bao bì và báo cho chúng tôi.',
+  'settings.appearance': 'Giao diện', 'settings.appearanceHelp': 'Tự động sẽ theo chế độ sáng hoặc tối của thiết bị. Lựa chọn của bạn được lưu trên thiết bị này.',
+  'settings.appearanceLabel': 'Giao diện: {name}', 'settings.appearance.auto': 'Tự động', 'settings.appearance.light': 'Sáng', 'settings.appearance.dark': 'Tối',
 
   'member.add': 'Thêm người', 'member.edit': 'Sửa {name}', 'member.name': 'Tên', 'member.nameLabel': 'Tên của người này', 'member.namePlaceholder': 'vd: Kha',
   'member.allergies': 'Dị ứng của họ', 'member.allergyFor': '{allergen} cho người này', 'member.saveChanges': 'Lưu thay đổi', 'member.addToHousehold': 'Thêm vào hộ gia đình',

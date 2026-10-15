@@ -150,6 +150,8 @@ export const es: Messages = {
   'settings.languageLabel': 'Idioma: {name}', 'toast.languageSaved': 'Idioma cambiado a {name}',
   'settings.languageFailed': 'No se pudo guardar el idioma en tu cuenta. Se seguirá aplicando hasta que cierres sesión.',
   'settings.translationNote': 'Las traducciones son nuevas. Si una palabra parece incorrecta, guíate por la etiqueta del empaque y avísanos.',
+  'settings.appearance': 'Apariencia', 'settings.appearanceHelp': 'Automático sigue el modo claro u oscuro de tu dispositivo. Tu elección se guarda en este dispositivo.',
+  'settings.appearanceLabel': 'Apariencia: {name}', 'settings.appearance.auto': 'Automático', 'settings.appearance.light': 'Claro', 'settings.appearance.dark': 'Oscuro',
 
   'member.add': 'Agregar a una persona', 'member.edit': 'Editar a {name}', 'member.name': 'Nombre', 'member.nameLabel': 'Nombre de la persona', 'member.namePlaceholder': 'p. ej., Kha',
   'member.allergies': 'Sus alergias', 'member.allergyFor': '{allergen} para esta persona', 'member.saveChanges': 'Guardar cambios', 'member.addToHousehold': 'Agregar al hogar',

@@ -150,6 +150,8 @@ export const hi: Messages = {
   'settings.languageLabel': 'भाषा: {name}', 'toast.languageSaved': 'भाषा {name} पर सेट की गई',
   'settings.languageFailed': 'भाषा आपके अकाउंट में सेव नहीं हो सकी। साइन आउट करने तक यह लागू रहेगी।',
   'settings.translationNote': 'अनुवाद नए हैं। अगर कोई शब्द गलत लगे, तो पैकेट के लेबल पर भरोसा करें और हमें बताएं।',
+  'settings.appearance': 'रूप', 'settings.appearanceHelp': 'स्वचालित आपके डिवाइस की लाइट या डार्क सेटिंग का पालन करता है। आपकी पसंद इसी डिवाइस पर सहेजी जाती है।',
+  'settings.appearanceLabel': 'रूप: {name}', 'settings.appearance.auto': 'स्वचालित', 'settings.appearance.light': 'लाइट', 'settings.appearance.dark': 'डार्क',
 
   'member.add': 'कोई व्यक्ति जोड़ें', 'member.edit': '{name} की जानकारी बदलें', 'member.name': 'नाम', 'member.nameLabel': 'व्यक्ति का नाम', 'member.namePlaceholder': 'जैसे, Kha',
   'member.allergies': 'उनकी एलर्जी', 'member.allergyFor': 'इस व्यक्ति के लिए {allergen}', 'member.saveChanges': 'बदलाव सेव करें', 'member.addToHousehold': 'परिवार में जोड़ें',

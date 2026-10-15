@@ -150,6 +150,8 @@ export const fr: Messages = {
   'settings.languageLabel': 'Langue : {name}', 'toast.languageSaved': 'Langue définie : {name}',
   'settings.languageFailed': 'Impossible d’enregistrer la langue dans votre compte. Elle reste appliquée jusqu’à votre déconnexion.',
   'settings.translationNote': 'Les traductions sont nouvelles. Si un mot semble incorrect, fiez-vous à l’étiquette de l’emballage et signalez-le-nous.',
+  'settings.appearance': 'Apparence', 'settings.appearanceHelp': 'Automatique suit le mode clair ou sombre de votre appareil. Votre choix est enregistré sur cet appareil.',
+  'settings.appearanceLabel': 'Apparence : {name}', 'settings.appearance.auto': 'Automatique', 'settings.appearance.light': 'Clair', 'settings.appearance.dark': 'Sombre',
 
   'member.add': 'Ajouter une personne', 'member.edit': 'Modifier {name}', 'member.name': 'Nom', 'member.nameLabel': 'Nom de la personne', 'member.namePlaceholder': 'ex. Kha',
   'member.allergies': 'Ses allergies', 'member.allergyFor': '{allergen} pour cette personne', 'member.saveChanges': 'Enregistrer les modifications', 'member.addToHousehold': 'Ajouter au foyer',
