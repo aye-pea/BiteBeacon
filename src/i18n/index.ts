@@ -3,17 +3,29 @@ import { es } from './es';
 import { zh } from './zh';
 import { bn } from './bn';
 import { vi } from './vi';
+import { zhHant } from './zhHant';
+import { ht } from './ht';
+import { ru } from './ru';
+import { ko } from './ko';
+import { fr } from './fr';
+import { hi } from './hi';
 
 // Native names, so people can find their language whatever the app is currently showing.
 export const LANGUAGES = [
   { code: 'en', name: 'English', locale: 'en-US' },
   { code: 'es', name: 'Español', locale: 'es-US' },
   { code: 'zh', name: '中文（简体）', locale: 'zh-CN' },
+  { code: 'zh-Hant', name: '中文（繁體）', locale: 'zh-TW' },
   { code: 'bn', name: 'বাংলা', locale: 'bn-BD' },
   { code: 'vi', name: 'Tiếng Việt', locale: 'vi-VN' },
+  { code: 'ht', name: 'Kreyòl ayisyen', locale: 'ht-HT' },
+  { code: 'ru', name: 'Русский', locale: 'ru-RU' },
+  { code: 'ko', name: '한국어', locale: 'ko-KR' },
+  { code: 'fr', name: 'Français', locale: 'fr-FR' },
+  { code: 'hi', name: 'हिन्दी', locale: 'hi-IN' },
 ] as const;
 export type Lang = typeof LANGUAGES[number]['code'];
-export const DICTIONARIES: Record<Lang, Messages> = { en, es, zh, bn, vi };
+export const DICTIONARIES: Record<Lang, Messages> = { en, es, zh, 'zh-Hant': zhHant, bn, vi, ht, ru, ko, fr, hi };
 export const isLang = (value: unknown): value is Lang => LANGUAGES.some(l => l.code === value);
 export const localeOf = (lang: Lang) => LANGUAGES.find(l => l.code === lang)!.locale;
 export const languageName = (lang: Lang) => LANGUAGES.find(l => l.code === lang)!.name;
@@ -30,13 +42,14 @@ export type PluralKey = PluralBase<MessageKey>;
 export const translatePlural = (lang: Lang, key: PluralKey, count: number, params: Params = {}) =>
   translate(lang, `${key}_${count === 1 ? 'one' : 'other'}` as MessageKey, { n: count, ...params });
 
-// Device language, used until the person picks one in Settings. Chinese variants all map to Simplified for now.
+// Device language, used until the person picks one in Settings. Taiwan, Hong Kong, Macau and zh-Hant devices get Traditional Chinese.
 export function detectLanguage(): Lang {
   let tag = '';
   try { tag = Intl.DateTimeFormat().resolvedOptions().locale; } catch { /* very old engines: fall back to English */ }
   if (typeof navigator !== 'undefined' && Array.isArray(navigator.languages) && navigator.languages[0]) tag = navigator.languages[0];
-  const base = tag.toLowerCase().split(/[-_]/)[0];
-  return isLang(base) ? base : 'en';
+  const parts = tag.toLowerCase().split(/[-_]/);
+  if (parts[0] === 'zh' && parts.slice(1).some(p => ['hant', 'tw', 'hk', 'mo'].includes(p))) return 'zh-Hant';
+  return isLang(parts[0]) ? parts[0] : 'en';
 }
 
 export type I18n = {
