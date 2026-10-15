@@ -12,7 +12,7 @@ Project second brain. Update after material behavior, architecture or acceptance
 
 - User chose **US first** and **local demo + Supabase setup**.
 - React Native / Expo with TypeScript; no existing project files needed preservation.
-- Working brand: BiteBeacon. Custom calm green/cream UI. Responsive layouts use flex and percentage widths; native text respects system font scaling. Roblox `Scale` / `TextScaled` properties do not exist in React Native.
+- Working brand: BiteBeacon. Custom calm green/cream UI. Responsive layouts use flex and percentage widths; native text respects system font scaling. Roblox `Scale` / `TextScaled` properties do not exist in React Native. Logo: flat green cart inside scan brackets (`assets/logo.svg`, drawn in-app by `CartLogo` in `src/ui/logo.tsx` using the theme green); wordmark "BiteBeacon" has no trailing period. App icon, favicon and Android icons are generated from the same mark on white.
 - Real email auth and PostgreSQL persistence are prepared through Supabase; demo does not simulate successful signup or claim accounts are stored.
 - Nine supported US major-allergen groups; no custom allergy text, celiac classification or severity recommendation in v0.1.
 - Never label products “safe.” Incomplete or unsupported-language data remains uncertain. Structured positives override missing fields; traces remain distinct. Limited English synonym detection is conservative and may flag negated statements.
