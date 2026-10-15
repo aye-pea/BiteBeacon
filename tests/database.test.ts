@@ -21,6 +21,7 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610150001_pantry_items.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150002_more_languages.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150004_default_view_people.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150005_more_allergens.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -192,5 +193,19 @@ describe('pantry items', () => {
     expect((await db.query('select id from public.pantry_items where owner_id = $1', [G])).rows).toHaveLength(0);
     await db.exec('set role anon;');
     await expect(db.query('select * from public.pantry_items')).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('more allergens', () => {
+  const H = '88888888-8888-4888-8888-888888888888';
+  const all15 = "array['milk','eggs','peanuts','tree-nuts','soy','wheat','fish','shellfish','sesame','gluten','mollusks','mustard','celery','sulfites','lupin']";
+  it('accepts all 15 allergens for profiles and household members, and still rejects unknown ones', async () => {
+    await db.exec(`reset role; insert into auth.users values ('${H}');`);
+    await asUser(H);
+    await db.query(`insert into public.profiles(id, allergies, consent_version) values ($1, ${all15}, '2026-09-30')`, [H]);
+    expect((await db.query<{ allergies: string[] }>('select allergies from public.profiles where id = $1', [H])).rows[0].allergies).toHaveLength(15);
+    await db.query(`insert into public.household_members(name, allergies) values ('Sam', array['gluten','mollusks'])`);
+    await expect(db.query(`update public.profiles set allergies = array['banana'] where id = $1`, [H])).rejects.toThrow(/supported_allergies/);
+    await expect(db.query(`insert into public.household_members(name, allergies) values ('Kim', array['kiwi'])`)).rejects.toThrow(/member_supported_allergies/);
   });
 });

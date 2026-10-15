@@ -65,7 +65,7 @@ test('small phone allergy controls stay reachable and navigation resets scroll',
   await expect(save).toBeInViewport();
   await expect(page.getByRole('heading', { name: 'Your allergies, front and center.' })).toBeInViewport();
   await page.getByRole('checkbox', { name: 'Crustacean shellfish', exact: true }).click();
-  await expect(page.getByText('3 of 9 selected · Unsaved changes')).toBeVisible();
+  await expect(page.getByText('3 of 15 selected · Unsaved changes')).toBeVisible();
   await expect(save).toBeInViewport();
   await page.getByRole('button', { name: 'Reset changes' }).click();
   await expect(page.getByRole('checkbox', { name: 'Crustacean shellfish', exact: true })).not.toBeChecked();

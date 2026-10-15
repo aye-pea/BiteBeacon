@@ -11,6 +11,7 @@ export const es: Messages = {
 
   'allergen.milk': 'Leche', 'allergen.eggs': 'Huevo', 'allergen.peanuts': 'Cacahuate (maní)', 'allergen.tree-nuts': 'Nueces de árbol', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Trigo', 'allergen.fish': 'Pescado', 'allergen.shellfish': 'Mariscos crustáceos', 'allergen.sesame': 'Ajonjolí (sésamo)',
+  'allergen.gluten': 'Gluten', 'allergen.mollusks': 'Moluscos', 'allergen.mustard': 'Mostaza', 'allergen.celery': 'Apio', 'allergen.sulfites': 'Sulfitos', 'allergen.lupin': 'Altramuz (lupino)',
 
   'common.cancel': 'Cancelar', 'common.unknown': 'desconocido', 'common.you': 'Tú', 'common.listSeparator': ', ',
 
@@ -53,8 +54,8 @@ export const es: Messages = {
   'samples.title': 'Pruébala', 'samples.body': 'Cuatro productos ficticios. Cuatro resultados útiles.', 'samples.label': 'COLECCIÓN DEMO',
   'samples.try': 'Probar {name}', 'samples.fictional': 'Ejemplo ficticio',
 
-  'allergies.title': 'Tus alergias, en primer plano.', 'allergies.body': 'Elige entre los nueve alérgenos alimentarios principales de EE. UU. Selecciona todos los que apliquen.',
-  'allergies.notice': 'Esta app no cubre todas las alergias. Trigo no es una revisión de gluten ni de enfermedad celíaca. Mariscos crustáceos no incluye moluscos.',
+  'allergies.title': 'Tus alergias, en primer plano.', 'allergies.body': 'Elige entre 15 alérgenos alimentarios comunes: los nueve principales de EE. UU. y seis más que se declaran en Europa y Canadá. Selecciona todos los que apliquen.',
+  'allergies.notice': 'Esta app no cubre todas las alergias. Trigo solo revisa el trigo; elige Gluten para revisar también cebada, centeno y avena. Mariscos crustáceos no incluye moluscos; elige Moluscos para almejas, ostras y calamares.',
   'allergies.hint': 'Los cambios se aplican después de guardar tu perfil de alergias.',
   'allergies.chooseOne': 'Elige al menos una alergia para usar la revisión por código de barras.',
   'allergies.savedDemo': 'Perfil de alergias guardado. Los resultados ahora usan estas selecciones. Solo demo: los cambios duran hasta que termine esta sesión.',

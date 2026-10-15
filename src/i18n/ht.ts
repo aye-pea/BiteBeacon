@@ -11,6 +11,7 @@ export const ht: Messages = {
 
   'allergen.milk': 'Lèt', 'allergen.eggs': 'Ze', 'allergen.peanuts': 'Pistach', 'allergen.tree-nuts': 'Nwa pyebwa (zanmann, nwa, elatriye)', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Ble', 'allergen.fish': 'Pwason', 'allergen.shellfish': 'Kristase (kribich, krab, woma)', 'allergen.sesame': 'Wowoli (sezam)',
+  'allergen.gluten': 'Gluten', 'allergen.mollusks': 'Molisk (paloud, zuit, kalma)', 'allergen.mustard': 'Moutad', 'allergen.celery': 'Seleri', 'allergen.sulfites': 'Silfit', 'allergen.lupin': 'Lipen',
 
   'common.cancel': 'Anile', 'common.unknown': 'pa konnen', 'common.you': 'Ou', 'common.listSeparator': ', ',
 
@@ -53,8 +54,8 @@ export const ht: Messages = {
   'samples.title': 'Eseye l', 'samples.body': 'Kat pwodui fiktif. Kat rezilta itil.', 'samples.label': 'KOLEKSYON DEMO',
   'samples.try': 'Eseye {name}', 'samples.fictional': 'Egzanp fiktif',
 
-  'allergies.title': 'Alèji ou, an premye plas.', 'allergies.body': 'Chwazi nan nèf gwo alèjèn manje Etazini yo. Chwazi tout sa ki konsène ou.',
-  'allergies.notice': 'Aplikasyon sa a pa kouvri tout alèji. Ble a se pa yon verifikasyon pou gliten oswa maladi selyak. Kristase pa kouvri molisk (tankou lanbi, wit, kalma).',
+  'allergies.title': 'Alèji ou, an premye plas.', 'allergies.body': 'Chwazi nan 15 alèjèn manje ki komen: nèf gwo alèjèn Etazini yo plis sis lòt yo mete sou lis an Ewòp ak Kanada. Chwazi tout sa ki aplike.',
+  'allergies.notice': 'Aplikasyon sa a pa kouvri tout alèji. Ble tcheke ble sèlman; chwazi Gluten pou tcheke lòj, sèg ak avwàn tou. Kristase pa kouvri molisk; chwazi Molisk pou paloud, zuit ak kalma.',
   'allergies.hint': 'Chanjman yo aplike apre ou sere pwofil alèji ou.',
   'allergies.chooseOne': 'Chwazi omwen yon alèji pou itilize verifikasyon kòd ba.',
   'allergies.savedDemo': 'Pwofil alèji a sere. Rezilta yo kounye a itilize chwa sa yo. Demo sèlman: chanjman yo dire jiskaske sesyon sa a fini.',

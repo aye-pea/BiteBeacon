@@ -11,6 +11,7 @@ export const ko: Messages = {
 
   'allergen.milk': '우유', 'allergen.eggs': '달걀', 'allergen.peanuts': '땅콩', 'allergen.tree-nuts': '견과류(트리너트)', 'allergen.soy': '대두',
   'allergen.wheat': '밀', 'allergen.fish': '생선', 'allergen.shellfish': '갑각류', 'allergen.sesame': '참깨',
+  'allergen.gluten': '글루텐', 'allergen.mollusks': '연체동물', 'allergen.mustard': '겨자', 'allergen.celery': '셀러리', 'allergen.sulfites': '아황산염', 'allergen.lupin': '루핀',
 
   'common.cancel': '취소', 'common.unknown': '알 수 없음', 'common.you': '나', 'common.listSeparator': ', ',
 
@@ -53,8 +54,8 @@ export const ko: Messages = {
   'samples.title': '한번 써 보세요', 'samples.body': '가상 제품 네 개. 유용한 결과 네 가지.', 'samples.label': '데모 컬렉션',
   'samples.try': '{name} 체험하기', 'samples.fictional': '가상 샘플',
 
-  'allergies.title': '내 알레르기를 가장 앞에.', 'allergies.body': '미국 9대 주요 식품 알레르기 유발 물질 중에서 고르세요. 해당하는 것을 모두 선택하세요.',
-  'allergies.notice': '이 앱은 모든 알레르기를 다루지는 않아요. 밀 항목은 글루텐이나 셀리악병 확인이 아니에요. 갑각류 항목에는 조개·오징어 같은 연체동물이 포함되지 않아요.',
+  'allergies.title': '내 알레르기를 가장 앞에.', 'allergies.body': '흔한 식품 알레르기 유발 물질 15가지 중에서 선택하세요: 미국 9대 주요 알레르기 유발 물질과 유럽 및 캐나다에서 표시하는 6가지입니다. 해당하는 항목을 모두 선택하세요.',
+  'allergies.notice': '이 앱이 모든 알레르기를 다루지는 않습니다. 밀은 밀만 확인합니다. 보리, 호밀, 귀리도 확인하려면 글루텐을 선택하세요. 갑각류에는 연체동물이 포함되지 않습니다. 조개, 굴, 오징어는 연체동물을 선택하세요.',
   'allergies.hint': '변경 사항은 알레르기 프로필을 저장한 후에 적용돼요.',
   'allergies.chooseOne': '바코드 확인을 사용하려면 알레르기를 하나 이상 선택하세요.',
   'allergies.savedDemo': '알레르기 프로필을 저장했어요. 이제 결과에 이 선택이 반영돼요. 데모 전용: 변경 사항은 이번 세션이 끝날 때까지만 유지돼요.',

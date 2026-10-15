@@ -35,6 +35,24 @@ describe('allergy decisions', () => {
   it.each(ALLERGENS)('matches structured tags for $label', allergen => {
     expect(assess({ ...SAMPLES[2], allergens: [`en:${allergen.tags[0]}`] }, [allergen.id]).kind).toBe('contains');
   });
+  it.each([
+    ['gluten', 'Water, barley malt, salt.'], ['gluten', 'Rolled oats.'], ['gluten', 'Enriched wheat flour.'],
+    ['mollusks', 'Oyster sauce, garlic.'], ['mollusks', 'Fried calamari.'], ['mustard', 'Vinegar, mustard seed.'],
+    ['celery', 'Carrot, celery, onion.'], ['sulfites', 'Grapes, sodium metabisulfite.'], ['sulfites', 'Apricots, sulphur dioxide.'],
+    ['sulfites', 'Lemon juice, preservative (E223).'], ['lupin', 'Lupin flour, rice.'],
+  ] as [AllergenId, string][])('finds %s in "%s"', (id, ingredients) => {
+    expect(assess({ ...SAMPLES[2], ingredients }, [id]).kind).toBe('contains');
+  });
+  it('keeps Wheat wheat-only while Gluten covers every gluten grain', () => {
+    const rye = { ...SAMPLES[2], ingredients: 'Rye flour, water, salt.' };
+    expect(assess(rye, ['wheat']).kind).not.toBe('contains');
+    expect(assess(rye, ['gluten']).kind).toBe('contains');
+    expect(assess({ ...SAMPLES[2], ingredients: 'Maltodextrin, sugar.' }, ['gluten']).kind).not.toBe('contains');
+  });
+  it('treats a structured gluten tag as a match when Gluten is selected', () => {
+    expect(assess({ ...SAMPLES[2], allergens: ['en:gluten'] }, ['gluten']).kind).toBe('contains');
+    expect(assess({ ...SAMPLES[2], allergens: ['en:gluten'] }, ['wheat']).reason).toBe('gluten');
+  });
   it('recalculates for changed allergies', () => {
     expect(assess(SAMPLES[0], ['sesame']).kind).toBe('no-match');
     expect(assess(SAMPLES[0], ['milk']).kind).toBe('contains');
@@ -58,6 +76,10 @@ describe('provider normalization', () => {
   });
 });
 describe('result evidence', () => {
+  it('credits a shared word to every selected allergen that uses it', () => {
+    const e = explain({ ...SAMPLES[2], ingredients: 'Wheat flour, water.' }, ['wheat', 'gluten']);
+    expect(e.map(x => x.allergen)).toEqual(['Wheat', 'Gluten']);
+  });
   const base = { ...SAMPLES[2], allergens: [], traces: [] };
   it('highlights the exact ingredient words that matched, keeping the original text', () => {
     const segs = highlightIngredients('Sugar, Whey powder, tahini.', ['milk', 'sesame']);

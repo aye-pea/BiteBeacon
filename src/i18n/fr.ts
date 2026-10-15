@@ -11,6 +11,7 @@ export const fr: Messages = {
 
   'allergen.milk': 'Lait', 'allergen.eggs': 'Œufs', 'allergen.peanuts': 'Arachides (cacahuètes)', 'allergen.tree-nuts': 'Fruits à coque', 'allergen.soy': 'Soja',
   'allergen.wheat': 'Blé', 'allergen.fish': 'Poisson', 'allergen.shellfish': 'Crustacés', 'allergen.sesame': 'Sésame',
+  'allergen.gluten': 'Gluten', 'allergen.mollusks': 'Mollusques', 'allergen.mustard': 'Moutarde', 'allergen.celery': 'Céleri', 'allergen.sulfites': 'Sulfites', 'allergen.lupin': 'Lupin',
 
   'common.cancel': 'Annuler', 'common.unknown': 'inconnu', 'common.you': 'Vous', 'common.listSeparator': ', ',
 
@@ -53,8 +54,8 @@ export const fr: Messages = {
   'samples.title': 'Essayez', 'samples.body': 'Quatre produits fictifs. Quatre résultats utiles.', 'samples.label': 'COLLECTION DÉMO',
   'samples.try': 'Essayer {name}', 'samples.fictional': 'Exemple fictif',
 
-  'allergies.title': 'Vos allergies, au premier plan.', 'allergies.body': 'Choisissez parmi les neuf allergènes alimentaires majeurs aux États-Unis. Sélectionnez tous ceux qui vous concernent.',
-  'allergies.notice': 'Cette app ne couvre pas toutes les allergies. Le blé n’est pas une vérification du gluten ni de la maladie cœliaque. Les crustacés n’incluent pas les mollusques.',
+  'allergies.title': 'Vos allergies, au premier plan.', 'allergies.body': 'Choisissez parmi 15 allergènes alimentaires courants : les neuf allergènes majeurs aux États-Unis et six autres déclarés en Europe et au Canada. Sélectionnez tous ceux qui vous concernent.',
+  'allergies.notice': 'Cette app ne couvre pas toutes les allergies. Blé ne vérifie que le blé ; choisissez Gluten pour vérifier aussi l’orge, le seigle et l’avoine. Les crustacés n’incluent pas les mollusques ; choisissez Mollusques pour les palourdes, les huîtres et les calmars.',
   'allergies.hint': 'Les modifications s’appliquent après l’enregistrement de votre profil d’allergies.',
   'allergies.chooseOne': 'Choisissez au moins une allergie pour utiliser la vérification par code-barres.',
   'allergies.savedDemo': 'Profil d’allergies enregistré. Les résultats utilisent désormais ces sélections. Démo uniquement : les modifications durent jusqu’à la fin de cette session.',

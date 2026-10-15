@@ -11,6 +11,7 @@ export const zh: Messages = {
 
   'allergen.milk': '牛奶', 'allergen.eggs': '鸡蛋', 'allergen.peanuts': '花生', 'allergen.tree-nuts': '树坚果', 'allergen.soy': '大豆',
   'allergen.wheat': '小麦', 'allergen.fish': '鱼类', 'allergen.shellfish': '甲壳类水产', 'allergen.sesame': '芝麻',
+  'allergen.gluten': '麸质', 'allergen.mollusks': '软体动物', 'allergen.mustard': '芥末', 'allergen.celery': '芹菜', 'allergen.sulfites': '亚硫酸盐', 'allergen.lupin': '羽扇豆',
 
   'common.cancel': '取消', 'common.unknown': '未知', 'common.you': '你', 'common.listSeparator': '、',
 
@@ -53,8 +54,8 @@ export const zh: Messages = {
   'samples.title': '试一试', 'samples.body': '四款虚构商品，四种实用结果。', 'samples.label': '演示合集',
   'samples.try': '试试 {name}', 'samples.fictional': '虚构示例',
 
-  'allergies.title': '你的过敏原，一目了然。', 'allergies.body': '从美国九大主要食物过敏原中选择，可多选。',
-  'allergies.notice': '本应用无法涵盖所有过敏。小麦不等于麸质检查，也不能用于乳糜泻检查。甲壳类水产不包括软体动物。',
+  'allergies.title': '你的过敏原，一目了然。', 'allergies.body': '从15种常见食物过敏原中选择：美国九大主要过敏原，另加欧洲和加拿大列出的六种。可多选。',
+  'allergies.notice': '本应用无法涵盖所有过敏。“小麦”只检查小麦；如需同时检查大麦、黑麦和燕麦，请选择“麸质”。甲壳类水产不包括软体动物；如需检查蛤蜊、牡蛎和鱿鱼，请选择“软体动物”。',
   'allergies.hint': '保存过敏档案后，更改才会生效。',
   'allergies.chooseOne': '请至少选择一种过敏原，才能使用条码检查。',
   'allergies.savedDemo': '过敏档案已保存，结果将使用这些选择。仅限演示：更改在本次会话结束前有效。',

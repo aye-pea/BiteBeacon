@@ -1,6 +1,6 @@
 # BiteBeacon
 
-React Native / Expo allergy-aware barcode demo. US-first, with nine major allergen groups. Built from scratch in this workspace.
+React Native / Expo allergy-aware barcode demo. US-first, with 15 allergen groups: the nine US major allergens plus gluten, mollusks, mustard, celery, sulfites and lupin. Built from scratch in this workspace.
 
 ## Run the demo
 

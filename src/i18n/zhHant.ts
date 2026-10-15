@@ -11,6 +11,7 @@ export const zhHant: Messages = {
 
   'allergen.milk': '牛奶', 'allergen.eggs': '雞蛋', 'allergen.peanuts': '花生', 'allergen.tree-nuts': '樹堅果', 'allergen.soy': '大豆',
   'allergen.wheat': '小麥', 'allergen.fish': '魚類', 'allergen.shellfish': '甲殼類水產', 'allergen.sesame': '芝麻',
+  'allergen.gluten': '麩質', 'allergen.mollusks': '軟體動物', 'allergen.mustard': '芥末', 'allergen.celery': '芹菜', 'allergen.sulfites': '亞硫酸鹽', 'allergen.lupin': '羽扇豆',
 
   'common.cancel': '取消', 'common.unknown': '未知', 'common.you': '你', 'common.listSeparator': '、',
 
@@ -53,8 +54,8 @@ export const zhHant: Messages = {
   'samples.title': '試一試', 'samples.body': '四款虛構商品，四種實用結果。', 'samples.label': '示範合集',
   'samples.try': '試試 {name}', 'samples.fictional': '虛構示例',
 
-  'allergies.title': '你的過敏原，一目瞭然。', 'allergies.body': '從美國九大主要食物過敏原中選擇，可多選。',
-  'allergies.notice': '本 App 無法涵蓋所有過敏。小麥不等於麩質檢查，也不能用於乳糜瀉檢查。甲殼類水產不包括軟體動物。',
+  'allergies.title': '你的過敏原，一目瞭然。', 'allergies.body': '從15種常見食物過敏原中選擇：美國九大主要過敏原，另加歐洲和加拿大列出的六種。可複選。',
+  'allergies.notice': '本應用程式無法涵蓋所有過敏。「小麥」只檢查小麥；如需同時檢查大麥、黑麥和燕麥，請選擇「麩質」。甲殼類水產不包括軟體動物；如需檢查蛤蜊、牡蠣和魷魚，請選擇「軟體動物」。',
   'allergies.hint': '儲存過敏檔案後，更改才會生效。',
   'allergies.chooseOne': '請至少選擇一種過敏原，才能使用條碼檢查。',
   'allergies.savedDemo': '過敏檔案已儲存，結果將使用這些選擇。僅限示範：更改在本次工作階段結束前有效。',
