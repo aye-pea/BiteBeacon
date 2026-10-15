@@ -190,3 +190,9 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - `explain()` now scans each selected allergen separately, so a word shared by two allergens ("wheat" for Wheat and Gluten) is evidence for both.
 - Migration `202610150005_more_allergens.sql` widens `supported_allergies` (profiles) and `member_supported_allergies` (household members) to the 15 ids and 1–15 entries. Until it runs on the hosted project, saving a new allergen to a signed-in profile fails; demo mode works without it.
 - Allergy page intro and notice rewritten (Wheat vs Gluten, Crustacean shellfish vs Mollusks). Machine-drafted translations in all 11 languages; need native review. Migration is numbered 0005 so it runs after `more_languages` (0002) and `default_view_people` (0004).
+
+## Phone browsers: page scroll and pinned tab bar — 2026-10-15
+- Problem: on phone-width web the app scrolled inside its own ScrollView, so mobile Safari/Chrome never collapsed their address bar and toolbar.
+- Now, on web below the desktop breakpoint (signed in or demo), the document itself scrolls: App.tsx swaps the page ScrollView for a View and injects CSS that lifts Expo's `body { overflow: hidden }` reset. The tab bar (and the Allergies save bar) sit in a `position: fixed` bottom container; its measured height pads the page so the last content clears it. Page changes scroll to top; the scan result still auto-scrolls into view.
+- `public/index.html` is Expo's default template plus `viewport-fit=cover`, so the tab bar pads by the iPhone home-indicator safe area. Desktop (sidebar) and native apps unchanged; the welcome/sign-in screen still uses its inner ScrollView.
+- Validation: TypeScript passed; 137 unit tests passed. Exported web build checked in Chromium at iPhone 13 size (document scrolls, tab bar pinned, Allergies save bar above it, result auto-scroll) and 1400 × 900 (unchanged, body not scrollable). Real iPhone Safari bar-collapse needs device QA.

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ArrowUpRight, BookOpen, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
@@ -112,7 +112,9 @@ function AppContent() {
   const { allergyLabel, labelOf, evidenceText, kindTitle, kindDetail, summaryTitle, summaryDetail, personReason, sourceName, allergyList, expiryText } = words(i18n);
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
+  const insets = useSafeAreaInsets();
   const [page, setPage] = useState<Page>('overview');
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [booting, setBooting] = useState(cloudConfigured);
@@ -464,6 +466,19 @@ function AppContent() {
     </SwipeRow>;
   };
 
+  // Phone-width web: the page itself scrolls (not an inner box) so mobile browsers can collapse their
+  // address bar and toolbar; the tab bar is pinned to the bottom of the viewport instead.
+  const docScroll = Platform.OS === 'web' && !wide && (demo || !!session);
+  useEffect(() => {
+    if (!docScroll) return;
+    const el = document.createElement('style');
+    el.textContent = `html, body { height: auto; min-height: 100%; overflow: visible; background-color: ${C.bg}; } #root { height: auto; min-height: 100dvh; }`;
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [docScroll, C.bg]);
+  useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
+  const Scroller = docScroll ? View : ScrollView;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
@@ -501,7 +516,7 @@ function AppContent() {
   const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
-  return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
+  return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
       <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
@@ -516,7 +531,7 @@ function AppContent() {
         <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{navItems.find(n => n.page === page)?.label}</Text></Text></View>
         <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : t('mode.connected')}</Text></View>
       </View>}
-      <ScrollView ref={scrollRef} key={page} testID="page-scroll" style={s.pageScroll} contentContainerStyle={[s.content, !wide && { padding: 18, gap: 20 }]} keyboardShouldPersistTaps="handled">
+      <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}
         {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
@@ -562,7 +577,7 @@ function AppContent() {
           </View><View style={[s.card, { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
             <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color="white" /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
             <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View></View></View>}
-          {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollRef.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 12), animated: true }); } }}>
+          {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollToY(Math.max(0, e.nativeEvent.layout.y - 12)); } }}>
             {busy ? <Reveal style={s.card}><View accessibilityRole="progressbar" aria-busy accessibilityLabel={t('scan.checkingLabel')} style={s.inline}><ActivityIndicator color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('scan.checking')}</Text><Text style={s.bodySmall}>{t('scan.lookingUp', { barcode: barcode || t('scan.barcodeWord') })}</Text></View></View><Skeleton width="60%" height={22} /><Skeleton height={64} /><Skeleton width="85%" /><Skeleton width="70%" /></Reveal>
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? t('result.fictional') : t('result.live')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('result.close')} haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
@@ -653,7 +668,8 @@ function AppContent() {
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sessionTitle')}</Text><Text style={s.bodySmall}>{demo ? t('about.sessionDemo') : t('about.sessionCloud')}</Text><Button secondary disabled={busy || saving} onPress={leave} icon={<LogOut accessible={false} size={17} color={C.ink} />}>{demo ? t('about.exitDemo') : t('about.signOut')}</Button>
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
         <View style={s.footer}><Leaf size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version')}</Text></View>
-      </ScrollView>
+      </Scroller>
+      <View style={docScroll && [s.fixedBottom, { paddingBottom: insets.bottom }]} onLayout={docScroll ? e => setBottomBarHeight(e.nativeEvent.layout.height) : undefined}>
       {page === 'allergies' && <View style={s.profileActions}>
         <Text accessibilityLiveRegion="polite" style={[s.bodySmall, profileChanged && { color: C.amber, fontWeight: '600' }]}>{t('allergies.count', { n: draft.length, total: ALLERGENS.length })} · {profileChanged ? t('allergies.unsaved') : t('allergies.saved')}</Text>
         <View accessible={false} style={s.progressTrack}><View style={[s.progressFill, { width: `${(draft.length / ALLERGENS.length) * 100}%` }]} /></View>
@@ -664,6 +680,7 @@ function AppContent() {
       {!wide && <View style={s.mobileNavWrap}><View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
         <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} />{item.page === 'pantry' && alertCount > 0 && <View accessible={false} style={s.navBadge} />}</View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
       </Tap>; })}</View></View>}
+      </View>
     </View>
   </View></SafeAreaView>;
 }
@@ -719,6 +736,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   pantryAction: { flexGrow: 1, flexBasis: '40%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 999 }, pantryActionText: { ...type.subhead, fontWeight: '700' },
   navBadge: { position: 'absolute', top: 0, right: '-15%', width: 9, height: 9, borderRadius: 5, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.paper },
   navCount: { marginLeft: 'auto', minWidth: 22, textAlign: 'center', ...type.caption, fontWeight: '800', color: C.onAccent, backgroundColor: C.red, borderRadius: 11, overflow: 'hidden', paddingHorizontal: 6, paddingVertical: 2 }, empty: { alignItems: 'center', paddingVertical: 44 },
+  fixedBottom: { position: 'fixed' as 'absolute', left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: C.bg },
   mobileNavWrap: { paddingHorizontal: '4%', paddingTop: 6, paddingBottom: 8, backgroundColor: C.bg },
   groupedList: { backgroundColor: C.paper, borderRadius: 22, overflow: 'hidden', rowGap: 0 }, groupedRow: { width: '100%', borderRadius: 0, borderWidth: 0 }, groupedSeparator: { borderBottomWidth: 1, borderBottomColor: C.separator },
   mobileNav: { flexDirection: 'row', backgroundColor: C.paper, borderRadius: 999, borderWidth: 1, borderColor: C.separator, paddingVertical: 4, paddingHorizontal: 4, boxShadow: '0px 8px 24px rgba(23,51,43,0.12)' }, mobileNavItem: { flex: 1, minWidth: 0, minHeight: 50, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, gap: 2 }, mobileNavIcon: { paddingVertical: 2 }, mobileNavText: { textAlign: 'center', fontSize: 11, lineHeight: 13, fontWeight: '500', color: C.muted },
