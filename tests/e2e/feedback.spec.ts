@@ -25,6 +25,6 @@ test('lookup shows progress, inline outcome near the button, and transient confi
   await expect(outcome).toBeInViewport();
 
   await page.getByRole('button', { name: 'Dark Chocolate Bites', exact: true }).click();
-  await expect(page.getByTestId('toast')).toContainText('Checked for 5 people');
+  await expect(page.getByTestId('toast')).toContainText('Checked for 7 people');
   await expect(page.getByTestId('product-result')).toBeInViewport();
 });
