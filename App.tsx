@@ -681,7 +681,7 @@ function AppContent() {
   if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
-      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
       <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
       <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />)}
@@ -691,7 +691,7 @@ function AppContent() {
   </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
-      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
       <Text style={[s.welcomeTitle, { fontSize: wide ? 58 : 40, lineHeight: wide ? 64 : 46 }]}>{t('welcome.title')}</Text>
       <Text style={[s.body, { maxWidth: 430 }]}>{t('welcome.body')}</Text>
@@ -781,7 +781,7 @@ function AppContent() {
     {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
     {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
       {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
-      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
+      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
       {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
         <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.navActiveText, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}

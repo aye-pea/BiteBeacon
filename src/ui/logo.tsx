@@ -16,13 +16,14 @@ export function CartLogo({ size = 32, color }: { size?: number; color: string })
   </Svg>;
 }
 
-/** Top-left brand mark: the frosted-glass cart (assets/glass-logo.png, background cut out) in the Presentation theme,
- *  the flat cart everywhere else. */
-export function BrandLogo({ size, color, glass }: { size: number; color: string; glass: boolean }) {
+/** Top-left brand mark: the frosted-glass cart (assets/glass-logo.png, background cut out) in Presentation and Apple,
+ *  a darker copy whose glass reflects the deep violet surroundings in Partiful (assets/glass-logo-partiful.png),
+ *  and the flat cart everywhere else. */
+export function BrandLogo({ size, color, glass, deep = false }: { size: number; color: string; glass: boolean; deep?: boolean }) {
   if (!glass) return <CartLogo size={size} color={color} />;
   // The glass art is cropped to its edges while the flat mark has padding inside its box, so draw it at 85% in the
   // same-size box: the brackets then line up with the green cart's.
   return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-    <Image testID="glass-logo" accessible={false} source={require('../../assets/glass-logo.png')} style={{ width: Math.round(size * 0.85), height: Math.round(size * 0.85) }} resizeMode="contain" />
+    <Image testID="glass-logo" accessible={false} source={deep ? require('../../assets/glass-logo-partiful.png') : require('../../assets/glass-logo.png')} style={{ width: Math.round(size * 0.85), height: Math.round(size * 0.85) }} resizeMode="contain" />
   </View>;
 }

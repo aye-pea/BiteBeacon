@@ -25,3 +25,17 @@ test('Settings lists Apple and Partiful first, and each paints its own canvas', 
   await expect(page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Partiful' })).toBeChecked();
   expect(errors).toEqual([]);
 });
+
+test('Apple shows the glass cart and Partiful a deeper glass cart in the top-left corner', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const srcs: string[] = [];
+  for (const theme of ['apple', 'partiful']) {
+    await page.addInitScript(t => localStorage.setItem('bitebeacon.appearance', t), theme);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Explore employer demo' }).click();
+    const img = page.getByTestId('glass-logo').first().locator('img');
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    srcs.push(await img.getAttribute('src') as string);
+  }
+  expect(srcs[0]).not.toBe(srcs[1]);
+});
