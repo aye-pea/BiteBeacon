@@ -251,3 +251,10 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Apple/Partiful: icy-blue gradient buttons and selected chips, lavender secondary controls, rose allergy chips, translucent cards, pastel initials, a multicolour Home banner with the glass cart image (`assets/bitebeacon-original.png`). Red and amber warnings and all allergen logic are unchanged.
 - Tests: `tests/e2e/apple-partiful.spec.ts` checks the order, both canvases, gradient avatars and that the choice is remembered.
 - Contact-photo letters (`src/domain/initials.ts`, every appearance): one capital letter, unless two people share a first letter; then two-word names show initials (Jeremy Smith → JS) and one-word names their first two letters (Jayson → Ja, Jeremy → Je). When even those match (Jonathan and Jonas are both "Jo"), Apple/Partiful give them colours from opposite sides of the colour wheel (`profileHues`). Used in Settings and on household scan results. Tests: `tests/initials.test.ts`, `tests/e2e/avatar-initials.spec.ts`.
+
+## Settings menus — 2026-10-16 (1.2)
+- Settings main page: **Account** row (your name, sign-in & recovery, change password) and **App** row (language, appearance), styled like the App details row, then Household and Show results for, then App details and (phones) Admin Dashboard. Sub-view is `settingsView` state (`main` | `account` | `app`), reset to `main` by `navigate()`.
+- Account, App, App details and the phone Admin Dashboard show a floating "‹ Settings" back button (`settings-back`): above the tab bar on phones, bottom-left of the page on desktop (percent offsets). Desktop Admin has none (sidebar).
+- Five new strings (`settings.account`, `settings.accountBody`, `settings.app`, `settings.appBody`, `settings.back`) in all 11 dictionaries.
+- Validation: TypeScript, 159 unit tests; Playwright `settings-menus.spec.ts` plus updated appearance, apple-partiful, household, language, toolbar-theme and username specs pass. web-camera spec can't launch in the cloud sandbox (fails without the change too).
+
