@@ -63,12 +63,14 @@ test('someone with no allergies of their own can add family and check food for t
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByText('Save your own allergy profile first')).toHaveCount(0);
+  await expect(page.getByTestId('show-for-settings')).toHaveCount(0); // nobody to choose between yet
   await page.getByRole('button', { name: 'Add a person' }).click();
   await page.getByLabel("Person's name").fill('Mia');
   await page.getByRole('checkbox', { name: 'Peanuts for this person', exact: true }).click();
   await page.getByRole('button', { name: 'Add to household' }).click();
   await expect(page.getByTestId('member-form')).toHaveCount(0);
   expect(seen.memberInserts).toEqual([{ name: 'Mia', allergies: ['peanuts'], position: 0 }]);
+  await expect(page.getByTestId('show-for-settings')).toBeVisible();
   await page.screenshot({ path: 'artifacts/family-without-own-allergies.png', fullPage: true });
 
   // The first household setting creates the empty profile row.

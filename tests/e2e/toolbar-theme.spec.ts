@@ -26,11 +26,14 @@ test('phones start without Home in the tab bar, and Settings can turn it on', as
   expect(errors).toEqual([]);
 });
 
-test('desktop keeps Home in the sidebar by default', async ({ page }) => {
+test('desktop always keeps Home in the sidebar and has no Toolbar setting', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByTestId('appearance-settings')).toBeVisible();
+  await expect(page.getByTestId('toolbar-settings')).toHaveCount(0);
 });
 
 test('the Presentation theme uses the pitch deck colours and the footer shows version 1.01', async ({ page }) => {
