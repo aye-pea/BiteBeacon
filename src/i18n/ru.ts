@@ -154,7 +154,7 @@ export const ru: Messages = {
   'settings.appearance': 'Оформление', 'settings.appearanceHelp': '«Авто» следует светлой или тёмной теме устройства. Выбор сохраняется на этом устройстве.',
   'settings.appearanceLabel': 'Оформление: {name}', 'settings.appearance.auto': 'Авто', 'settings.appearance.light': 'Светлое', 'settings.appearance.dark': 'Тёмное',
 
-  'member.add': 'Добавить человека', 'member.edit': 'Изменить: {name}', 'member.name': 'Имя', 'member.nameLabel': 'Имя человека', 'member.namePlaceholder': 'напр. Кха',
+  'member.add': 'Добавить человека', 'member.edit': 'Изменить: {name}', 'member.name': 'Имя', 'member.nameLabel': 'Имя человека', 'member.namePlaceholder': 'напр. Банджо',
   'member.allergies': 'Его или её аллергии', 'member.allergyFor': '{allergen} — для этого человека', 'member.saveChanges': 'Сохранить изменения', 'member.addToHousehold': 'Добавить в семью',
   'member.nameInvalid': 'Введите имя длиной от 1 до 40 символов.', 'member.chooseAllergy': 'Выберите хотя бы одну аллергию для: {name}.',
   'member.full': 'В семье может быть не более {n} чел. помимо вас.', 'member.saveFailed': 'Не удалось сохранить: {name}. Ничего не изменилось.',
@@ -285,7 +285,7 @@ export const ru: Messages = {
   'settings.recoveryHelp': 'Необязательно. С email можно сбросить забытый пароль, а также входить по нему. Мы никогда не присылаем рекламу.',
   'settings.recoveryNone': 'Email не добавлен. Если вы забудете пароль, восстановить этот аккаунт будет нельзя.',
   'settings.recoveryCurrent': 'Email для восстановления: {email}',
-  'settings.recoveryPending': 'Смена на {email}: откройте ссылку подтверждения, отправленную на этот адрес, чтобы завершить. До тех пор письма для сброса пароля приходят на адрес выше.',
+  'settings.recoveryPending': 'Смена на {email}: откройте ссылку подтверждения, отправленную на этот адрес, чтобы завершить. До тех пор письма для сброса пароля приходят на адрес выше.', 'settings.passwordTitle': 'Сменить пароль', 'settings.passwordCurrent': 'Текущий пароль', 'settings.passwordNew': 'Новый пароль', 'settings.passwordSave': 'Сменить пароль', 'settings.passwordWrong': 'Текущий пароль неверный.', 'settings.passwordShort': 'Новый пароль должен содержать не менее 12 символов.', 'settings.passwordSame': 'Выберите новый пароль, отличный от текущего.', 'settings.passwordFailed': 'Не удалось сменить пароль. Попробуйте ещё раз.', 'settings.passwordDone': 'Пароль изменён.',
   'settings.emailConfirm': 'Введите email ещё раз',
   'settings.emailSave': 'Сохранить email',
   'settings.emailMismatch': 'Адреса email не совпадают.',

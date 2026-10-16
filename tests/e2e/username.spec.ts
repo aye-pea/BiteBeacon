@@ -7,13 +7,18 @@ async function fakeSupabase(page: Page) {
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: USER.id, role: 'authenticated', aud: 'authenticated', exp })}.test`;
   const session = { access_token: token, token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'test-refresh' };
-  const seen: { signup?: Record<string, unknown>; signIn?: Record<string, unknown>; lookup?: Record<string, unknown>; emailChange?: Record<string, unknown>; reset?: Record<string, unknown> } = {};
+  const seen: { signup?: Record<string, unknown>; signIn?: Record<string, unknown>; lookup?: Record<string, unknown>; emailChange?: Record<string, unknown>; password?: Record<string, unknown>; reset?: Record<string, unknown> } = {};
   let user: Record<string, unknown> = { ...USER };
   // Off: an email change applies at once. On: Supabase holds it in new_email until the link is opened.
   const opts = { confirmChanges: false };
   await page.route('**/auth/v1/signup**', route => { seen.signup = route.request().postDataJSON(); return route.fulfill({ json: { ...session, user } }); });
-  await page.route('**/auth/v1/token**', route => { seen.signIn = route.request().postDataJSON(); return route.fulfill({ json: { ...session, user } }); });
+  await page.route('**/auth/v1/token**', route => {
+    seen.signIn = route.request().postDataJSON();
+    if (seen.signIn?.password === 'not-my-password') return route.fulfill({ status: 400, json: { error: 'invalid_grant', error_description: 'Invalid login credentials' } });
+    return route.fulfill({ json: { ...session, user } });
+  });
   await page.route('**/auth/v1/user**', route => {
+    if (route.request().method() === 'PUT' && route.request().postDataJSON().password) { seen.password = route.request().postDataJSON(); return route.fulfill({ json: user }); }
     if (route.request().method() === 'PUT') { seen.emailChange = route.request().postDataJSON(); const email = String(seen.emailChange?.email); user = opts.confirmChanges ? { ...user, new_email: email } : { ...user, email }; }
     return route.fulfill({ json: user });
   });
@@ -118,4 +123,40 @@ test('an email typed at sign-up is saved as the recovery email straight away', a
   expect(seen.emailChange?.email).toBe('sam@example.com');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByTestId('sign-in-settings')).toContainText('Recovery email: sam@example.com');
+});
+
+test('changes the password in Settings after checking the current one', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  const seen = await fakeSupabase(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
+  await page.getByLabel('Username or email').fill('sam_k');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByTestId('toast')).toContainText('profile loaded');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const card = page.getByTestId('password-settings');
+  await card.getByLabel('Current password').fill('not-my-password');
+  await card.getByLabel('New password').fill('a-brand-new-password');
+  await card.getByRole('button', { name: 'Change password' }).click();
+  await expect(page.getByText('Your current password is incorrect.')).toBeVisible();
+  expect(seen.password).toBeUndefined();
+
+  await card.getByLabel('Current password').fill('local-test-only-password');
+  await card.getByLabel('New password').fill('short');
+  await card.getByRole('button', { name: 'Change password' }).click();
+  await expect(page.getByText('Use at least 12 characters for the new password.')).toBeVisible();
+
+  await card.getByLabel('New password').fill('a-brand-new-password');
+  await expect(card.getByLabel('New password')).toHaveAttribute('type', 'password');
+  await card.getByTestId('toggle-new-password').click();
+  await expect(card.getByLabel('New password')).not.toHaveAttribute('type', 'password');
+  await card.getByRole('button', { name: 'Change password' }).click();
+  await expect(page.getByText('Password changed.')).toBeVisible();
+  expect(seen.signIn).toMatchObject({ email: 'sam_k@users.bitebeacon.org', password: 'local-test-only-password' });
+  expect(seen.password).toMatchObject({ password: 'a-brand-new-password' });
+  await expect(card.getByLabel('Current password')).toHaveValue('');
+  await card.screenshot({ path: 'artifacts/change-password.png' });
+  expect(errors).toEqual([]);
 });

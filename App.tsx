@@ -160,6 +160,7 @@ function AppContent() {
   const [emailDraft, setEmailDraft] = useState('');
   const [emailAgain, setEmailAgain] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState(''); const [pwNew, setPwNew] = useState(''); const [pwBusy, setPwBusy] = useState(false); const [showPwCurrent, setShowPwCurrent] = useState(false); const [showPwNew, setShowPwNew] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stay, setStay] = useState(staySignedIn);
@@ -209,7 +210,7 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
-    setIsAdmin(false); setAdminChecked(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
+    setIsAdmin(false); setAdminChecked(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain(''); setPwCurrent(''); setPwNew('');
     if (!session || !supabase || demo) return;
     void checkAdmin().then(ok => {
       if (generation.current !== current) return;
@@ -320,6 +321,20 @@ function AppContent() {
     // With "Confirm email" off the address changes at once; otherwise Supabase first mails a confirmation link.
     if (data.user?.email?.toLowerCase() === next.toLowerCase()) { haptic.success(); say(t('settings.emailSaved'), 'success'); }
     else { haptic.success(); say(t('settings.emailCheck', { email: next }), 'success'); }
+  };
+  // Changing the password checks the current one first (a fresh sign-in as the same user), so an unlocked device can't be used to lock someone out.
+  const changePassword = async () => {
+    if (!supabase || !session?.user.email || pwBusy) return;
+    if (!pwCurrent) { haptic.warning(); say(t('settings.passwordWrong')); return; }
+    if (pwNew.length < 12) { haptic.warning(); say(t('settings.passwordShort')); return; }
+    if (pwNew === pwCurrent) { haptic.warning(); say(t('settings.passwordSame')); return; }
+    setPwBusy(true); setFeedback('');
+    const check = await supabase.auth.signInWithPassword({ email: session.user.email, password: pwCurrent });
+    if (check.error) { setPwBusy(false); haptic.error(); say(t('settings.passwordWrong'), 'danger'); return; }
+    const { error } = await supabase.auth.updateUser({ password: pwNew });
+    setPwBusy(false);
+    if (error) { haptic.error(); say(t('settings.passwordFailed'), 'danger'); return; }
+    setPwCurrent(''); setPwNew(''); setShowPwCurrent(false); setShowPwNew(false); haptic.success(); say(t('settings.passwordDone'), 'success');
   };
   const saveAllergies = async () => {
     if (saving) return;
@@ -653,9 +668,9 @@ function AppContent() {
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
   // Password box with an eye button that shows or hides what was typed.
-  const passwordField = (input: React.ReactElement) => <View style={s.passwordBox}>{input}
-    <Tap testID="toggle-password" accessibilityRole="button" accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShowPassword(!showPassword)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
-      {showPassword ? <EyeOff accessible={false} size={20} color={C.muted} /> : <Eye accessible={false} size={20} color={C.muted} />}</Tap></View>;
+  const passwordField = (input: React.ReactElement, shown = showPassword, setShown = setShowPassword, testID = 'toggle-password') => <View style={s.passwordBox}>{input}
+    <Tap testID={testID} accessibilityRole="button" accessibilityLabel={shown ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShown(!shown)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
+      {shown ? <EyeOff accessible={false} size={20} color={C.muted} /> : <Eye accessible={false} size={20} color={C.muted} />}</Tap></View>;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
@@ -893,7 +908,11 @@ function AppContent() {
             {pendingEmail && <View testID="recovery-pending"><Notice>{t('settings.recoveryPending', { email: pendingEmail })}</Notice></View>}
             <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="recovery-email" accessibilityLabel={t('auth.email')} style={s.input} value={emailDraft} onChangeText={setEmailDraft} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" editable={!emailBusy} />
             <Text style={s.label}>{t('settings.emailConfirm')}</Text><TextInput testID="recovery-email-again" accessibilityLabel={t('settings.emailConfirm')} style={s.input} value={emailAgain} onChangeText={setEmailAgain} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="off" editable={!emailBusy} onSubmitEditing={() => void saveRecoveryEmail()} />
-            {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}
+            {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}
+            <View testID="password-settings" style={{ gap: 8, marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.fill }}><Text style={s.cardTitle}>{t('settings.passwordTitle')}</Text>
+              <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPwCurrent} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPwCurrent, setShowPwCurrent, 'toggle-current-password')}
+              <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPwNew} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPwNew, setShowPwNew, 'toggle-new-password')}
+              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('settings.passwordSave')}</Button>}</View></View>}
           <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
             {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>

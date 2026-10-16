@@ -154,7 +154,7 @@ export const hi: Messages = {
   'settings.appearance': 'रूप', 'settings.appearanceHelp': 'स्वचालित आपके डिवाइस की लाइट या डार्क सेटिंग का पालन करता है। आपकी पसंद इसी डिवाइस पर सहेजी जाती है।',
   'settings.appearanceLabel': 'रूप: {name}', 'settings.appearance.auto': 'स्वचालित', 'settings.appearance.light': 'लाइट', 'settings.appearance.dark': 'डार्क',
 
-  'member.add': 'कोई व्यक्ति जोड़ें', 'member.edit': '{name} की जानकारी बदलें', 'member.name': 'नाम', 'member.nameLabel': 'व्यक्ति का नाम', 'member.namePlaceholder': 'जैसे, Kha',
+  'member.add': 'कोई व्यक्ति जोड़ें', 'member.edit': '{name} की जानकारी बदलें', 'member.name': 'नाम', 'member.nameLabel': 'व्यक्ति का नाम', 'member.namePlaceholder': 'जैसे, Banjo',
   'member.allergies': 'उनकी एलर्जी', 'member.allergyFor': 'इस व्यक्ति के लिए {allergen}', 'member.saveChanges': 'बदलाव सेव करें', 'member.addToHousehold': 'परिवार में जोड़ें',
   'member.nameInvalid': '1 से 40 अक्षरों का नाम डालें।', 'member.chooseAllergy': '{name} के लिए कम से कम एक एलर्जी चुनें।',
   'member.full': 'परिवार में आपके अलावा ज़्यादा से ज़्यादा {n} लोग हो सकते हैं।', 'member.saveFailed': '{name} को सेव नहीं किया जा सका। कुछ नहीं बदला।',
@@ -285,7 +285,7 @@ export const hi: Messages = {
   'settings.recoveryHelp': 'वैकल्पिक। ईमेल होने पर आप भूला हुआ पासवर्ड रीसेट कर सकते हैं, और उससे साइन इन भी कर सकते हैं। हम कभी विज्ञापन नहीं भेजते।',
   'settings.recoveryNone': 'कोई ईमेल नहीं जोड़ा गया। पासवर्ड भूलने पर यह खाता वापस नहीं मिल सकेगा।',
   'settings.recoveryCurrent': 'रिकवरी ईमेल: {email}',
-  'settings.recoveryPending': '{email} पर बदला जा रहा है: पूरा करने के लिए वहाँ भेजा गया पुष्टि लिंक खोलें। तब तक पासवर्ड रीसेट ईमेल ऊपर वाले पते पर जाएँगे।',
+  'settings.recoveryPending': '{email} पर बदला जा रहा है: पूरा करने के लिए वहाँ भेजा गया पुष्टि लिंक खोलें। तब तक पासवर्ड रीसेट ईमेल ऊपर वाले पते पर जाएँगे।', 'settings.passwordTitle': 'पासवर्ड बदलें', 'settings.passwordCurrent': 'मौजूदा पासवर्ड', 'settings.passwordNew': 'नया पासवर्ड', 'settings.passwordSave': 'पासवर्ड बदलें', 'settings.passwordWrong': 'आपका मौजूदा पासवर्ड गलत है।', 'settings.passwordShort': 'नए पासवर्ड में कम से कम 12 अक्षर रखें।', 'settings.passwordSame': 'मौजूदा पासवर्ड से अलग नया पासवर्ड चुनें।', 'settings.passwordFailed': 'पासवर्ड नहीं बदला जा सका। फिर से कोशिश करें।', 'settings.passwordDone': 'पासवर्ड बदल दिया गया।',
   'settings.emailConfirm': 'ईमेल दोबारा लिखें',
   'settings.emailSave': 'ईमेल सहेजें',
   'settings.emailMismatch': 'दोनों ईमेल पते मेल नहीं खाते।',

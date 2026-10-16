@@ -154,7 +154,7 @@ export const fr: Messages = {
   'settings.appearance': 'Apparence', 'settings.appearanceHelp': 'Automatique suit le mode clair ou sombre de votre appareil. Votre choix est enregistré sur cet appareil.',
   'settings.appearanceLabel': 'Apparence : {name}', 'settings.appearance.auto': 'Automatique', 'settings.appearance.light': 'Clair', 'settings.appearance.dark': 'Sombre',
 
-  'member.add': 'Ajouter une personne', 'member.edit': 'Modifier {name}', 'member.name': 'Nom', 'member.nameLabel': 'Nom de la personne', 'member.namePlaceholder': 'ex. Kha',
+  'member.add': 'Ajouter une personne', 'member.edit': 'Modifier {name}', 'member.name': 'Nom', 'member.nameLabel': 'Nom de la personne', 'member.namePlaceholder': 'ex. Banjo',
   'member.allergies': 'Ses allergies', 'member.allergyFor': '{allergen} pour cette personne', 'member.saveChanges': 'Enregistrer les modifications', 'member.addToHousehold': 'Ajouter au foyer',
   'member.nameInvalid': 'Saisissez un nom de 1 à 40 caractères.', 'member.chooseAllergy': 'Choisissez au moins une allergie pour {name}.',
   'member.full': 'Un foyer peut compter jusqu’à {n} personnes en plus de vous.', 'member.saveFailed': 'Impossible d’enregistrer {name}. Rien n’a été modifié.',
@@ -285,7 +285,7 @@ export const fr: Messages = {
   'settings.recoveryHelp': 'Facultatif. Un e-mail permet de réinitialiser un mot de passe oublié, et vous pouvez aussi vous connecter avec. Nous n’envoyons jamais de publicité.',
   'settings.recoveryNone': 'Aucun e-mail ajouté. Si vous oubliez votre mot de passe, ce compte ne pourra pas être récupéré.',
   'settings.recoveryCurrent': 'E-mail de récupération : {email}',
-  'settings.recoveryPending': 'Changement vers {email} : ouvrez le lien de confirmation envoyé à cette adresse pour terminer. D’ici là, les réinitialisations de mot de passe vont à l’adresse ci-dessus.',
+  'settings.recoveryPending': 'Changement vers {email} : ouvrez le lien de confirmation envoyé à cette adresse pour terminer. D’ici là, les réinitialisations de mot de passe vont à l’adresse ci-dessus.', 'settings.passwordTitle': 'Changer le mot de passe', 'settings.passwordCurrent': 'Mot de passe actuel', 'settings.passwordNew': 'Nouveau mot de passe', 'settings.passwordSave': 'Changer le mot de passe', 'settings.passwordWrong': 'Votre mot de passe actuel est incorrect.', 'settings.passwordShort': 'Utilisez au moins 12 caractères pour le nouveau mot de passe.', 'settings.passwordSame': 'Choisissez un nouveau mot de passe différent de l’actuel.', 'settings.passwordFailed': 'Impossible de changer votre mot de passe. Réessayez.', 'settings.passwordDone': 'Mot de passe changé.',
   'settings.emailConfirm': 'Saisissez à nouveau l’e-mail',
   'settings.emailSave': 'Enregistrer l’e-mail',
   'settings.emailMismatch': 'Les deux adresses e-mail ne correspondent pas.',

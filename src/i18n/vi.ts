@@ -154,7 +154,7 @@ export const vi: Messages = {
   'settings.appearance': 'Giao diện', 'settings.appearanceHelp': 'Tự động sẽ theo chế độ sáng hoặc tối của thiết bị. Lựa chọn của bạn được lưu trên thiết bị này.',
   'settings.appearanceLabel': 'Giao diện: {name}', 'settings.appearance.auto': 'Tự động', 'settings.appearance.light': 'Sáng', 'settings.appearance.dark': 'Tối',
 
-  'member.add': 'Thêm người', 'member.edit': 'Sửa {name}', 'member.name': 'Tên', 'member.nameLabel': 'Tên của người này', 'member.namePlaceholder': 'vd: Kha',
+  'member.add': 'Thêm người', 'member.edit': 'Sửa {name}', 'member.name': 'Tên', 'member.nameLabel': 'Tên của người này', 'member.namePlaceholder': 'vd: Banjo',
   'member.allergies': 'Dị ứng của họ', 'member.allergyFor': '{allergen} cho người này', 'member.saveChanges': 'Lưu thay đổi', 'member.addToHousehold': 'Thêm vào hộ gia đình',
   'member.nameInvalid': 'Nhập tên từ 1 đến 40 ký tự.', 'member.chooseAllergy': 'Chọn ít nhất một loại dị ứng cho {name}.',
   'member.full': 'Một hộ gia đình có thể có tối đa {n} người ngoài bạn.', 'member.saveFailed': 'Không thể lưu {name}. Không có gì thay đổi.',
@@ -285,7 +285,7 @@ export const vi: Messages = {
   'settings.recoveryHelp': 'Không bắt buộc. Có email, bạn có thể đặt lại mật khẩu khi quên và cũng có thể đăng nhập bằng email. Chúng tôi không bao giờ gửi quảng cáo.',
   'settings.recoveryNone': 'Chưa thêm email. Nếu quên mật khẩu, tài khoản này sẽ không thể khôi phục.',
   'settings.recoveryCurrent': 'Email khôi phục: {email}',
-  'settings.recoveryPending': 'Đang đổi sang {email}: hãy mở liên kết xác nhận gửi tới địa chỉ đó để hoàn tất. Trước đó, email đặt lại mật khẩu vẫn gửi tới địa chỉ ở trên.',
+  'settings.recoveryPending': 'Đang đổi sang {email}: hãy mở liên kết xác nhận gửi tới địa chỉ đó để hoàn tất. Trước đó, email đặt lại mật khẩu vẫn gửi tới địa chỉ ở trên.', 'settings.passwordTitle': 'Đổi mật khẩu', 'settings.passwordCurrent': 'Mật khẩu hiện tại', 'settings.passwordNew': 'Mật khẩu mới', 'settings.passwordSave': 'Đổi mật khẩu', 'settings.passwordWrong': 'Mật khẩu hiện tại không đúng.', 'settings.passwordShort': 'Mật khẩu mới cần ít nhất 12 ký tự.', 'settings.passwordSame': 'Hãy chọn mật khẩu mới khác mật khẩu hiện tại.', 'settings.passwordFailed': 'Không thể đổi mật khẩu. Vui lòng thử lại.', 'settings.passwordDone': 'Đã đổi mật khẩu.',
   'settings.emailConfirm': 'Nhập lại email',
   'settings.emailSave': 'Lưu email',
   'settings.emailMismatch': 'Hai địa chỉ email không khớp.',

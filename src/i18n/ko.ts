@@ -285,7 +285,7 @@ export const ko: Messages = {
   'settings.recoveryHelp': '선택 사항입니다. 이메일이 있으면 잊은 비밀번호를 재설정할 수 있고 이메일로 로그인할 수도 있습니다. 광고는 절대 보내지 않습니다.',
   'settings.recoveryNone': '추가된 이메일이 없습니다. 비밀번호를 잊으면 이 계정을 복구할 수 없습니다.',
   'settings.recoveryCurrent': '복구 이메일: {email}',
-  'settings.recoveryPending': '{email}(으)로 변경 중: 해당 주소로 보낸 확인 링크를 열어 완료하세요. 그때까지 비밀번호 재설정 메일은 위 주소로 갑니다.',
+  'settings.recoveryPending': '{email}(으)로 변경 중: 해당 주소로 보낸 확인 링크를 열어 완료하세요. 그때까지 비밀번호 재설정 메일은 위 주소로 갑니다.', 'settings.passwordTitle': '비밀번호 변경', 'settings.passwordCurrent': '현재 비밀번호', 'settings.passwordNew': '새 비밀번호', 'settings.passwordSave': '비밀번호 변경', 'settings.passwordWrong': '현재 비밀번호가 올바르지 않아요.', 'settings.passwordShort': '새 비밀번호는 12자 이상이어야 해요.', 'settings.passwordSame': '현재 비밀번호와 다른 새 비밀번호를 정해 주세요.', 'settings.passwordFailed': '비밀번호를 변경하지 못했어요. 다시 시도해 주세요.', 'settings.passwordDone': '비밀번호가 변경되었어요.',
   'settings.emailConfirm': '이메일을 한 번 더 입력하세요',
   'settings.emailSave': '이메일 저장',
   'settings.emailMismatch': '두 이메일 주소가 일치하지 않습니다.',

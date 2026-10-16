@@ -154,7 +154,7 @@ export const es: Messages = {
   'settings.appearance': 'Apariencia', 'settings.appearanceHelp': 'Automático sigue el modo claro u oscuro de tu dispositivo. Tu elección se guarda en este dispositivo.',
   'settings.appearanceLabel': 'Apariencia: {name}', 'settings.appearance.auto': 'Automático', 'settings.appearance.light': 'Claro', 'settings.appearance.dark': 'Oscuro',
 
-  'member.add': 'Agregar a una persona', 'member.edit': 'Editar a {name}', 'member.name': 'Nombre', 'member.nameLabel': 'Nombre de la persona', 'member.namePlaceholder': 'p. ej., Kha',
+  'member.add': 'Agregar a una persona', 'member.edit': 'Editar a {name}', 'member.name': 'Nombre', 'member.nameLabel': 'Nombre de la persona', 'member.namePlaceholder': 'p. ej., Banjo',
   'member.allergies': 'Sus alergias', 'member.allergyFor': '{allergen} para esta persona', 'member.saveChanges': 'Guardar cambios', 'member.addToHousehold': 'Agregar al hogar',
   'member.nameInvalid': 'Ingresa un nombre de 1 a 40 caracteres.', 'member.chooseAllergy': 'Elige al menos una alergia para {name}.',
   'member.full': 'Un hogar puede tener hasta {n} personas además de ti.', 'member.saveFailed': 'No se pudo guardar a {name}. No se cambió nada.',
@@ -285,7 +285,7 @@ export const es: Messages = {
   'settings.recoveryHelp': 'Opcional. Con un correo puedes restablecer una contraseña olvidada y también iniciar sesión. Nunca enviamos publicidad.',
   'settings.recoveryNone': 'No has añadido un correo. Si olvidas tu contraseña, no se podrá recuperar esta cuenta.',
   'settings.recoveryCurrent': 'Correo de recuperación: {email}',
-  'settings.recoveryPending': 'Cambiando a {email}: abre el enlace de confirmación enviado a esa dirección para terminar. Hasta entonces, los restablecimientos de contraseña van a la dirección de arriba.',
+  'settings.recoveryPending': 'Cambiando a {email}: abre el enlace de confirmación enviado a esa dirección para terminar. Hasta entonces, los restablecimientos de contraseña van a la dirección de arriba.', 'settings.passwordTitle': 'Cambiar contraseña', 'settings.passwordCurrent': 'Contraseña actual', 'settings.passwordNew': 'Contraseña nueva', 'settings.passwordSave': 'Cambiar contraseña', 'settings.passwordWrong': 'Tu contraseña actual no es correcta.', 'settings.passwordShort': 'Usa al menos 12 caracteres para la nueva contraseña.', 'settings.passwordSame': 'Elige una contraseña nueva distinta de la actual.', 'settings.passwordFailed': 'No se pudo cambiar tu contraseña. Inténtalo de nuevo.', 'settings.passwordDone': 'Contraseña cambiada.',
   'settings.emailConfirm': 'Escribe el correo otra vez',
   'settings.emailSave': 'Guardar correo',
   'settings.emailMismatch': 'Los dos correos no coinciden.',

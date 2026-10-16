@@ -154,7 +154,7 @@ export const en = {
   'settings.appearance': 'Appearance', 'settings.appearanceHelp': 'Auto matches your device’s light or dark setting. Your choice is saved on this device.',
   'settings.appearanceLabel': 'Appearance: {name}', 'settings.appearance.auto': 'Auto', 'settings.appearance.light': 'Light', 'settings.appearance.dark': 'Dark',
 
-  'member.add': 'Add a person', 'member.edit': 'Edit {name}', 'member.name': 'Name', 'member.nameLabel': "Person's name", 'member.namePlaceholder': 'e.g. Kha',
+  'member.add': 'Add a person', 'member.edit': 'Edit {name}', 'member.name': 'Name', 'member.nameLabel': "Person's name", 'member.namePlaceholder': 'e.g. Banjo',
   'member.allergies': 'Their allergies', 'member.allergyFor': '{allergen} for this person', 'member.saveChanges': 'Save changes', 'member.addToHousehold': 'Add to household',
   'member.nameInvalid': 'Enter a name of 1 to 40 characters.', 'member.chooseAllergy': 'Choose at least one allergy for {name}.',
   'member.full': 'A household can have up to {n} people besides you.', 'member.saveFailed': '{name} could not be saved. Nothing changed.',
@@ -285,7 +285,7 @@ export const en = {
   'settings.recoveryHelp': 'Optional. An email lets you reset a forgotten password, and you can sign in with it too. We never send marketing.',
   'settings.recoveryNone': 'No email added. If you forget your password, this account can’t be recovered.',
   'settings.recoveryCurrent': 'Recovery email: {email}',
-  'settings.recoveryPending': 'Changing to {email}: open the confirmation link sent there to finish. Until then, password resets go to the address above.',
+  'settings.recoveryPending': 'Changing to {email}: open the confirmation link sent there to finish. Until then, password resets go to the address above.', 'settings.passwordTitle': 'Change password', 'settings.passwordCurrent': 'Current password', 'settings.passwordNew': 'New password', 'settings.passwordSave': 'Change password', 'settings.passwordWrong': 'Your current password is incorrect.', 'settings.passwordShort': 'Use at least 12 characters for the new password.', 'settings.passwordSame': 'Choose a new password that is different from the current one.', 'settings.passwordFailed': 'Could not change your password. Try again.', 'settings.passwordDone': 'Password changed.',
   'settings.emailConfirm': 'Type the email again',
   'settings.emailSave': 'Save email',
   'settings.emailMismatch': 'The two email addresses don’t match.',
