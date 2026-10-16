@@ -152,6 +152,10 @@ test('changes the password in Settings after checking the current one', async ({
   await expect(card.getByLabel('New password')).toHaveAttribute('type', 'password');
   await card.getByTestId('toggle-new-password').click();
   await expect(card.getByLabel('New password')).not.toHaveAttribute('type', 'password');
+  await expect(card.getByLabel('Current password')).not.toHaveAttribute('type', 'password'); // one eye shows both
+  await card.getByTestId('toggle-current-password').click();
+  await expect(card.getByLabel('New password')).toHaveAttribute('type', 'password');
+  await expect(card.getByLabel('Current password')).toHaveAttribute('type', 'password');
   await card.screenshot({ path: 'artifacts/change-password.png' });
   await card.getByRole('button', { name: 'Save new password' }).click();
   await expect(page.getByText('Password changed.')).toBeVisible();

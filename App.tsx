@@ -160,7 +160,9 @@ function AppContent() {
   const [emailDraft, setEmailDraft] = useState('');
   const [emailAgain, setEmailAgain] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
-  const [pwCurrent, setPwCurrent] = useState(''); const [pwNew, setPwNew] = useState(''); const [pwBusy, setPwBusy] = useState(false); const [showPwCurrent, setShowPwCurrent] = useState(false); const [showPwNew, setShowPwNew] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState(''); const [pwNew, setPwNew] = useState(''); const [pwBusy, setPwBusy] = useState(false);
+  // One eye state for both Change password boxes, so either button shows or hides both.
+  const [showPw, setShowPw] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stay, setStay] = useState(staySignedIn);
@@ -334,7 +336,7 @@ function AppContent() {
     const { error } = await supabase.auth.updateUser({ password: pwNew });
     setPwBusy(false);
     if (error) { haptic.error(); say(t('settings.passwordFailed'), 'danger'); return; }
-    setPwCurrent(''); setPwNew(''); setShowPwCurrent(false); setShowPwNew(false); haptic.success(); say(t('settings.passwordDone'), 'success');
+    setPwCurrent(''); setPwNew(''); setShowPw(false); haptic.success(); say(t('settings.passwordDone'), 'success');
   };
   const saveAllergies = async () => {
     if (saving) return;
@@ -911,8 +913,8 @@ function AppContent() {
             {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}
           {!demo && session && <View testID="password-settings" style={s.card}><View style={s.inline}><KeyRound size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.passwordTitle')}</Text></View>
               <Text style={s.bodySmall}>{t('settings.passwordHelp')}</Text>
-              <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPwCurrent} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPwCurrent, setShowPwCurrent, 'toggle-current-password')}
-              <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPwNew} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPwNew, setShowPwNew, 'toggle-new-password')}
+              <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPw, setShowPw, 'toggle-current-password')}
+              <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPw, setShowPw, 'toggle-new-password')}
               {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}
           <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
