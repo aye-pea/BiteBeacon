@@ -170,8 +170,6 @@ export const en = {
   'about.sourcesTitle': 'Where food information comes from',
   'about.sourcesBody': 'Lookups use USDA FoodData Central Branded Foods first: public-domain label data submitted by manufacturers through GS1 and label-data partners. If USDA has no exact barcode match, the app falls back to Open Food Facts, a community-maintained database. Any record can be stale after a recipe or label change. This app checks reported tags and a limited English ingredient vocabulary. It cannot confirm absence, cross-contact, or suitability for your medical needs.',
   'about.usdaLink': 'USDA FoodData Central · public domain ↗', 'about.offLink': 'Open Food Facts · database under ODbL ↗', 'about.license': 'Read database license ↗',
-  'about.nextTitle': 'Next chapter: label recognition',
-  'about.nextBody': 'Planned, not active: photograph an ingredient label, extract text, then ask the user to verify it. Recognizing a food’s appearance cannot prove what allergens it contains.',
   'about.sessionTitle': 'Session & account', 'about.sessionDemo': 'Demo session: no account exists and no profile is stored.',
   'about.sessionCloud': 'Delete account removes your Auth user, allergy profile, household and pantry. Provider backup retention is separate; see employer security notes.',
   'about.exitDemo': 'Exit demo & clear session', 'about.signOut': 'Sign out & clear session',

@@ -170,8 +170,6 @@ export const zh: Messages = {
   'about.sourcesTitle': '食品信息从哪里来',
   'about.sourcesBody': '查询优先使用 USDA FoodData Central 品牌食品数据：由制造商通过 GS1 及标签数据合作方提交的公有领域标签数据。若 USDA 没有完全匹配的条形码，应用将改用社区维护的数据库 Open Food Facts。配方或标签变更后，任何记录都可能过时。本应用检查已报告的标签和有限的英文配料词汇，无法确认是否不含过敏原、是否存在交叉接触，或是否适合你的医疗需求。',
   'about.usdaLink': 'USDA FoodData Central · 公有领域 ↗', 'about.offLink': 'Open Food Facts · 数据库采用 ODbL 许可 ↗', 'about.license': '阅读数据库许可 ↗',
-  'about.nextTitle': '下一步：标签识别',
-  'about.nextBody': '已在计划中，尚未启用：拍摄配料标签，提取文字，然后请用户核实。仅凭食物外观识别，无法证明其含有哪些过敏原。',
   'about.sessionTitle': '会话与账户', 'about.sessionDemo': '演示会话：不存在账户，也不保存任何档案。',
   'about.sessionCloud': '删除账户会移除你的 Auth 用户、过敏档案、家庭成员信息和食品柜。服务提供方的备份保留另行处理；请参阅雇主安全说明。',
   'about.exitDemo': '退出演示并清除会话', 'about.signOut': '退出登录并清除会话',

@@ -170,8 +170,6 @@ export const ko: Messages = {
   'about.sourcesTitle': '식품 정보의 출처',
   'about.sourcesBody': '조회는 먼저 USDA FoodData Central Branded Foods를 사용해요. 제조사가 GS1 및 라벨 데이터 파트너를 통해 제출한 퍼블릭 도메인 라벨 데이터예요. USDA에 정확히 일치하는 바코드가 없으면 커뮤니티가 관리하는 데이터베이스인 Open Food Facts를 사용해요. 레시피나 라벨이 바뀐 뒤에는 어떤 기록이든 오래된 정보일 수 있어요. 이 앱은 보고된 태그와 제한된 영어 원재료 어휘만 확인해요. 알레르기 유발 물질이 없음, 교차 오염 여부, 내 의학적 필요에 적합한지는 확인할 수 없어요.',
   'about.usdaLink': 'USDA FoodData Central · 퍼블릭 도메인 ↗', 'about.offLink': 'Open Food Facts · ODbL 라이선스 데이터베이스 ↗', 'about.license': '데이터베이스 라이선스 읽기 ↗',
-  'about.nextTitle': '다음 단계: 라벨 인식',
-  'about.nextBody': '계획 중이며 아직 사용할 수 없어요: 원재료 라벨을 촬영하고, 텍스트를 추출한 뒤 사용자에게 확인을 요청해요. 음식의 겉모습을 인식하는 것만으로는 어떤 알레르기 유발 물질이 들어 있는지 증명할 수 없어요.',
   'about.sessionTitle': '세션 및 계정', 'about.sessionDemo': '데모 세션: 계정이 없으며 프로필도 저장되지 않아요.',
   'about.sessionCloud': '계정을 삭제하면 Auth 사용자, 알레르기 프로필, 가구, 팬트리가 삭제돼요. 제공 업체의 백업 보존은 별개이니 채용 담당자용 보안 안내를 참고하세요.',
   'about.exitDemo': '데모 종료 및 세션 삭제', 'about.signOut': '로그아웃 및 세션 삭제',

@@ -170,8 +170,6 @@ export const zhHant: Messages = {
   'about.sourcesTitle': '食品資訊從哪裡來',
   'about.sourcesBody': '查詢優先使用 USDA FoodData Central 品牌食品資料：由製造商透過 GS1 及標籤資料合作方提交的公有領域標籤資料。若 USDA 沒有完全匹配的條碼，App 將改用社群維護的資料庫 Open Food Facts。配方或標籤變更後，任何記錄都可能過時。本 App 檢查已報告的標籤和有限的英文配料詞彙，無法確認是否不含過敏原、是否存在交叉接觸，或是否適合你的醫療需求。',
   'about.usdaLink': 'USDA FoodData Central · 公有領域 ↗', 'about.offLink': 'Open Food Facts · 資料庫採用 ODbL 許可 ↗', 'about.license': '閱讀資料庫許可 ↗',
-  'about.nextTitle': '下一步：標籤識別',
-  'about.nextBody': '已在計劃中，尚未啟用：拍攝配料標籤，提取文字，然後請使用者核實。僅憑食物外觀識別，無法證明其含有哪些過敏原。',
   'about.sessionTitle': '工作階段與帳號', 'about.sessionDemo': '示範工作階段：不存在帳號，也不儲存任何檔案。',
   'about.sessionCloud': '刪除帳號會移除你的 Auth 使用者、過敏檔案、家庭成員資訊和食品櫃。服務提供方的備份保留另行處理；請參閱僱主安全說明。',
   'about.exitDemo': '退出示範並清除工作階段', 'about.signOut': '登出並清除工作階段',

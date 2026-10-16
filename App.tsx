@@ -563,7 +563,7 @@ function AppContent() {
   const multi = checkPeople.length > 1;
   const firstPick: ViewPick = [checkPeople[0]?.id ?? ME];
   const activeView: ViewPick = multi && picked(view, checkPeople).length ? view : firstPick;
-  // Nobody has allergies yet: lists still render against the account holder, as before; checking stays off (canScan).
+  // Nobody has allergies yet: lists render against the account holder, whose empty list gives "not checked" results.
   const viewPeople = checkPeople.length ? picked(activeView, checkPeople) : [people[0]];
   const defaultPeople = picked(defaultView, checkPeople);
   const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: checkPeople.length }) }, ...checkPeople.map(p => ({ id: p.id, label: p.name }))];
@@ -573,7 +573,8 @@ function AppContent() {
   const assessment = single?.assessment ?? null;
   const evidence = single?.evidence ?? [];
   const focusAllergies = unionAllergies(viewPeople);
-  const canScan = profileReady && checkPeople.length > 0;
+  // Scanning works with no allergies saved: the result then says the product wasn't checked (assess 'no-profile').
+  const canScan = profileReady;
   const allergyOwner = allergyPerson === ME ? null : members.find(m => m.id === allergyPerson) ?? null;
   const savedDraft = allergyOwner ? allergyOwner.allergies : allergies;
   const profileChanged = draft.length !== savedDraft.length || draft.some(id => !savedDraft.includes(id));
@@ -741,9 +742,9 @@ function AppContent() {
           <View style={s.card}><Text style={s.cardTitle}>{t('admin.languages')}</Text>{barRows(Object.entries(stats.languages).map(([code, value]) => ({ key: code, label: isLang(code) ? languageName(code) : t('admin.deviceLanguage'), value })).sort((a, b) => b.value - a.value))}</View>
         </View>
       </View>}
-      <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
+      {stats.full && <View testID="admin-recent" style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
         {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{usernameFromEmail(u.email) ?? u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
-          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
+          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>}
     </>}
   </>;
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
@@ -903,13 +904,12 @@ function AppContent() {
           <View testID="toolbar-settings" style={s.card}><View style={s.inline}><PanelsTopLeft size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.toolbar')}</Text></View><Text style={s.bodySmall}>{t('settings.toolbarHelp')}</Text>
             <Tap accessibilityRole="switch" aria-checked={showHome} accessibilityState={{ checked: showHome }} accessibilityLabel={t('settings.showHome')} haptic="select" onPress={() => setShowHome(!showHome)} style={[s.radioRow, showHome && s.allergySelected]} pressedStyle={!showHome && { backgroundColor: C.pale }}><CheckMark checked={showHome} /><Text style={[s.navText, { flex: 1 }]}>{t('settings.showHome')}</Text></Tap></View>
           <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
-          {isAdmin && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+          {isAdmin && !wide && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
         {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sourcesTitle')}</Text><Text style={s.body}>{t('about.sourcesBody')}</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>{t('about.usdaLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>{t('about.offLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>{t('about.license')}</Text></Tap></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('legal.title')}</Text>{lang !== 'en' && <Text style={s.footnote}>{t('legal.english')}</Text>}{(['disclaimer', 'privacy', 'terms'] as const).map(name => <Tap key={name} accessibilityRole="link" haptic="select" onPress={() => openLegal(name)}><Text style={s.link}>{t(`legal.${name}`)}</Text></Tap>)}</View>
-          <View style={[s.card, { backgroundColor: C.pale }]}><Sparkles size={25} color={C.green} /><Text style={s.cardTitle}>{t('about.nextTitle')}</Text><Text style={s.body}>{t('about.nextBody')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sessionTitle')}</Text><Text style={s.bodySmall}>{demo ? t('about.sessionDemo') : t('about.sessionCloud')}</Text><Button secondary disabled={busy || saving} onPress={leave} icon={<LogOut accessible={false} size={17} color={C.ink} />}>{demo ? t('about.exitDemo') : t('about.signOut')}</Button>
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
         <View style={s.footer}><CartLogo size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version', { version: APP_VERSION })}</Text></View>

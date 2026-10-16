@@ -170,8 +170,6 @@ export const vi: Messages = {
   'about.sourcesTitle': 'Thông tin thực phẩm đến từ đâu',
   'about.sourcesBody': 'Tra cứu ưu tiên dùng USDA FoodData Central Branded Foods: dữ liệu nhãn thuộc phạm vi công cộng do nhà sản xuất gửi qua GS1 và các đối tác dữ liệu nhãn. Nếu USDA không có mã vạch khớp chính xác, ứng dụng chuyển sang Open Food Facts, một cơ sở dữ liệu do cộng đồng duy trì. Bất kỳ hồ sơ nào cũng có thể lỗi thời sau khi công thức hoặc nhãn thay đổi. Ứng dụng này kiểm tra các nhãn được báo cáo và một bộ từ vựng thành phần tiếng Anh có giới hạn. Ứng dụng không thể xác nhận việc không có chất gây dị ứng, nguy cơ nhiễm chéo, hay mức độ phù hợp với nhu cầu y tế của bạn.',
   'about.usdaLink': 'USDA FoodData Central · phạm vi công cộng ↗', 'about.offLink': 'Open Food Facts · cơ sở dữ liệu theo giấy phép ODbL ↗', 'about.license': 'Đọc giấy phép cơ sở dữ liệu ↗',
-  'about.nextTitle': 'Chương tiếp theo: nhận dạng nhãn',
-  'about.nextBody': 'Đã lên kế hoạch, chưa hoạt động: chụp ảnh nhãn thành phần, trích xuất văn bản, rồi yêu cầu người dùng xác minh. Nhận dạng hình dáng của thực phẩm không thể chứng minh nó chứa chất gây dị ứng nào.',
   'about.sessionTitle': 'Phiên & tài khoản', 'about.sessionDemo': 'Phiên demo: không có tài khoản và không lưu hồ sơ nào.',
   'about.sessionCloud': 'Xóa tài khoản sẽ xóa người dùng Auth, hồ sơ dị ứng, hộ gia đình và tủ đồ ăn của bạn. Việc lưu giữ bản sao lưu của nhà cung cấp là riêng biệt; xem ghi chú bảo mật dành cho nhà tuyển dụng.',
   'about.exitDemo': 'Thoát demo & xóa phiên', 'about.signOut': 'Đăng xuất & xóa phiên',

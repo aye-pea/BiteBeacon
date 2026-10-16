@@ -170,8 +170,6 @@ export const es: Messages = {
   'about.sourcesTitle': 'De dónde viene la información de los alimentos',
   'about.sourcesBody': 'Las búsquedas usan primero USDA FoodData Central Branded Foods: datos de etiquetas de dominio público enviados por fabricantes a través de GS1 y socios de datos de etiquetas. Si USDA no tiene una coincidencia exacta del código de barras, la app recurre a Open Food Facts, una base de datos mantenida por la comunidad. Cualquier registro puede estar desactualizado después de un cambio de receta o de etiqueta. Esta app revisa las etiquetas reportadas y un vocabulario limitado de ingredientes en inglés. No puede confirmar la ausencia de alérgenos, el contacto cruzado ni si un alimento es adecuado para tus necesidades médicas.',
   'about.usdaLink': 'USDA FoodData Central · dominio público ↗', 'about.offLink': 'Open Food Facts · base de datos bajo ODbL ↗', 'about.license': 'Leer la licencia de la base de datos ↗',
-  'about.nextTitle': 'Próximo capítulo: reconocimiento de etiquetas',
-  'about.nextBody': 'Planeado, aún no activo: tomar una foto de la lista de ingredientes, extraer el texto y luego pedirle al usuario que lo verifique. Reconocer cómo se ve un alimento no puede comprobar qué alérgenos contiene.',
   'about.sessionTitle': 'Sesión y cuenta', 'about.sessionDemo': 'Sesión demo: no existe ninguna cuenta y no se guarda ningún perfil.',
   'about.sessionCloud': 'Eliminar la cuenta borra tu usuario de Auth, tu perfil de alergias, tu hogar y tu despensa. La retención de copias de seguridad del proveedor es aparte; consulta las notas de seguridad para empleadores.',
   'about.exitDemo': 'Salir de la demo y borrar la sesión', 'about.signOut': 'Cerrar sesión y borrarla',

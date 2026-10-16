@@ -170,8 +170,6 @@ export const ht: Messages = {
   'about.sourcesTitle': 'Ki kote enfòmasyon sou manje yo soti',
   'about.sourcesBody': 'Rechèch yo itilize USDA FoodData Central Branded Foods an premye: done etikèt ki nan domèn piblik, manifaktirye yo voye atravè GS1 ak lòt patnè done etikèt. Si USDA pa gen kòd ba egzak la, aplikasyon an chèche nan Open Food Facts, yon baz done kominote a jere. Nenpòt dosye ka pa ajou apre yon resèt oswa yon etikèt chanje. Aplikasyon sa a verifye etikèt yo bay yo ak yon vokabilè engredyan an angle ki limite. Li pa ka konfime pa gen alèjèn, pa gen kontak kwaze, ni si manje a bon pou bezwen medikal ou.',
   'about.usdaLink': 'USDA FoodData Central · domèn piblik ↗', 'about.offLink': 'Open Food Facts · baz done anba lisans ODbL ↗', 'about.license': 'Li lisans baz done a ↗',
-  'about.nextTitle': 'Pwochen etap: rekonesans etikèt',
-  'about.nextBody': 'Nan plan, men poko aktif: pran foto yon etikèt engredyan, rale tèks la, epi mande itilizatè a verifye l. Rekonèt jan yon manje sanble pa ka pwouve ki alèjèn ki ladan l.',
   'about.sessionTitle': 'Sesyon ak kont', 'about.sessionDemo': 'Sesyon demo: pa gen kont epi okenn pwofil pa sere.',
   'about.sessionCloud': 'Efase kont la retire itilizatè Auth ou, pwofil alèji ou, fanmi ou ak gadmanje ou. Kopi sekou founisè a kenbe se yon lòt bagay; gade nòt sekirite pou anplwayè yo.',
   'about.exitDemo': 'Kite demo a epi efase sesyon an', 'about.signOut': 'Dekonekte epi efase sesyon an',

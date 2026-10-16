@@ -232,3 +232,9 @@ Latest final results recorded after implementation below. See `tests/` for repea
 ## Recovery email display (2026-10-16)
 - Settings › Sign-in & recovery shows `session.user.email`. supabase-js mutates its session in place on `updateUser`, so `App.tsx` passes React a copied session after saving, on every auth event, and after `getUser()` when the app becomes active (picks up a change confirmed in another tab).
 - If Supabase holds a change for confirmation (`user.new_email`), the card keeps the current address and shows `settings.recoveryPending` naming the new one. Covered in `tests/e2e/username.spec.ts`.
+
+## Dashboard and scan tweaks (2026-10-16)
+- Limited admins no longer get the recent sign-ins list (`202610160001_limited_admins_no_sign_ins.sql` strips `recent_sign_ins`; the card renders only when `stats.full`).
+- Settings shows the Admin dashboard row only without the sidebar (`!wide`); on desktop the sidebar item is the way in.
+- App details no longer has the "Next chapter: label recognition" card (strings removed from all dictionaries).
+- `canScan` is just `profileReady`: an account with no allergies saved can scan; results use assess()'s `no-profile` outcome ("Choose your allergies first… not checked for you"), never a no-match.
