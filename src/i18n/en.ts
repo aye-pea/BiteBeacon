@@ -146,6 +146,7 @@ export const en = {
   'settings.defaultFailed': 'Default could not be saved. Your previous choice is still active.',
   'toast.defaultEveryone': 'Results now show everyone by default', 'toast.defaultPerson': 'Results now show {name} by default',
   'settings.appDetails': 'App details', 'settings.appDetailsBody': 'Data sources, privacy, sign out and account deletion',
+  'settings.account': 'Account', 'settings.accountBody': 'Your name, sign-in and password', 'settings.app': 'App', 'settings.appBody': 'Language and appearance', 'settings.back': 'Back to Settings',
   'settings.language': 'Language',
   'settings.languageHelp': 'Changes the app’s text. Product names and ingredient lists stay as the source provides them, and ingredient matching is in English.',
   'settings.languageLabel': 'Language: {name}', 'toast.languageSaved': 'Language set to {name}',

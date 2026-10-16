@@ -146,6 +146,7 @@ export const zh: Messages = {
   'settings.defaultFailed': '无法保存默认设置。你之前的选择仍然有效。',
   'toast.defaultEveryone': '结果现在默认显示所有人', 'toast.defaultPerson': '结果现在默认显示 {name}',
   'settings.appDetails': '应用详情', 'settings.appDetailsBody': '数据来源、隐私、退出登录和删除账户',
+  'settings.account': '账户', 'settings.accountBody': '你的名字、登录和密码', 'settings.app': '应用', 'settings.appBody': '语言和外观', 'settings.back': '返回设置',
   'settings.language': '语言',
   'settings.languageHelp': '更改应用中的文字。商品名称和配料表将保持数据源提供的原样，配料比对使用英文进行。',
   'settings.languageLabel': '语言：{name}', 'toast.languageSaved': '语言已设为{name}',

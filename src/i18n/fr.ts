@@ -146,6 +146,7 @@ export const fr: Messages = {
   'settings.defaultFailed': 'Impossible d’enregistrer le choix par défaut. Votre choix précédent reste actif.',
   'toast.defaultEveryone': 'Les résultats affichent désormais tout le monde par défaut', 'toast.defaultPerson': 'Les résultats affichent désormais {name} par défaut',
   'settings.appDetails': 'Infos sur l’app', 'settings.appDetailsBody': 'Sources de données, confidentialité, déconnexion et suppression du compte',
+  'settings.account': 'Compte', 'settings.accountBody': 'Votre nom, connexion et mot de passe', 'settings.app': 'App', 'settings.appBody': 'Langue et apparence', 'settings.back': 'Retour aux réglages',
   'settings.language': 'Langue',
   'settings.languageHelp': 'Modifie le texte de l’app. Les noms de produits et les listes d’ingrédients restent tels que la source les fournit, et la comparaison des ingrédients se fait en anglais.',
   'settings.languageLabel': 'Langue : {name}', 'toast.languageSaved': 'Langue définie : {name}',

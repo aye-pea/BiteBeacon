@@ -31,6 +31,7 @@ test('the Presentation theme uses the pitch deck colours and the footer shows ve
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' }).click();
   await expect(page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' })).toBeChecked();
   await expect(page.getByText('BiteBeacon · Version 1.2')).toBeVisible();
@@ -101,6 +102,7 @@ test('the Presentation theme shows the glass logo in the top-left corner; other 
   await expect(page.getByTestId('glass-logo')).toHaveCount(0);
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' }).click();
   await expect(page.getByTestId('glass-logo')).toBeVisible();
   await page.getByTestId('brand-home').click();
@@ -109,6 +111,7 @@ test('the Presentation theme shows the glass logo in the top-left corner; other 
   await page.screenshot({ path: 'artifacts/glass-logo-desktop.png' });
   await page.screenshot({ path: 'artifacts/glass-logo-closeup.png', clip: { x: 0, y: 0, width: 260, height: 120 } });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Light' }).click();
   await expect(page.getByTestId('glass-logo')).toHaveCount(0);
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' }).click();

@@ -146,6 +146,7 @@ export const bn: Messages = {
   'settings.defaultFailed': 'ডিফল্ট সংরক্ষণ করা যায়নি। আপনার আগের পছন্দই এখনো চালু আছে।',
   'toast.defaultEveryone': 'ফলাফলে এখন ডিফল্টভাবে সবাইকে দেখাবে', 'toast.defaultPerson': 'ফলাফলে এখন ডিফল্টভাবে {name}-কে দেখাবে',
   'settings.appDetails': 'অ্যাপের বিবরণ', 'settings.appDetailsBody': 'তথ্যের উৎস, গোপনীয়তা, সাইন আউট ও অ্যাকাউন্ট মুছে ফেলা',
+  'settings.account': 'অ্যাকাউন্ট', 'settings.accountBody': 'আপনার নাম, সাইন-ইন ও পাসওয়ার্ড', 'settings.app': 'অ্যাপ', 'settings.appBody': 'ভাষা ও চেহারা', 'settings.back': 'সেটিংসে ফিরে যান',
   'settings.language': 'ভাষা',
   'settings.languageHelp': 'অ্যাপের লেখা বদলায়। পণ্যের নাম ও উপাদানের তালিকা উৎস যেভাবে দেয় সেভাবেই থাকে, এবং উপাদান মেলানো হয় ইংরেজিতে।',
   'settings.languageLabel': 'ভাষা: {name}', 'toast.languageSaved': 'ভাষা {name} করা হয়েছে',

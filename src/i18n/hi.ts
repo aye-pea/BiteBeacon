@@ -146,6 +146,7 @@ export const hi: Messages = {
   'settings.defaultFailed': 'डिफ़ॉल्ट सेव नहीं हो सका। आपका पिछला चुनाव अब भी लागू है।',
   'toast.defaultEveryone': 'अब नतीजे डिफ़ॉल्ट रूप से सभी के लिए दिखेंगे', 'toast.defaultPerson': 'अब नतीजे डिफ़ॉल्ट रूप से {name} के लिए दिखेंगे',
   'settings.appDetails': 'ऐप की जानकारी', 'settings.appDetailsBody': 'डेटा स्रोत, निजता, साइन आउट और अकाउंट डिलीट करना',
+  'settings.account': 'खाता', 'settings.accountBody': 'आपका नाम, साइन-इन और पासवर्ड', 'settings.app': 'ऐप', 'settings.appBody': 'भाषा और रूप', 'settings.back': 'सेटिंग्स पर वापस जाएं',
   'settings.language': 'भाषा',
   'settings.languageHelp': 'ऐप का टेक्स्ट बदलता है। प्रोडक्ट के नाम और सामग्री सूचियां वैसी ही रहती हैं जैसी स्रोत देता है, और सामग्री का मिलान अंग्रेज़ी में होता है।',
   'settings.languageLabel': 'भाषा: {name}', 'toast.languageSaved': 'भाषा {name} पर सेट की गई',

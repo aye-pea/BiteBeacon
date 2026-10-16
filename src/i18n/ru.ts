@@ -146,6 +146,7 @@ export const ru: Messages = {
   'settings.defaultFailed': 'Не удалось сохранить выбор по умолчанию. Прежний выбор по-прежнему действует.',
   'toast.defaultEveryone': 'Теперь по умолчанию показываются все', 'toast.defaultPerson': 'Теперь по умолчанию показывается: {name}',
   'settings.appDetails': 'О приложении', 'settings.appDetailsBody': 'Источники данных, конфиденциальность, выход и удаление аккаунта',
+  'settings.account': 'Аккаунт', 'settings.accountBody': 'Ваше имя, вход и пароль', 'settings.app': 'Приложение', 'settings.appBody': 'Язык и оформление', 'settings.back': 'Назад в настройки',
   'settings.language': 'Язык',
   'settings.languageHelp': 'Меняет язык интерфейса. Названия продуктов и составы остаются такими, как их предоставляет источник, а сверка ингредиентов выполняется на английском.',
   'settings.languageLabel': 'Язык: {name}', 'toast.languageSaved': 'Язык: {name}',

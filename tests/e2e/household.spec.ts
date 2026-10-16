@@ -76,10 +76,12 @@ test('settings add, edit and remove people and set who results show by default',
   await page.getByRole('button', { name: 'Save changes' }).click();
   await expect(page.getByText('Eggs · Soy', { exact: true })).toBeVisible();
 
-  // Rename the account holder.
+  // Rename the account holder (Account menu), then come back.
+  await page.getByTestId('open-account-settings').click();
   await page.getByLabel('Your name').fill('Alex P');
   await page.getByRole('button', { name: 'Save name' }).click();
   await expect(page.getByRole('button', { name: 'Save name' })).toHaveCount(0);
+  await page.getByTestId('settings-back').click();
 
   // Default to any combination: Kha and Sam. Unticking Everyone leaves just the account holder first.
   const showFor = page.getByTestId('show-for-settings');

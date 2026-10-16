@@ -35,6 +35,7 @@ test('Settings can pin Dark or Light over the device setting, and it is remember
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByTestId('open-app-settings').click();
   const card = page.getByTestId('appearance-settings');
   await expect(card.getByRole('radio', { name: 'Appearance: Auto' })).toBeChecked();
   await card.getByRole('radio', { name: 'Appearance: Dark' }).click();
@@ -44,6 +45,7 @@ test('Settings can pin Dark or Light over the device setting, and it is remember
   await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await expect.poll(() => canvas(page)).toBe(DARK);
   await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByTestId('open-app-settings').click();
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Light' }).click();
   await expect.poll(() => canvas(page)).toBe(LIGHT);

@@ -12,6 +12,7 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.goto('/');
   await page.getByRole('button', { name: en['demo.explore'] }).click();
   await page.getByRole('button', { name: en['nav.settings'], exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
   // A dropdown: the closed button names the current language; opening it lists every language.
   await expect(page.getByRole('radio', { name: 'Language: Español' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Language: English' }).click();
@@ -19,7 +20,7 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.getByRole('radio', { name: 'Language: Español' }).click();
   await expect(page.getByRole('radio', { name: 'Language: English' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: es['settings.languageLabel'].replace('{name}', 'Español') })).toBeVisible();
-  await expect(page.getByRole('heading', { name: es['settings.title'] })).toBeVisible();
+  await expect(page.getByRole('heading', { name: es['settings.app'] })).toBeVisible();
   await expect(page.getByTestId('toast')).toContainText('Español');
   await expect(page.getByText(es['settings.translationNote'])).toBeVisible();
   await page.getByTestId('language-settings').scrollIntoViewIfNeeded();
@@ -43,6 +44,7 @@ test.describe('device language', () => {
     await expect(page.getByRole('button', { name: vi['demo.explore'] })).toBeVisible();
     await page.getByRole('button', { name: vi['demo.explore'] }).click();
     await page.getByRole('button', { name: vi['nav.settings'], exact: true }).click();
+    await page.getByTestId('open-app-settings').click();
     await expect(page.getByRole('button', { name: vi['settings.languageLabel'].replace('{name}', 'Tiếng Việt') })).toBeVisible();
   });
 });
@@ -53,6 +55,7 @@ test.describe('Traditional Chinese device', () => {
     await page.goto('/');
     await page.getByRole('button', { name: zhHant['demo.explore'] }).click();
     await page.getByRole('button', { name: zhHant['nav.settings'], exact: true }).click();
+    await page.getByTestId('open-app-settings').click();
     await expect(page.getByRole('button', { name: zhHant['settings.languageLabel'].replace('{name}', '中文（繁體）') })).toBeVisible();
   });
 });

@@ -146,6 +146,7 @@ export const vi: Messages = {
   'settings.defaultFailed': 'Không thể lưu mặc định. Lựa chọn trước đó của bạn vẫn đang có hiệu lực.',
   'toast.defaultEveryone': 'Kết quả giờ mặc định hiển thị cho mọi người', 'toast.defaultPerson': 'Kết quả giờ mặc định hiển thị cho {name}',
   'settings.appDetails': 'Thông tin ứng dụng', 'settings.appDetailsBody': 'Nguồn dữ liệu, quyền riêng tư, đăng xuất và xóa tài khoản',
+  'settings.account': 'Tài khoản', 'settings.accountBody': 'Tên, đăng nhập và mật khẩu', 'settings.app': 'Ứng dụng', 'settings.appBody': 'Ngôn ngữ và giao diện', 'settings.back': 'Quay lại Cài đặt',
   'settings.language': 'Ngôn ngữ',
   'settings.languageHelp': 'Thay đổi văn bản của ứng dụng. Tên sản phẩm và danh sách thành phần được giữ nguyên như nguồn cung cấp, và việc đối chiếu thành phần được thực hiện bằng tiếng Anh.',
   'settings.languageLabel': 'Ngôn ngữ: {name}', 'toast.languageSaved': 'Đã đặt ngôn ngữ thành {name}',

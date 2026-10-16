@@ -3,7 +3,7 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Image, Platfor
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, ChevronLeft, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
@@ -127,6 +127,8 @@ function AppContent() {
   // Home has no tab: the BiteBeacon logo at the top opens it. Phones open on Scan, desktop on Home.
   const landing: Page = wide ? 'overview' : 'scan';
   const [page, setPage] = useState<Page>('overview');
+  // Settings opens on a short menu; Account and App are its two submenus.
+  const [settingsView, setSettingsView] = useState<'main' | 'account' | 'app'>('main');
   const [showPassword, setShowPassword] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
@@ -260,7 +262,7 @@ function AppContent() {
   const navigate = (next: Page) => {
     // The Allergies page always opens on your own list; a member's unsaved picks are dropped.
     if (allergyPerson !== ME) { setAllergyPerson(ME); setDraft([...allergies]); }
-    setLangOpen(false); setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
+    setLangOpen(false); setCamera(false); setPage(next); setSettingsView('main'); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
     const typed = authMode === 'signup' ? cleanUsername(login) : login.trim();
@@ -653,7 +655,7 @@ function AppContent() {
     document.head.appendChild(el);
     return () => el.remove();
   }, [docScroll, C.bg, C.canvasImage]);
-  useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  useEffect(() => { if (docScroll) window.scrollTo(0, 0); else scrollRef.current?.scrollTo({ y: 0, animated: false }); }, [page, settingsView, docScroll]);
   // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
   const refreshStats = async () => {
     const current = generation.current;
@@ -670,6 +672,12 @@ function AppContent() {
   }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
+  // A Settings row that opens another page (Account, App, App details, Admin Dashboard).
+  const menuRow = (testID: string | undefined, icon: React.ReactNode, title: string, body: string, onPress: () => void) => <Tap testID={testID} accessibilityRole="button" haptic="select" onPress={onPress} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>{icon}<View style={{ flex: 1 }}><Text style={s.cardTitle}>{title}</Text><Text style={s.footnote}>{body}</Text></View><ChevronRight size={20} color={C.green} /></Tap>;
+  const openSettings = (view: 'account' | 'app') => { setFeedback(''); setLangOpen(false); setEditing(null); setRemoving(null); setNameDraft(myName); setSettingsView(view); };
+  // Pages opened from Settings get a floating button back to the Settings menu (Admin Dashboard only on phones; desktop has it in the sidebar).
+  const showBack = (page === 'settings' && settingsView !== 'main') || page === 'about' || (page === 'admin' && !wide);
+  const backButton = <Tap testID="settings-back" accessibilityRole="button" accessibilityLabel={t('settings.back')} haptic="select" scaleTo={.95} onPress={() => navigate('settings')} style={s.backButton} pressedStyle={{ opacity: .75 }}><ChevronLeft accessible={false} size={20} color={C.green} /><Text style={s.backText}>{t('nav.settings')}</Text></Tap>;
   // Password box with an eye button that shows or hides what was typed.
   const passwordField = (input: React.ReactElement, shown = showPassword, setShown = setShowPassword, testID = 'toggle-password') => <View style={s.passwordBox}>{input}
     <Tap testID={testID} accessibilityRole="button" accessibilityLabel={shown ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShown(!shown)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
@@ -900,9 +908,11 @@ function AppContent() {
               <Tap accessibilityRole="button" accessibilityLabel={t('history.putBackLabel', { name })} haptic={null} onPress={() => void setPantryStatus(item.id, 'active')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Undo2 size={18} color={C.green} /></Tap>
               <Tap accessibilityRole="button" accessibilityLabel={t('history.deleteLabel', { name })} haptic={null} onPress={() => void deletePantryItem(item.id)} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><X size={18} color={C.red} /></Tap>
             </View>; })}</>}
-        {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('settings.title')}</Text><Text style={s.body}>{t('settings.body')}</Text>
+        {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{settingsView === 'account' ? t('settings.account') : settingsView === 'app' ? t('settings.app') : t('settings.title')}</Text>{settingsView === 'main' && <Text style={s.body}>{t('settings.body')}</Text>}
           {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
-          <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
+          {settingsView === 'main' && <>{menuRow('open-account-settings', <UserRound size={20} color={C.green} />, t('settings.account'), t('settings.accountBody'), () => openSettings('account'))}
+           {menuRow('open-app-settings', <SlidersHorizontal size={20} color={C.green} />, t('settings.app'), t('settings.appBody'), () => openSettings('app'))}</>}
+          {settingsView === 'account' && <><View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
             {cleanName(nameDraft) !== myName && <Button loading={settingsBusy} disabled={!settingsReady} onPress={saveMyName}>{t('settings.saveName')}</Button>}</View>
           {!demo && session && <View testID="sign-in-settings" style={s.card}><View style={s.inline}><LockKeyhole size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.signIn')}</Text></View>
@@ -917,8 +927,8 @@ function AppContent() {
               <Text style={s.bodySmall}>{t('settings.passwordHelp')}</Text>
               <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPw, setShowPw, 'toggle-current-password')}
               <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPw, setShowPw, 'toggle-new-password')}
-              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}
-          <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
+              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}</>}
+          {settingsView === 'main' && <><View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View testID="profile-avatar-self" style={[s.personAvatar, C.pastel ? profileAvatarFill(0) : { backgroundColor: C.green }]}><Text accessible={false} style={[s.personInitial, C.pastel && { color: C.avatarInk }]}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
             {members.map((m, i) => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View testID={`profile-avatar-${m.id}`} style={[s.personAvatar, C.pastel ? profileAvatarFill(i + 1) : { backgroundColor: C.blue }]}><Text accessible={false} style={[s.personInitial, C.pastel && { color: C.avatarInk }]}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
               <Tap accessibilityRole="button" accessibilityLabel={t('member.edit', { name: m.name })} haptic="select" disabled={settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: m.id, name: m.name, allergies: [...m.allergies] }); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap>
@@ -930,15 +940,15 @@ function AppContent() {
           {/* Choosing whose results show only makes sense once there is someone besides you. */}
           {household && <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
             <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(shownDefault, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{o.label}</Text></Tap>; })}</View>
-            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}
-          <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
+            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}</>}
+          {settingsView === 'app' && <><View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>
             {langOpen && <Reveal style={s.dropdownMenu}><View accessibilityRole="radiogroup">{LANGUAGES.map((l, i) => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} scaleTo={.99} disabled={settingsBusy} onPress={() => { setLangOpen(false); void chooseLanguage(l.code); }} style={[s.dropdownRow, i < LANGUAGES.length - 1 && s.groupedSeparator]} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }, on && { color: C.green, fontWeight: '700' }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></Reveal>}
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
-            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
-          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
-          {isAdmin && !wide && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View></>}
+          {settingsView === 'main' && <>{menuRow(undefined, <BookOpen size={20} color={C.green} />, t('settings.appDetails'), t('settings.appDetailsBody'), () => navigate('about'))}
+           {isAdmin && !wide && menuRow('open-admin', <ChartColumn size={20} color={C.green} />, t('nav.admin'), t('settings.adminBody'), () => navigate('admin'))}</>}</>}
         {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
@@ -956,10 +966,12 @@ function AppContent() {
           : feedback ? <Reveal trigger={feedback}><View testID="profile-save-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite" style={[s.saveConfirmation, { backgroundColor: tone[feedbackTone].bg }]}>{profileSaved ? <CheckMark checked round /> : <CircleAlert accessible={false} size={24} color={tone[feedbackTone].fg} />}<View style={{ flex: 1 }}>{profileSaved && !allergyOwner && <Text style={s.cardTitle}>{t('allergies.profileSaved')}</Text>}<Text style={[s.bodySmall, { color: tone[feedbackTone].fg }]}>{feedback}</Text></View></View></Reveal> : null}
         <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? t('allergies.savingShort') : allergyOwner ? t('allergies.saveFor', { name: allergyOwner.name }) : t('allergies.save')}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...savedDraft]); setProfileSaved(false); setFeedback(''); toast(t('toast.discarded'), 'info'); }}>{t('allergies.reset')}</Button>}</View>
       </View>}
+      {showBack && !wide && <View style={s.backRow}>{backButton}</View>}
       {!wide && <View style={[s.mobileNavWrap, docScroll && (page === 'allergies' ? s.mobileNavWrapUnderSaveBar : s.mobileNavWrapFloating)]}><View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
         <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} />{item.page === 'pantry' && alertCount > 0 && <View accessible={false} style={s.navBadge} />}</View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
       </Tap>; })}</View></View>}
       </View>
+      {showBack && wide && <View style={s.backDesk}>{backButton}</View>}
     </View>
   </View></SafeAreaView>;
 }
@@ -1038,6 +1050,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(
   navBadge: { position: 'absolute', top: 0, right: '-15%', width: 9, height: 9, borderRadius: 5, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.paper },
   navCount: { marginLeft: 'auto', minWidth: 22, textAlign: 'center', ...type.caption, fontWeight: '800', color: C.onAccent, backgroundColor: C.red, borderRadius: 11, overflow: 'hidden', paddingHorizontal: 6, paddingVertical: 2 }, empty: { alignItems: 'center', paddingVertical: 44 },
   // No backdrop on the pinned bar: the page scrolls on behind the glass tab bar.
+  backRow: { paddingHorizontal: 16, paddingBottom: 2, alignItems: 'flex-start', pointerEvents: 'box-none' }, backDesk: { position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as 'absolute', left: 112, bottom: 24, zIndex: 20 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: 10, paddingRight: 16, borderRadius: 999, backgroundColor: glassBlur ? C.glass : C.glassSolid, ...(Platform.OS === 'web' && { backdropFilter: 'blur(16px) saturate(180%)' }), borderWidth: 1, borderColor: C.glassRim, boxShadow: `0px 8px 24px ${C.shadowRaised}, 0px 0px 0px 0.5px ${C.glassEdge}, inset 0px 1px 0px ${C.glassHighlight}` } as ViewStyle, backText: { color: C.green, fontSize: 15, fontWeight: '600' },
   fixedBottom: { position: 'fixed' as 'absolute', left: 0, right: 0, bottom: 0, zIndex: 10, pointerEvents: 'box-none' },
   mobileNavWrap: { paddingHorizontal: '4%', paddingTop: 6, paddingBottom: 8, backgroundColor: C.bg }, mobileNavWrapFloating: { backgroundColor: 'transparent', pointerEvents: 'box-none' }, mobileNavWrapUnderSaveBar: { backgroundColor: C.paper },
   groupedList: { backgroundColor: C.paper, borderRadius: 22, overflow: 'hidden', rowGap: 0 }, groupedRow: { width: '100%', borderRadius: 0, borderWidth: 0 }, groupedSeparator: { borderBottomWidth: 1, borderBottomColor: C.separator },

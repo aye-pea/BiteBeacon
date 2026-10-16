@@ -146,6 +146,7 @@ export const ht: Messages = {
   'settings.defaultFailed': 'Nou pa t kapab sere chwa pa defo a. Ansyen chwa ou a toujou aktif.',
   'toast.defaultEveryone': 'Rezilta yo kounye a montre tout moun pa defo', 'toast.defaultPerson': 'Rezilta yo kounye a montre {name} pa defo',
   'settings.appDetails': 'Detay aplikasyon an', 'settings.appDetailsBody': 'Sous done, konfidansyalite, dekoneksyon ak efase kont',
+  'settings.account': 'Kont', 'settings.accountBody': 'Non ou, koneksyon ak modpas', 'settings.app': 'Aplikasyon', 'settings.appBody': 'Lang ak aparans', 'settings.back': 'Retounen nan Paramèt',
   'settings.language': 'Lang',
   'settings.languageHelp': 'Sa chanje tèks aplikasyon an. Non pwodui ak lis engredyan yo rete jan sous la bay yo, epi konparezon engredyan yo fèt an angle.',
   'settings.languageLabel': 'Lang: {name}', 'toast.languageSaved': 'Lang lan chanje an {name}',

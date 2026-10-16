@@ -146,6 +146,7 @@ export const ko: Messages = {
   'settings.defaultFailed': '기본값을 저장할 수 없어요. 이전 선택이 계속 적용 중이에요.',
   'toast.defaultEveryone': '이제 기본적으로 모두의 결과를 표시해요', 'toast.defaultPerson': '이제 기본적으로 {name}님의 결과를 표시해요',
   'settings.appDetails': '앱 정보', 'settings.appDetailsBody': '데이터 출처, 개인정보, 로그아웃 및 계정 삭제',
+  'settings.account': '계정', 'settings.accountBody': '이름, 로그인 및 비밀번호', 'settings.app': '앱', 'settings.appBody': '언어 및 화면 스타일', 'settings.back': '설정으로 돌아가기',
   'settings.language': '언어',
   'settings.languageHelp': '앱의 텍스트를 바꿔요. 제품명과 원재료 목록은 정보 제공처가 제공한 그대로 표시되며, 원재료 비교는 영어로 이루어져요.',
   'settings.languageLabel': '언어: {name}', 'toast.languageSaved': '언어를 {name}(으)로 설정했어요',

@@ -146,6 +146,7 @@ export const es: Messages = {
   'settings.defaultFailed': 'No se pudo guardar la opción predeterminada. Tu elección anterior sigue activa.',
   'toast.defaultEveryone': 'Ahora los resultados muestran a todos de forma predeterminada', 'toast.defaultPerson': 'Ahora los resultados muestran a {name} de forma predeterminada',
   'settings.appDetails': 'Detalles de la app', 'settings.appDetailsBody': 'Fuentes de datos, privacidad, cierre de sesión y eliminación de cuenta',
+  'settings.account': 'Cuenta', 'settings.accountBody': 'Tu nombre, inicio de sesión y contraseña', 'settings.app': 'App', 'settings.appBody': 'Idioma y apariencia', 'settings.back': 'Volver a Ajustes',
   'settings.language': 'Idioma',
   'settings.languageHelp': 'Cambia el texto de la app. Los nombres de productos y las listas de ingredientes se muestran como los proporciona la fuente, y la comparación de ingredientes se hace en inglés.',
   'settings.languageLabel': 'Idioma: {name}', 'toast.languageSaved': 'Idioma cambiado a {name}',
