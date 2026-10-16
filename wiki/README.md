@@ -18,7 +18,7 @@ Project second brain. Update after material behavior, architecture or acceptance
 - Nine supported US major-allergen groups; no custom allergy text, celiac classification or severity recommendation in v0.1.
 - Never label products “safe.” Incomplete or unsupported-language data remains uncertain. Structured positives override missing fields; traces remain distinct. Limited English synonym detection is conservative and may flag negated statements.
 - Positive barcode results use live Open Food Facts; deterministic fictional samples are separate explicit actions. No fallback from failed real lookup to fake product.
-- Native camera scanning, manual lookup on web. UPC-E is detected but requires full UPC entry; expansion deferred.
+- Native camera scanning, manual lookup on web. UPC-E is expanded to UPC-A in the app (see UPC-E section).
 - Demo profiles and history memory-only. Connected cloud profile private through RLS. No scan history table, no uploaded camera media.
 - Image recognition deferred to opt-in label OCR with user verification. No inference that appearance proves allergen absence.
 
@@ -260,3 +260,9 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Validation: TypeScript, 159 unit tests; Playwright `settings-menus.spec.ts` plus updated appearance, apple-partiful, household, language, toolbar-theme and username specs pass. web-camera spec can't launch in the cloud sandbox (fails without the change too).
 
 - "App details" renamed **About & Privacy** (Alex, 2026-10-16): `nav.about`, `nav.about.short` ("About") and `settings.appDetails` in all 11 languages.
+
+## UPC-E barcodes — 2026-10-16
+- UPC-E (8-digit, zero-suppressed UPC-A on small packages) is expanded to its 12-digit UPC-A by `expandUpcE` in `src/domain/allergens.ts`, then looked up like any code. USDA and Open Food Facts index the UPC-A form.
+- Camera: when the scanner reports `upc_e`, only the UPC-E reading is used. Typed 8-digit codes: `barcodeCandidates` tries UPC-E first (number system 0/1, check digit valid on the expanded UPC-A), then EAN-8 if the code is also a valid EAN-8. First found wins.
+- The old "UPC-E needs expansion" message (`scan.upce`) is gone from all 11 languages.
+- Validation: unit tests for every expansion rule (last digit 0-2, 3, 4, 5-9, number system 1) and the UPC-E/EAN-8 fallback; tsc clean; 186 unit tests and all Playwright flows passed.

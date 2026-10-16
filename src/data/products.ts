@@ -1,4 +1,4 @@
-import { Product, validBarcode } from '../domain/allergens';
+import { barcodeCandidates, Product, validBarcode } from '../domain/allergens';
 import { titleCase } from '../domain/names';
 // Codes let the UI show the message in the person's language; message stays English for logs and tests.
 export type LookupErrorCode = 'invalid' | 'incomplete' | 'busy' | 'unavailable' | 'timeout' | 'unreachable' | 'mismatch' | 'badBarcode' | 'disputed' | 'wait';
@@ -93,11 +93,24 @@ async function lookupOpenFoodFacts(barcode: string, native: boolean): Promise<Pr
   return product;
 }
 // Manufacturer-submitted USDA record first; community Open Food Facts only when USDA has no exact GTIN match.
-export async function lookupProduct(barcode: string, native = false): Promise<Product | null> {
-  if (!validBarcode(barcode)) throw new LookupError('badBarcode', 'Enter a valid UPC or EAN barcode, including its check digit (8, 12, 13 or 14 digits).');
-  if (disputedBarcodes.has(gtin14(barcode))) throw new LookupError('disputed', 'Product identity disputed for this barcode: Open Food Facts lists Hellmann’s Light Mayonnaise, but a Poland Spring bottle was reported. No allergy assessment available. Check the physical package label.');
+// An 8-digit code can be UPC-E (expanded to UPC-A first) or EAN-8; `upcE` says the camera already read it as UPC-E.
+export async function lookupProduct(code: string, native = false, upcE = false): Promise<Product | null> {
+  const candidates = barcodeCandidates(code, upcE);
+  if (!candidates.length) throw new LookupError('badBarcode', 'Enter a valid UPC or EAN barcode, including its check digit (8, 12, 13 or 14 digits).');
+  if (candidates.some(c => disputedBarcodes.has(gtin14(c)))) throw new LookupError('disputed', 'Product identity disputed for this barcode: Open Food Facts lists Hellmann’s Light Mayonnaise, but a Poland Spring bottle was reported. No allergy assessment available. Check the physical package label.');
   if (Date.now() - lastRequest < 4500) throw new LookupError('wait', 'Please wait a few seconds before another product lookup.');
   lastRequest = Date.now();
+  let error: unknown;
+  for (const barcode of candidates) {
+    try {
+      const product = await lookupBarcode(barcode, native);
+      if (product) return product;
+    } catch (e) { error ??= e; }
+  }
+  if (error) throw error;
+  return null;
+}
+async function lookupBarcode(barcode: string, native: boolean): Promise<Product | null> {
   let usdaError: unknown;
   try {
     const product = await lookupUsda(barcode, native);

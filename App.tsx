@@ -5,7 +5,7 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, ChevronLeft, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
-import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, barcodeCandidates, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
 import { DEMO_FIXED_KEY, demoLineup } from './src/data/demo';
 import { titleCase } from './src/domain/names';
@@ -109,7 +109,7 @@ function barcodeHint(value: string, { t }: I18n): { text: string; ok: boolean } 
   if (!digits) return { text: t('hint.empty'), ok: false };
   if (!/^\d+$/.test(digits)) return { text: t('hint.digitsOnly'), ok: false };
   if (![8, 12, 13, 14].includes(digits.length)) return { text: t('hint.count', { n: digits.length }), ok: false };
-  return validBarcode(digits) ? { text: t('hint.ok', { n: digits.length }), ok: true } : { text: t('hint.bad', { n: digits.length }), ok: false };
+  return barcodeCandidates(digits).length ? { text: t('hint.ok', { n: digits.length }), ok: true } : { text: t('hint.bad', { n: digits.length }), ok: false };
 }
 
 type LegalPage = 'disclaimer' | 'privacy' | 'terms';
@@ -429,14 +429,14 @@ function AppContent() {
     setProduct(next); setHistory(prev => [{ product: next, at: new Date().toISOString() }, ...prev].slice(0, 30)); setPage('scan'); setFeedback(''); setCamera(false);
     toast(viewPeople.length > 1 ? t('toast.checkedPeople', { n: viewPeople.length }) : viewPeople[0].id === ME ? tp('toast.checkedMine', allergies.length) : t('toast.checkedFor', { name: viewPeople[0].name }), 'info');
   };
-  const scan = async (code: string, fromCamera = false) => {
+  const scan = async (code: string, fromCamera = false, upcE = false) => {
     if (scanLock.current || !canScan) return;
     scanLock.current = true; if (fromCamera) haptic.firm();
     pendingScroll.current = true;
     setBusy(true); setCamera(false); setProduct(null); setFeedback(''); setBarcode(code.trim());
     const current = generation.current;
     try {
-      const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
+      const found = await lookupProduct(code.trim(), Platform.OS !== 'web', upcE);
       // One more for the app-wide total, for signed-in accounts only (demo lookups don't count).
       // Only the count goes up, nothing about the barcode or person.
       if (!demo) recordScan();
@@ -868,7 +868,7 @@ function AppContent() {
           <Text accessibilityRole="header" style={s.pageTitle}>{t('scan.title')}</Text><Text style={s.body}>{t('scan.body')}</Text>
           {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, wide && { flex: 1 }]}>
             <View style={s.inline}><View style={s.iconTile}><ScanBarcode size={19} color={C.green} /></View><Text style={s.cardTitle}>{t('scan.scanner')}</Text></View>
-            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => { if (event.type === 'upc_e') { setCamera(false); haptic.warning(); say(t('scan.upce')); } else void scan(event.data, true); }} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
+            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => void scan(event.data, true, event.type === 'upc_e')} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
               : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onPrimary} />}>{t('scan.openCamera')}</Button></View>}
             <Text style={s.label}>{t('scan.manual')}</Text>
             <TextInput accessibilityLabel={t('scan.barcodeLabel')} style={[s.input, barcodeFocused && s.inputFocused, hint.ok && { borderColor: C.green }]} value={barcode} onChangeText={value => { setBarcode(value); if (feedback) setFeedback(''); }} onFocus={() => setBarcodeFocused(true)} onBlur={() => setBarcodeFocused(false)} keyboardType="number-pad" maxLength={14} placeholder="e.g. 3017620422003" placeholderTextColor={C.faint} onSubmitEditing={() => void scan(barcode)} editable={!busy} />

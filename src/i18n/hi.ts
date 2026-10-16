@@ -69,7 +69,6 @@ export const hi: Messages = {
 
   'scan.title': 'आपके अगले निवाले में क्या है?', 'scan.body': 'खाने का बारकोड स्कैन करें या उसके नीचे लिखे नंबर डालें।',
   'scan.chooseAllergies': 'अपनी एलर्जी चुनें', 'scan.scanner': 'बारकोड स्कैनर',
-  'scan.upce': 'UPC-E को पूरा करना ज़रूरी है। पूरा UPC बारकोड डालें या कोई दूसरा प्रोडक्ट आज़माएं।',
   'scan.center': 'बारकोड को फ़्रेम के बीच में रखें', 'scan.closeCamera': 'कैमरा बंद करें',
   'scan.webCamera': 'कैमरे से स्कैन करने के लिए सुरक्षित (https) पेज और कैमरा अनुमति चाहिए। आप फिर भी नीचे बारकोड टाइप कर सकते हैं।', 'scan.pointCamera': 'अपना कैमरा किसी UPC या EAN बारकोड की ओर करें।', 'scan.openCamera': 'कैमरा खोलें',
   'scan.manual': 'या बारकोड खुद डालें', 'scan.barcodeLabel': 'बारकोड नंबर', 'scan.checking': 'प्रोडक्ट जांचा जा रहा है…', 'scan.checkingLabel': 'प्रोडक्ट जांचा जा रहा है', 'scan.lookUp': 'प्रोडक्ट खोजें',

@@ -69,7 +69,6 @@ export const vi: Messages = {
 
   'scan.title': 'Miếng ăn tiếp theo có gì?', 'scan.body': 'Quét mã vạch thực phẩm hoặc nhập dãy số bên dưới mã.',
   'scan.chooseAllergies': 'Chọn dị ứng của bạn', 'scan.scanner': 'Máy quét mã vạch',
-  'scan.upce': 'Mã UPC-E cần được mở rộng. Hãy nhập đầy đủ mã vạch UPC hoặc thử sản phẩm khác.',
   'scan.center': 'Đặt mã vạch vào giữa khung', 'scan.closeCamera': 'Đóng camera',
   'scan.webCamera': 'Quét bằng camera cần trang bảo mật (https) và quyền dùng camera. Bạn vẫn có thể nhập mã vạch bên dưới.', 'scan.pointCamera': 'Hướng camera vào mã vạch UPC hoặc EAN.', 'scan.openCamera': 'Mở camera',
   'scan.manual': 'Hoặc nhập mã vạch thủ công', 'scan.barcodeLabel': 'Số mã vạch', 'scan.checking': 'Đang kiểm tra sản phẩm…', 'scan.checkingLabel': 'Đang kiểm tra sản phẩm', 'scan.lookUp': 'Tra cứu sản phẩm',

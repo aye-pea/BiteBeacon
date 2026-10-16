@@ -51,6 +51,25 @@ export function validBarcode(value: string): boolean {
   return (10 - sum % 10) % 10 === check;
 }
 
+// UPC-E is a zero-suppressed UPC-A: number system (0 or 1), six digits, then the UPC-A check digit.
+// Returns the 12-digit UPC-A it stands for, or null when the code is not a valid 8-digit UPC-E.
+export function expandUpcE(value: string): string | null {
+  if (!/^[01]\d{7}$/.test(value)) return null;
+  const [ns, a, b, c, d, e, f, check] = value.split('');
+  const body = f <= '2' ? a + b + f + '0000' + c + d + e
+    : f === '3' ? a + b + c + '00000' + d + e
+    : f === '4' ? a + b + c + d + '00000' + e
+    : a + b + c + d + e + '0000' + f;
+  const upcA = ns + body + check;
+  return validBarcode(upcA) ? upcA : null;
+}
+/** Codes to look up for what was scanned or typed, in order. An 8-digit code can be UPC-E or EAN-8: UPC-E is tried first. */
+export function barcodeCandidates(value: string, upcE = false): string[] {
+  const expanded = value.length === 8 ? expandUpcE(value) : null;
+  if (upcE) return expanded ? [expanded] : [];
+  return [...(expanded ? [expanded] : []), ...(validBarcode(value) ? [value] : [])];
+}
+
 // Evidence explains an assessment; it never changes one. It reuses assess()'s tags and vocabulary so the two cannot disagree.
 // 'ingredient' = the allergen is named outright ("milk"); 'hidden' = a word that comes from it without saying so ("whey" → milk).
 export type Evidence = { allergen: string; via: 'tag' | 'trace' | 'ingredient' | 'hidden'; term: string };

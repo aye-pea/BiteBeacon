@@ -69,7 +69,6 @@ export const ht: Messages = {
 
   'scan.title': 'Kisa ki nan pwochen bouche ou?', 'scan.body': 'Eskane kòd ba yon manje oswa antre nimewo ki anba l yo.',
   'scan.chooseAllergies': 'Chwazi alèji ou', 'scan.scanner': 'Eskanè kòd ba',
-  'scan.upce': 'Kòd UPC-E a bezwen agrandi. Antre tout kòd ba UPC a oswa eseye yon lòt pwodui.',
   'scan.center': 'Mete kòd ba a nan mitan kad la', 'scan.closeCamera': 'Fèmen kamera a',
   'scan.webCamera': 'Pou eskane ak kamera, ou bezwen yon paj ki an sekirite (https) ak aksè kamera. Ou ka toujou tape kòd ba a anba a.', 'scan.pointCamera': 'Brake kamera ou sou yon kòd ba UPC oswa EAN.', 'scan.openCamera': 'Louvri kamera a',
   'scan.manual': 'Oswa antre kòd ba a ak men', 'scan.barcodeLabel': 'Nimewo kòd ba', 'scan.checking': 'N ap verifye pwodui a…', 'scan.checkingLabel': 'N ap verifye pwodui a', 'scan.lookUp': 'Chèche pwodui a',

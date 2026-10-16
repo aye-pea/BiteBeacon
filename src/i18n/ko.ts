@@ -69,7 +69,6 @@ export const ko: Messages = {
 
   'scan.title': '다음 한 입에 무엇이 들었을까요?', 'scan.body': '식품 바코드를 스캔하거나 바코드 아래 숫자를 입력하세요.',
   'scan.chooseAllergies': '알레르기 선택하기', 'scan.scanner': '바코드 스캐너',
-  'scan.upce': 'UPC-E는 확장이 필요해요. 전체 UPC 바코드를 입력하거나 다른 제품을 시도하세요.',
   'scan.center': '바코드를 프레임 가운데에 맞추세요', 'scan.closeCamera': '카메라 닫기',
   'scan.webCamera': '카메라 스캔에는 보안(https) 페이지와 카메라 권한이 필요해요. 아래에 바코드를 직접 입력할 수도 있어요.', 'scan.pointCamera': '카메라를 UPC 또는 EAN 바코드에 맞추세요.', 'scan.openCamera': '카메라 열기',
   'scan.manual': '또는 바코드를 직접 입력하세요', 'scan.barcodeLabel': '바코드 번호', 'scan.checking': '제품 확인 중…', 'scan.checkingLabel': '제품 확인 중', 'scan.lookUp': '제품 조회',

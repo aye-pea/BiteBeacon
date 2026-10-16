@@ -69,7 +69,6 @@ export const es: Messages = {
 
   'scan.title': '¿Qué hay en tu próximo bocado?', 'scan.body': 'Escanea el código de barras de un alimento o ingresa los números que aparecen debajo.',
   'scan.chooseAllergies': 'Elige tus alergias', 'scan.scanner': 'Escáner de códigos de barras',
-  'scan.upce': 'El código UPC-E necesita expandirse. Ingresa el código UPC completo o prueba con otro producto.',
   'scan.center': 'Centra el código de barras dentro del marco', 'scan.closeCamera': 'Cerrar cámara',
   'scan.webCamera': 'El escaneo con cámara necesita una página segura (https) y acceso a la cámara. Aún puedes escribir el código abajo.', 'scan.pointCamera': 'Apunta la cámara a un código de barras UPC o EAN.', 'scan.openCamera': 'Abrir cámara',
   'scan.manual': 'O ingresa el código manualmente', 'scan.barcodeLabel': 'Número del código de barras', 'scan.checking': 'Revisando producto…', 'scan.checkingLabel': 'Revisando producto', 'scan.lookUp': 'Buscar producto',

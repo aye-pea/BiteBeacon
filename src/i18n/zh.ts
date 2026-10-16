@@ -69,7 +69,6 @@ export const zh: Messages = {
 
   'scan.title': '你下一口吃的是什么？', 'scan.body': '扫描食品条形码，或输入条码下方的数字。',
   'scan.chooseAllergies': '选择你的过敏原', 'scan.scanner': '条码扫描器',
-  'scan.upce': 'UPC-E 条码需要展开。请输入完整的 UPC 条码，或换一件商品试试。',
   'scan.center': '请将条形码对准框内', 'scan.closeCamera': '关闭相机',
   'scan.webCamera': '相机扫描需要安全（https）页面和相机权限。你仍可在下方输入条形码。', 'scan.pointCamera': '将相机对准 UPC 或 EAN 条形码。', 'scan.openCamera': '打开相机',
   'scan.manual': '或手动输入条形码', 'scan.barcodeLabel': '条形码数字', 'scan.checking': '正在检查商品…', 'scan.checkingLabel': '正在检查商品', 'scan.lookUp': '查询商品',

@@ -69,7 +69,6 @@ export const en = {
 
   'scan.title': 'What’s in your next bite?', 'scan.body': 'Scan a food barcode or enter the numbers beneath it.',
   'scan.chooseAllergies': 'Choose your allergies', 'scan.scanner': 'Barcode scanner',
-  'scan.upce': 'UPC-E needs expansion. Enter the full UPC barcode or try another product.',
   'scan.center': 'Center the barcode inside the frame', 'scan.closeCamera': 'Close camera',
   'scan.webCamera': 'Camera scanning needs a secure (https) page and camera access. You can still type the barcode below.', 'scan.pointCamera': 'Point your camera at a UPC or EAN barcode.', 'scan.openCamera': 'Open camera',
   'scan.manual': 'Or enter barcode manually', 'scan.barcodeLabel': 'Barcode number', 'scan.checking': 'Checking product…', 'scan.checkingLabel': 'Checking product', 'scan.lookUp': 'Look up product',

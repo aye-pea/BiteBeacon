@@ -69,7 +69,6 @@ export const zhHant: Messages = {
 
   'scan.title': '你下一口吃的是什麼？', 'scan.body': '掃描食品條碼，或輸入條碼下方的數字。',
   'scan.chooseAllergies': '選擇你的過敏原', 'scan.scanner': '條碼掃描器',
-  'scan.upce': 'UPC-E 條碼需要展開。請輸入完整的 UPC 條碼，或換一件商品試試。',
   'scan.center': '請將條碼對準框內', 'scan.closeCamera': '關閉相機',
   'scan.webCamera': '相機掃描需要安全（https）頁面和相機許可權。你仍可在下方輸入條碼。', 'scan.pointCamera': '將相機對準 UPC 或 EAN 條碼。', 'scan.openCamera': '開啟相機',
   'scan.manual': '或手動輸入條碼', 'scan.barcodeLabel': '條碼數字', 'scan.checking': '正在檢查商品…', 'scan.checkingLabel': '正在檢查商品', 'scan.lookUp': '查詢商品',
