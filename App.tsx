@@ -21,7 +21,7 @@ import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, gradientFill, Palette, profileAvatarFill, profileHues, setAppearance, shadowOf, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
-import { BrandLogo, CartLogo } from './src/ui/logo';
+import { BrandLogo, CartLogo, SelectorBracket } from './src/ui/logo';
 import { APP_VERSION } from './src/version';
 import { IS_BETA } from './src/lib/beta';
 
@@ -138,6 +138,7 @@ function AppContent() {
   // to the sidebar row that was clicked last and may report a mouseenter without the mouse moving. Neither should open the sidebar:
   // until a real key press or mouse movement, the rail only opens for a Tab focus ring or an actual hover.
   const railReturning = useRef(false);
+  const [railHover, setRailHover] = useState<Page | null>(null);
   const railHovered = useRef(false);
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -816,10 +817,12 @@ function AppContent() {
       {...(railEvents as object)}>
       <Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.98} onPress={() => navigate('overview')} style={[s.brand, s.brandTap]} hoverStyle={{ backgroundColor: C.pale }} pressedStyle={{ opacity: .7 }}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></Tap>
       <View style={{ height: 32 }} />
-      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
+      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} onHoverIn={() => setRailHover(item.page)} onHoverOut={() => setRailHover(h => (h === item.page ? null : h))} style={[s.navItem, active && s.navActive]} hoverStyle={scheme === 'partiful' ? !active && { backgroundColor: C.pale } : active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
+        {scheme === 'partiful' && railHover === item.page && <View testID="selector-bracket" style={s.selectorBracket}><SelectorBracket /></View>}
         <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.navActiveText, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
       </Tap>; })}
       <View style={{ flex: 1 }} />
+      <View style={s.railDivider} />
       <Tap accessibilityRole="button" accessibilityLabel={demo ? t('account.demo') : t('account.yours')} disabled={busy || saving} onPress={leave} style={s.account} hoverStyle={s.accountHover} pressedStyle={{ opacity: .7 }}><View style={[s.avatar, { flexShrink: 0 }]}><UserRound size={19} color={C.green} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={1} style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text>{demo && <Text numberOfLines={1} style={s.footnote}>{t('account.demoSub')}</Text>}</View><LogOut size={18} color={C.muted} /></View></Tap>
     </View></View>}
     <View style={[s.main, C.pastel && page === 'pantry' && alerts.expired > 0 && s.pantryCanvas]}>
@@ -1018,21 +1021,22 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   progressTrack: { height: 4, borderRadius: 4, backgroundColor: C.pale, overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: C.green },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandTap: { alignSelf: 'flex-start', borderRadius: 14, marginLeft: -6, padding: 6, minHeight: 44 }, mobileBrandRow: { flexDirection: 'row' }, mobileBrand: { borderRadius: 12, paddingVertical: 4, paddingRight: 8, minHeight: 44, gap: 8 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandTap: { alignSelf: 'flex-start', borderRadius: 14, marginLeft: 2, padding: 6, minHeight: 44 }, mobileBrandRow: { flexDirection: 'row' }, mobileBrand: { borderRadius: 12, paddingVertical: 4, paddingRight: 8, minHeight: 44, gap: 8 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
   // The rail keeps its narrow width in the layout; the panel inside grows over the page on hover, so nothing reflows.
   sidebarRail: { width: 88, zIndex: 10 },
-  sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingHorizontal: 16, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
+  sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingLeft: 16, paddingRight: 15, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
   sidebarClosed: { width: 88 }, sidebarOpen: { width: 264, boxShadow: shadow.raised },
   // Labels stay in the layout either way and only fade, so rows keep their height and the icons never move.
   railLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, overflow: 'hidden' },
   railFade: Platform.OS === 'web' ? { transitionProperty: 'opacity', transitionDuration: '150ms' } as object : {}, railHidden: { opacity: 0 },
   railBadge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 8, backgroundColor: C.red },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
-  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft },
+  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 17.5, borderRadius: 12, marginBottom: 6 },
+  selectorBracket: { position: 'absolute', left: 0, top: 0, bottom: 0, justifyContent: 'center' }, navActive: { backgroundColor: C.greenSoft },
   // Mouse hover on the sidebar: a tint plus a green bar on the left edge, so the row under the pointer is obvious.
   navHover: { backgroundColor: C.pale, boxShadow: `inset 4px 0px 0px ${C.green}` }, navActiveHover: { boxShadow: `inset 4px 0px 0px ${C.green}` },
   accountHover: { backgroundColor: C.pale }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },
-  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, paddingBottom: 6, paddingHorizontal: 6, borderTopWidth: 1, borderColor: C.border, borderRadius: 12 }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
+  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 9.5, borderRadius: 12 }, railDivider: { height: 1, backgroundColor: C.border, marginBottom: 10 }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
   topbar: { paddingVertical: 12, paddingHorizontal: 18, flexWrap: 'wrap', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.chrome, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   breadcrumb: { fontSize: 13, color: C.muted, flexShrink: 1 }, modeBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenSoft, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 }, modeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1, color: C.green },
   content: { padding: 36, gap: 24, width: '100%', maxWidth: 1320, alignSelf: 'center' },

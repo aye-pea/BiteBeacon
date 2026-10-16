@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, View } from 'react-native';
-import Svg, { Circle, G, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
 
 /** BiteBeacon mark: a shopping cart inside barcode-scan brackets (assets/logo.svg). */
 export function CartLogo({ size = 32, color }: { size?: number; color: string }) {
@@ -26,4 +26,22 @@ export function BrandLogo({ size, color, glass, deep = false }: { size: number; 
   return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
     <Image testID="glass-logo" accessible={false} source={deep ? require('../../assets/glass-logo-partiful.png') : require('../../assets/glass-logo.png')} style={{ width: Math.round(size * 0.85), height: Math.round(size * 0.85) }} resizeMode="contain" />
   </View>;
+}
+
+/** Partiful's sidebar selector: the two left corner brackets of the Partiful glass logo, periwinkle at the top fading to violet,
+ *  with a thin highlight down the inside like the logo's glass. */
+export function SelectorBracket({ height = 41 }: { height?: number }) {
+  const id = `bracket-${React.useId().replace(/:/g, '')}`;
+  const arm = Math.round(height * 0.3);
+  const corner = (y: number, down: boolean) => down
+    ? `M12 ${y + 2}H9a4 4 0 0 0-4 4V${y + arm}`
+    : `M5 ${y - arm}V${y - 6}a4 4 0 0 0 4 4H12`;
+  const d = `${corner(0, true)}${corner(height, false)}`;
+  return <Svg accessible={false} width={14} height={height} viewBox={`0 0 14 ${height}`}>
+    <Defs><LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <Stop offset="0" stopColor="#AAB4FB" /><Stop offset=".5" stopColor="#9C8EEA" /><Stop offset="1" stopColor="#A86BC4" />
+    </LinearGradient></Defs>
+    <Path d={d} fill="none" stroke={`url(#${id})`} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+    <Path d={d} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" transform="translate(0.6 0)" />
+  </Svg>;
 }
