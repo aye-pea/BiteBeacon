@@ -130,13 +130,15 @@ export function gradientFill(from: string, to: string, angle = 135): ViewStyle {
     ? { backgroundColor: 'transparent', backgroundImage: image } as ViewStyle
     : { backgroundColor: 'transparent', experimental_backgroundImage: image } as ViewStyle;
 }
-// Household initials cycle through gentle colours in Apple and Partiful, by display order only.
+// Household initials cycle through gentle colours in Apple and Partiful, in display order; profileHues lets
+// people whose letters still match (two "Ja"s) take colours from opposite sides of the colour wheel.
 const profileGradients = [
   ['#EFFAFF', '#C9E8F6'], ['#F7F1FF', '#E0D4F4'],
   ['#FFF3F9', '#F2D3E3'], ['#FFF7EF', '#F7DEC9'],
   ['#F1F7FC', '#D5E1ED'], ['#F4F3FF', '#DDDFF5'],
   ['#FDF8EA', '#F2E7C7'], ['#F9F4FF', '#E7D5EC'],
 ] as const;
+export const profileHues = [200, 270, 330, 30, 210, 245, 45, 290] as const;
 export function profileAvatarFill(index: number): ViewStyle {
   const [from, to] = profileGradients[index % profileGradients.length];
   return { ...gradientFill(from, to), boxShadow: 'inset 0px 1px 0px rgba(255,255,255,0.9)' } as ViewStyle;
