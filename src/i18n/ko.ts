@@ -17,7 +17,7 @@ export const ko: Messages = {
 
   'welcome.title': '더 알고,\n알레르기를\n생각하며\n장 보세요.',
   'welcome.body': '바코드를 스캔하세요. 보고된 원재료가 내 알레르기 프로필과 어떻게 맞는지 확인하세요. 최종 확인은 제품 라벨로 하세요.',
-  'welcome.pill1': '미국 9대 주요 알레르기 유발 물질', 'welcome.pill2': '개인정보 보호 중심 설계',
+  'welcome.pill1': '15대 주요 알레르기 유발 물질', 'welcome.pill2': '개인정보 보호 중심 설계',
   'welcome.graphicTitle': '다음 장보기, 더 잘 알고 하세요.', 'welcome.graphicBody': '먼저 바코드, 언제나 라벨.',
   'auth.signupTitle': '나만의 프로필을 만드세요.', 'auth.loginTitle': '다시 오신 걸 환영해요.', 'auth.tagline': '내 알레르기, 나만의 공간.',
   'auth.email': '이메일 주소', 'auth.password': '비밀번호', 'auth.passwordNew': '12자 이상', 'auth.passwordCurrent': '내 비밀번호',

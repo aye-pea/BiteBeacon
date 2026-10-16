@@ -17,7 +17,7 @@ export const zh: Messages = {
 
   'welcome.title': '多了解一点。\n购物时\n把过敏\n放在心上。',
   'welcome.body': '扫描条形码，查看已报告的配料与你的过敏档案是否匹配。最终请以包装标签为准。',
-  'welcome.pill1': '美国 9 大主要过敏原', 'welcome.pill2': '隐私优先设计',
+  'welcome.pill1': '15 种主要过敏原', 'welcome.pill2': '隐私优先设计',
   'welcome.graphicTitle': '下次购物，心里更有数。', 'welcome.graphicBody': '先扫条码，始终看标签。',
   'auth.signupTitle': '打造你的专属档案。', 'auth.loginTitle': '欢迎回来。', 'auth.tagline': '你的过敏信息，你的专属空间。',
   'auth.email': '电子邮箱地址', 'auth.password': '密码', 'auth.passwordNew': '至少 12 个字符', 'auth.passwordCurrent': '你的密码',

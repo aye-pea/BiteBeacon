@@ -17,7 +17,7 @@ export const vi: Messages = {
 
   'welcome.title': 'Biết rõ hơn.\nMua sắm\nluôn lưu tâm\nđến dị ứng của bạn.',
   'welcome.body': 'Quét mã vạch. Xem thành phần được báo cáo khớp thế nào với hồ sơ dị ứng của bạn. Bước kiểm tra cuối cùng vẫn là nhãn sản phẩm.',
-  'welcome.pill1': '9 chất gây dị ứng chính tại Mỹ', 'welcome.pill2': 'Riêng tư ngay từ thiết kế',
+  'welcome.pill1': '15 chất gây dị ứng chính', 'welcome.pill2': 'Riêng tư ngay từ thiết kế',
   'welcome.graphicTitle': 'Lần mua sắm tới, thêm hiểu biết.', 'welcome.graphicBody': 'Quét mã vạch trước. Luôn đọc nhãn.',
   'auth.signupTitle': 'Cá nhân hóa cho bạn.', 'auth.loginTitle': 'Chào mừng bạn trở lại.', 'auth.tagline': 'Dị ứng của bạn. Không gian của riêng bạn.',
   'auth.email': 'Địa chỉ email', 'auth.password': 'Mật khẩu', 'auth.passwordNew': 'Ít nhất 12 ký tự', 'auth.passwordCurrent': 'Mật khẩu của bạn',

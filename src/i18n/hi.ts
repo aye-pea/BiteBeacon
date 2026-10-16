@@ -17,7 +17,7 @@ export const hi: Messages = {
 
   'welcome.title': 'ज़्यादा जानें।\nखरीदारी करें\nअपनी एलर्जी को\nध्यान में रखकर।',
   'welcome.body': 'बारकोड स्कैन करें। देखें कि बताई गई सामग्री आपकी एलर्जी प्रोफ़ाइल से कैसे मेल खाती है। आख़िरी जाँच लेबल पर ही करें।',
-  'welcome.pill1': 'अमेरिका के 9 मुख्य एलर्जेन', 'welcome.pill2': 'शुरू से ही निजी',
+  'welcome.pill1': '15 मुख्य एलर्जेन', 'welcome.pill2': 'शुरू से ही निजी',
   'welcome.graphicTitle': 'आपकी अगली खरीदारी, ज़्यादा जानकारी के साथ।', 'welcome.graphicBody': 'पहले बारकोड। लेबल हमेशा।',
   'auth.signupTitle': 'इसे अपना बनाएं।', 'auth.loginTitle': 'फिर से स्वागत है।', 'auth.tagline': 'आपकी एलर्जी। आपकी अपनी जगह।',
   'auth.email': 'ईमेल पता', 'auth.password': 'पासवर्ड', 'auth.passwordNew': 'कम से कम 12 अक्षर', 'auth.passwordCurrent': 'आपका पासवर्ड',

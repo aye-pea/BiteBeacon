@@ -17,7 +17,7 @@ export const en = {
 
   'welcome.title': 'Know more.\nShop with\nyour allergies\nin mind.',
   'welcome.body': 'Scan a barcode. See how reported ingredients match your allergy profile. Keep the final check on the label.',
-  'welcome.pill1': '9 US major allergens', 'welcome.pill2': 'Private by design',
+  'welcome.pill1': '15 major allergens', 'welcome.pill2': 'Private by design',
   'welcome.graphicTitle': 'Your next shop, better informed.', 'welcome.graphicBody': 'Barcode first. Label always.',
   'auth.signupTitle': 'Make it personal.', 'auth.loginTitle': 'Welcome back.', 'auth.tagline': 'Your allergies. Your own space.',
   'auth.email': 'Email address', 'auth.password': 'Password', 'auth.passwordNew': 'At least 12 characters', 'auth.passwordCurrent': 'Your password',

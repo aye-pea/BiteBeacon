@@ -17,7 +17,7 @@ export const ht: Messages = {
 
   'welcome.title': 'Konnen plis.\nFè makèt\nak alèji ou\nnan tèt ou.',
   'welcome.body': 'Eskane yon kòd ba. Gade kijan engredyan yo bay yo konpare ak pwofil alèji ou. Dènye verifikasyon an toujou fèt sou etikèt la.',
-  'welcome.pill1': '9 gwo alèjèn Etazini yo', 'welcome.pill2': 'Prive depi nan konsepsyon',
+  'welcome.pill1': '15 gwo alèjèn', 'welcome.pill2': 'Prive depi nan konsepsyon',
   'welcome.graphicTitle': 'Pwochen makèt ou, ak plis enfòmasyon.', 'welcome.graphicBody': 'Kòd ba an premye. Etikèt la toujou.',
   'auth.signupTitle': 'Fè l pou ou.', 'auth.loginTitle': 'Bon retou.', 'auth.tagline': 'Alèji ou. Pwòp espas pa ou.',
   'auth.email': 'Adrès imèl', 'auth.password': 'Modpas', 'auth.passwordNew': 'Omwen 12 karaktè', 'auth.passwordCurrent': 'Modpas ou',

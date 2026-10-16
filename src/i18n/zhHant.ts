@@ -17,7 +17,7 @@ export const zhHant: Messages = {
 
   'welcome.title': '多了解一點。\n購物時\n把過敏\n放在心上。',
   'welcome.body': '掃描條碼，檢視已報告的配料與你的過敏檔案是否匹配。最終請以包裝標籤為準。',
-  'welcome.pill1': '美國 9 大主要過敏原', 'welcome.pill2': '隱私優先設計',
+  'welcome.pill1': '15 種主要過敏原', 'welcome.pill2': '隱私優先設計',
   'welcome.graphicTitle': '下次購物，心裡更有數。', 'welcome.graphicBody': '先掃條碼，始終看標籤。',
   'auth.signupTitle': '打造你的專屬檔案。', 'auth.loginTitle': '歡迎回來。', 'auth.tagline': '你的過敏資訊，你的專屬空間。',
   'auth.email': '電子郵件地址', 'auth.password': '密碼', 'auth.passwordNew': '至少 12 個字元', 'auth.passwordCurrent': '你的密碼',

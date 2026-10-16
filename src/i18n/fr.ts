@@ -17,7 +17,7 @@ export const fr: Messages = {
 
   'welcome.title': 'Soyez mieux informé.\nFaites vos courses\nen pensant\nà vos allergies.',
   'welcome.body': 'Scannez un code-barres. Voyez comment les ingrédients déclarés correspondent à votre profil d’allergies. La vérification finale se fait toujours sur l’étiquette.',
-  'welcome.pill1': 'Les 9 allergènes majeurs aux États-Unis', 'welcome.pill2': 'Confidentialité dès la conception',
+  'welcome.pill1': '15 allergènes majeurs', 'welcome.pill2': 'Confidentialité dès la conception',
   'welcome.graphicTitle': 'Vos prochaines courses, mieux informées.', 'welcome.graphicBody': 'D’abord le code-barres. Toujours l’étiquette.',
   'auth.signupTitle': 'Personnalisez-la.', 'auth.loginTitle': 'Bon retour parmi nous.', 'auth.tagline': 'Vos allergies. Votre espace à vous.',
   'auth.email': 'Adresse e-mail', 'auth.password': 'Mot de passe', 'auth.passwordNew': 'Au moins 12 caractères', 'auth.passwordCurrent': 'Votre mot de passe',

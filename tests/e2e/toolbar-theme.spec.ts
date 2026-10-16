@@ -1,34 +1,42 @@
 import { expect, test } from '@playwright/test';
 
-test('Settings can hide Home from the tab bar, and Scan becomes the first page', async ({ page }) => {
+test('phones start without Home in the tab bar, and Settings can turn it on', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Scan a Product', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/home-hidden-phone.png' });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const toggle = page.getByTestId('toolbar-settings').getByRole('switch', { name: 'Show Home in the toolbar' });
-  await expect(toggle).toBeChecked();
-  await toggle.click();
   await expect(toggle).not.toBeChecked();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
   await page.getByTestId('toolbar-settings').screenshot({ path: 'artifacts/toolbar-setting.png' });
-  await page.screenshot({ path: 'artifacts/home-hidden-phone.png' });
 
-  // Remembered on this device; the app now opens on Scan.
+  // The choice is remembered on this device.
   await page.reload();
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Check a barcode' }).or(page.getByTestId('page-scroll').getByRole('heading').first())).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByTestId('toolbar-settings').getByRole('switch', { name: 'Show Home in the toolbar' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test('desktop keeps Home in the sidebar by default', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
 });
 
 test('the Presentation theme uses the pitch deck colours and the footer shows version 1.01', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 1280, height: 900 });
+  await page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
@@ -46,17 +54,28 @@ test('the Presentation theme uses the pitch deck colours and the footer shows ve
   expect(errors).toEqual([]);
 });
 
-test('desktop sidebar rows light up under the mouse, and the account row has no subtitle', async ({ page }) => {
+test('the desktop sidebar is an icon rail that opens on hover, and rows light up under the mouse', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.mouse.move(900, 500);
+  const sidebar = page.getByTestId('sidebar');
+  const width = () => sidebar.evaluate(el => el.getBoundingClientRect().width);
+  await expect.poll(width).toBeLessThan(100);
+  await expect(sidebar.getByText('Pantry', { exact: true })).toHaveCount(0);
+  await page.waitForTimeout(4500); // let the demo toast fade
+  await page.screenshot({ path: 'artifacts/sidebar-collapsed.png' });
   const pantry = page.getByRole('button', { name: 'Pantry', exact: true });
   const shadow = () => pantry.evaluate(el => getComputedStyle(el).boxShadow);
   expect(await shadow()).not.toContain('inset');
   await pantry.hover();
+  await expect.poll(width).toBeGreaterThan(250);
+  await expect(sidebar.getByText('Pantry', { exact: true })).toBeVisible();
   await expect.poll(shadow).toContain('inset');
-  await page.screenshot({ path: 'artifacts/sidebar-hover.png', clip: { x: 0, y: 0, width: 260, height: 900 } });
+  await page.screenshot({ path: 'artifacts/sidebar-hover.png' });
+  // The page underneath keeps its place: the open sidebar floats over it.
   await page.mouse.move(900, 500);
+  await expect.poll(width).toBeLessThan(100);
   await expect.poll(shadow).not.toContain('inset');
   await expect(page.getByText('Private allergy profile')).toHaveCount(0);
 });
@@ -64,6 +83,7 @@ test('desktop sidebar rows light up under the mouse, and the account row has no 
 test('the account holder can save their own list with no allergies and still check for family', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Allergies', exact: true }).click();
