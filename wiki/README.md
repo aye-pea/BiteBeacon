@@ -264,5 +264,7 @@ Latest final results recorded after implementation below. See `tests/` for repea
 ## UPC-E barcodes — 2026-10-16
 - UPC-E (8-digit, zero-suppressed UPC-A on small packages) is expanded to its 12-digit UPC-A by `expandUpcE` in `src/domain/allergens.ts`, then looked up like any code. USDA and Open Food Facts index the UPC-A form.
 - Camera: when the scanner reports `upc_e`, only the UPC-E reading is used. Typed 8-digit codes: `barcodeCandidates` tries UPC-E first (number system 0/1, check digit valid on the expanded UPC-A), then EAN-8 if the code is also a valid EAN-8. First found wins.
+- The web camera decoder (barcode-detector/ZXing polyfill) reports UPC-E already expanded to 13 digits (`0027541000054` for `0 275415 4`), so a camera UPC-E read of 12/13 digits is looked up as it is.
+- UPC-E has weak misread protection (a tilted code once read as `0177544000053`), so the camera must read the same UPC-E twice in a row before looking it up.
 - The old "UPC-E needs expansion" message (`scan.upce`) is gone from all 11 languages.
-- Validation: unit tests for every expansion rule (last digit 0-2, 3, 4, 5-9, number system 1) and the UPC-E/EAN-8 fallback; tsc clean; 186 unit tests and all Playwright flows passed.
+- Validation: unit tests for every expansion rule (last digit 0-2, 3, 4, 5-9, number system 1) and the UPC-E/EAN-8 fallback; tsc clean; 186 unit tests and all 32 Playwright flows passed, including `web-camera-upce.spec.ts` (fake camera showing the water-bottle UPC-E; helpers in `tests/e2e/fake-camera.ts`).

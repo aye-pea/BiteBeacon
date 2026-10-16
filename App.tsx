@@ -175,6 +175,7 @@ function AppContent() {
   const [cameraAsking, setCameraAsking] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const scanLock = useRef(false);
+  const lastUpcE = useRef('');
   const generation = useRef(0);
   const scrollRef = useRef<ScrollView>(null);
   const pendingScroll = useRef(false);
@@ -444,6 +445,14 @@ function AppContent() {
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }
     finally { scanLock.current = false; setBusy(false); }
+  };
+  // UPC-E has no separate check against misreads (a tilted or partly hidden code can decode as a different valid one),
+  // so the camera must read the same UPC-E twice in a row before it is looked up.
+  const onCameraRead = (event: { type: string; data: string }) => {
+    if (event.type !== 'upc_e') { lastUpcE.current = ''; void scan(event.data, true); return; }
+    if (lastUpcE.current !== event.data) { lastUpcE.current = event.data; return; }
+    lastUpcE.current = '';
+    void scan(event.data, true, true);
   };
   const openCamera = async () => {
     setCameraAsking(true);
@@ -868,7 +877,7 @@ function AppContent() {
           <Text accessibilityRole="header" style={s.pageTitle}>{t('scan.title')}</Text><Text style={s.body}>{t('scan.body')}</Text>
           {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, wide && { flex: 1 }]}>
             <View style={s.inline}><View style={s.iconTile}><ScanBarcode size={19} color={C.green} /></View><Text style={s.cardTitle}>{t('scan.scanner')}</Text></View>
-            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => void scan(event.data, true, event.type === 'upc_e')} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
+            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={onCameraRead} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
               : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onPrimary} />}>{t('scan.openCamera')}</Button></View>}
             <Text style={s.label}>{t('scan.manual')}</Text>
             <TextInput accessibilityLabel={t('scan.barcodeLabel')} style={[s.input, barcodeFocused && s.inputFocused, hint.ok && { borderColor: C.green }]} value={barcode} onChangeText={value => { setBarcode(value); if (feedback) setFeedback(''); }} onFocus={() => setBarcodeFocused(true)} onBlur={() => setBarcodeFocused(false)} keyboardType="number-pad" maxLength={14} placeholder="e.g. 3017620422003" placeholderTextColor={C.faint} onSubmitEditing={() => void scan(barcode)} editable={!busy} />

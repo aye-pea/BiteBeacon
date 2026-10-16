@@ -179,5 +179,9 @@ describe('UPC-E', () => {
   it('trusts the camera when it reads UPC-E', () => {
     expect(barcodeCandidates('04252641', true)).toEqual(['042520000061']);
     expect(barcodeCandidates('96385074', true)).toEqual([]);
+    // The web camera decoder reports UPC-E already expanded (this is the 0 275415 4 water bottle).
+    expect(barcodeCandidates('0027541000054', true)).toEqual(['0027541000054']);
+    expect(barcodeCandidates('027541000054', true)).toEqual(['027541000054']);
+    expect(expandUpcE('02754154')).toBe('027541000054');
   });
 });

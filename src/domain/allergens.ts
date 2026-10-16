@@ -63,10 +63,11 @@ export function expandUpcE(value: string): string | null {
   const upcA = ns + body + check;
   return validBarcode(upcA) ? upcA : null;
 }
-/** Codes to look up for what was scanned or typed, in order. An 8-digit code can be UPC-E or EAN-8: UPC-E is tried first. */
+/** Codes to look up for what was scanned or typed, in order. An 8-digit code can be UPC-E or EAN-8: UPC-E is tried first.
+ * Some camera decoders (the web polyfill) report UPC-E already expanded to 12 or 13 digits; those are looked up as they are. */
 export function barcodeCandidates(value: string, upcE = false): string[] {
   const expanded = value.length === 8 ? expandUpcE(value) : null;
-  if (upcE) return expanded ? [expanded] : [];
+  if (upcE) return value.length === 8 ? (expanded ? [expanded] : []) : validBarcode(value) ? [value] : [];
   return [...(expanded ? [expanded] : []), ...(validBarcode(value) ? [value] : [])];
 }
 
