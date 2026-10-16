@@ -285,7 +285,7 @@ export const zh: Messages = {
   'settings.recoveryHelp': '可选。添加邮箱后可以重置忘记的密码，也可以用它登录。我们从不发送营销邮件。',
   'settings.recoveryNone': '尚未添加邮箱。如果忘记密码，此账户将无法找回。',
   'settings.recoveryCurrent': '找回邮箱：{email}',
-  'settings.recoveryPending': '正在更改为 {email}：请打开发送到该邮箱的确认链接以完成。在此之前，重置密码邮件仍发送到上面的地址。', 'settings.passwordTitle': '更改密码', 'settings.passwordCurrent': '当前密码', 'settings.passwordNew': '新密码', 'settings.passwordSave': '更改密码', 'settings.passwordWrong': '当前密码不正确。', 'settings.passwordShort': '新密码至少需要 12 个字符。', 'settings.passwordSame': '请选择与当前密码不同的新密码。', 'settings.passwordFailed': '无法更改密码，请重试。', 'settings.passwordDone': '密码已更改。',
+  'settings.recoveryPending': '正在更改为 {email}：请打开发送到该邮箱的确认链接以完成。在此之前，重置密码邮件仍发送到上面的地址。', 'settings.passwordTitle': '更改密码', 'settings.passwordHelp': '先输入当前密码，再输入至少 12 个字符的新密码。', 'settings.passwordCurrent': '当前密码', 'settings.passwordNew': '新密码', 'settings.passwordWrong': '当前密码不正确。', 'settings.passwordShort': '新密码至少需要 12 个字符。', 'settings.passwordSame': '请选择与当前密码不同的新密码。', 'settings.passwordFailed': '无法更改密码，请重试。', 'settings.passwordDone': '密码已更改。',
   'settings.emailConfirm': '再次输入邮箱',
   'settings.emailSave': '保存邮箱',
   'settings.emailMismatch': '两个邮箱地址不一致。',

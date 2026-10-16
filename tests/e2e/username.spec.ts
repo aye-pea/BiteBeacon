@@ -139,24 +139,24 @@ test('changes the password in Settings after checking the current one', async ({
   const card = page.getByTestId('password-settings');
   await card.getByLabel('Current password').fill('not-my-password');
   await card.getByLabel('New password').fill('a-brand-new-password');
-  await card.getByRole('button', { name: 'Change password' }).click();
+  await card.getByRole('button', { name: 'Save new password' }).click();
   await expect(page.getByText('Your current password is incorrect.')).toBeVisible();
   expect(seen.password).toBeUndefined();
 
   await card.getByLabel('Current password').fill('local-test-only-password');
   await card.getByLabel('New password').fill('short');
-  await card.getByRole('button', { name: 'Change password' }).click();
+  await card.getByRole('button', { name: 'Save new password' }).click();
   await expect(page.getByText('Use at least 12 characters for the new password.')).toBeVisible();
 
   await card.getByLabel('New password').fill('a-brand-new-password');
   await expect(card.getByLabel('New password')).toHaveAttribute('type', 'password');
   await card.getByTestId('toggle-new-password').click();
   await expect(card.getByLabel('New password')).not.toHaveAttribute('type', 'password');
-  await card.getByRole('button', { name: 'Change password' }).click();
+  await card.screenshot({ path: 'artifacts/change-password.png' });
+  await card.getByRole('button', { name: 'Save new password' }).click();
   await expect(page.getByText('Password changed.')).toBeVisible();
   expect(seen.signIn).toMatchObject({ email: 'sam_k@users.bitebeacon.org', password: 'local-test-only-password' });
   expect(seen.password).toMatchObject({ password: 'a-brand-new-password' });
   await expect(card.getByLabel('Current password')).toHaveValue('');
-  await card.screenshot({ path: 'artifacts/change-password.png' });
   expect(errors).toEqual([]);
 });
