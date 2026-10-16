@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Traditional Chinese (zh-TW). Converted from the Simplified file with Taiwan wording; needs native-speaker review before launch.
 export const zhHant: Messages = {
   'app.opening': '正在開啟 BiteBeacon…',
-  'nav.overview': '概覽', 'nav.overview.short': '首頁',
+  'nav.overview': '概覽', 'nav.overview.short': '首頁', 'nav.brandHome': 'BiteBeacon，前往首頁',
   'nav.scan': '掃描商品', 'nav.scan.short': '掃描',
   'nav.allergies': '過敏原', 'nav.allergies.short': '過敏原',
   'nav.history': '最近掃描', 'nav.history.short': '記錄',
@@ -297,5 +297,4 @@ export const zhHant: Messages = {
   'auth.emailOptionalHelp': '僅用於在你忘記密碼時重設密碼。之後可在「設定」中新增或變更。',
   'auth.emailNotSaved': '帳號已建立，但此電子郵件未能儲存。你可以在「設定」中新增。',
   'settings.appearance.presentation': '簡報', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
-  'settings.toolbar': '工具列', 'settings.toolbarHelp': '選擇標籤列和側邊欄中顯示的內容。儲存在此裝置上。', 'settings.showHome': '在工具列中顯示「首頁」',
 };

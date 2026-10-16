@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 
 // These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
-test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
 
 test('one scan shows a result for each household member', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await expect(page.getByTestId('toast')).toContainText('household of 8');
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('household-summary')).toContainText('4 of 8 people have an allergen signal');
@@ -51,6 +51,7 @@ test('settings add, edit and remove people and set who results show by default',
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByText('8 of 9 people')).toBeVisible();
@@ -123,6 +124,7 @@ test('the Allergies page switches between household members and saves each list'
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Allergies', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Allergies', exact: true })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Alex', exact: true })).toBeChecked();
@@ -152,6 +154,7 @@ test('phone home and scan cards fit their content', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   // Each card must be at least as tall as its last line of content (nothing clipped or spilling out).
   const fits = async (inner: string) => page.getByText(inner, { exact: false }).first().evaluate(el => {
     let card = el.parentElement!; while (card && getComputedStyle(card).borderTopLeftRadius !== '22px') card = card.parentElement!;

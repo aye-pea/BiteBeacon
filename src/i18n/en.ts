@@ -2,7 +2,7 @@
 // and the same {placeholders} (enforced by tests/i18n.test.ts). Keys ending _one/_other are plural forms.
 export const en = {
   'app.opening': 'Opening BiteBeacon…',
-  'nav.overview': 'Overview', 'nav.overview.short': 'Home',
+  'nav.overview': 'Overview', 'nav.overview.short': 'Home', 'nav.brandHome': 'BiteBeacon, go to Home',
   'nav.scan': 'Scan a Product', 'nav.scan.short': 'Scan',
   'nav.allergies': 'Allergies', 'nav.allergies.short': 'Allergies',
   'nav.history': 'Recent Scans', 'nav.history.short': 'History',
@@ -297,7 +297,6 @@ export const en = {
   'auth.emailOptionalHelp': 'Only used to reset your password if you forget it. You can add or change it later in Settings.',
   'auth.emailNotSaved': 'Account created, but that email couldn’t be saved. You can add it in Settings.',
   'settings.appearance.presentation': 'Presentation', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Show password', 'auth.hidePassword': 'Hide password',
-  'settings.toolbar': 'Toolbar', 'settings.toolbarHelp': 'Choose what appears in the tab bar and sidebar. Saved on this device.', 'settings.showHome': 'Show Home in the toolbar',
 } as const;
 
 export type MessageKey = keyof typeof en;

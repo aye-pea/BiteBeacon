@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Simplified Chinese (zh-CN). Machine-drafted; needs native-speaker review before launch.
 export const zh: Messages = {
   'app.opening': '正在打开 BiteBeacon…',
-  'nav.overview': '概览', 'nav.overview.short': '首页',
+  'nav.overview': '概览', 'nav.overview.short': '首页', 'nav.brandHome': 'BiteBeacon，前往首页',
   'nav.scan': '扫描商品', 'nav.scan.short': '扫描',
   'nav.allergies': '过敏原', 'nav.allergies.short': '过敏原',
   'nav.history': '最近扫描', 'nav.history.short': '记录',
@@ -297,5 +297,4 @@ export const zh: Messages = {
   'auth.emailOptionalHelp': '仅用于在你忘记密码时重置密码。之后可在“设置”中添加或更改。',
   'auth.emailNotSaved': '账户已创建，但该邮箱未能保存。你可以在“设置”中添加。',
   'settings.appearance.presentation': '演示文稿', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '显示密码', 'auth.hidePassword': '隐藏密码',
-  'settings.toolbar': '工具栏', 'settings.toolbarHelp': '选择标签栏和侧边栏中显示的内容。保存在此设备上。', 'settings.showHome': '在工具栏中显示“首页”',
 };

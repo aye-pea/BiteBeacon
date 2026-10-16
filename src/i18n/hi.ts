@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Hindi (hi-IN). Machine-drafted; needs native-speaker review before launch.
 export const hi: Messages = {
   'app.opening': 'BiteBeacon खुल रहा है…',
-  'nav.overview': 'सारांश', 'nav.overview.short': 'होम',
+  'nav.overview': 'सारांश', 'nav.overview.short': 'होम', 'nav.brandHome': 'BiteBeacon, होम पर जाएँ',
   'nav.scan': 'प्रोडक्ट स्कैन करें', 'nav.scan.short': 'स्कैन',
   'nav.allergies': 'एलर्जी', 'nav.allergies.short': 'एलर्जी',
   'nav.history': 'हाल के स्कैन', 'nav.history.short': 'इतिहास',
@@ -297,5 +297,4 @@ export const hi: Messages = {
   'auth.emailOptionalHelp': 'केवल पासवर्ड भूलने पर उसे रीसेट करने के लिए। आप इसे बाद में सेटिंग्स में जोड़ या बदल सकते हैं।',
   'auth.emailNotSaved': 'खाता बन गया, लेकिन यह ईमेल सहेजा नहीं जा सका। आप इसे सेटिंग्स में जोड़ सकते हैं।',
   'settings.appearance.presentation': 'प्रेज़ेंटेशन', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'पासवर्ड दिखाएं', 'auth.hidePassword': 'पासवर्ड छिपाएं',
-  'settings.toolbar': 'टूलबार', 'settings.toolbarHelp': 'चुनें कि टैब बार और साइडबार में क्या दिखे। इस डिवाइस पर सहेजा जाता है।', 'settings.showHome': 'टूलबार में होम दिखाएं',
 };

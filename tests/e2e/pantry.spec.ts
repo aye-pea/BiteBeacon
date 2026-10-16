@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 
 // These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
-test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
 
 test('add a scanned product to the pantry, see expiry alerts, mark items used or thrown out and put one back', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
 
   // Demo pantry is dated relative to today: one expired, one due tomorrow.
   const alert = page.getByTestId('pantry-alert');
@@ -66,6 +66,7 @@ test('evidence explains hidden allergen sources instead of repeating the allerge
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   // Narrow to Kha alone: untick Everyone (leaves Alex), tick Kha, untick Alex.
   await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();

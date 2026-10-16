@@ -3,7 +3,7 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Image, Platfor
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, Eye, EyeOff, House, PanelsTopLeft, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
@@ -20,7 +20,6 @@ import { APPEARANCES, bothSchemes, C, gradientFill, Palette, profileAvatarFill, 
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
 import { BrandLogo, CartLogo } from './src/ui/logo';
-import { setShowHome, useShowHome } from './src/ui/prefs';
 import { APP_VERSION } from './src/version';
 import { IS_BETA } from './src/lib/beta';
 
@@ -125,8 +124,8 @@ function AppContent() {
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const insets = useSafeAreaInsets();
-  const homeChoice = useShowHome(wide);
-  const showHome = wide || homeChoice; // the setting lives on phones only, so desktop always keeps Home
+  // Home has no tab: the BiteBeacon logo at the top opens it. Phones open on Scan, desktop on Home.
+  const landing: Page = wide ? 'overview' : 'scan';
   const [page, setPage] = useState<Page>('overview');
   const [showPassword, setShowPassword] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
@@ -247,7 +246,7 @@ function AppContent() {
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
       // Only a first visit (no profile saved yet) opens on Allergies; a list saved with nothing selected is a real choice.
-      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? 'overview' : 'allergies');
+      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? landing : 'allergies');
       toast(data ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
     });
   }, [session?.user.id]);
@@ -255,7 +254,7 @@ function AppContent() {
   const enterDemo = () => {
     ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
     resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
-    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage('overview');
+    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage(landing);
     haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => {
@@ -655,8 +654,6 @@ function AppContent() {
     return () => el.remove();
   }, [docScroll, C.bg, C.canvasImage]);
   useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
-  // With Home hidden from the toolbar, Scan is the first page instead.
-  useEffect(() => { if (!showHome && page === 'overview') setPage('scan'); }, [showHome, page]);
   // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
   const refreshStats = async () => {
     const current = generation.current;
@@ -728,7 +725,7 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = ([...(showHome ? ['overview'] as const : []), 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  const navItems: { page: Page; label: string; short: string }[] = (['scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
   // App details lives in Settings on every screen size.
@@ -781,7 +778,7 @@ function AppContent() {
     {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
     {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
       {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
-      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
+      <Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.98} onPress={() => navigate('overview')} style={[s.brand, s.brandTap]} hoverStyle={{ backgroundColor: C.pale }} pressedStyle={{ opacity: .7 }}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></Tap>
       <View style={{ height: 32 }} />
       {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
         <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.navActiveText, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
@@ -791,10 +788,11 @@ function AppContent() {
     </View></View>}
     <View style={[s.main, C.pastel && page === 'pantry' && alerts.expired > 0 && s.pantryCanvas]}>
       {wide && <View style={s.topbar}>
-        <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{navItems.find(n => n.page === page)?.label}</Text></Text></View>
+        <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{page === 'overview' ? t('nav.overview') : navItems.find(n => n.page === page)?.label}</Text></Text></View>
         <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : IS_BETA ? t('mode.beta') : t('mode.connected')}</Text></View>
       </View>}
       <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
+        {!wide && <View style={s.mobileBrandRow}><Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.96} onPress={() => navigate('overview')} style={[s.brand, s.mobileBrand]} pressedStyle={{ opacity: .6 }}><BrandLogo size={30} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={[s.brandText, { fontSize: 20 }]}>BiteBeacon</Text></Tap></View>}
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}
         {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
@@ -939,9 +937,6 @@ function AppContent() {
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
-          {/* The toolbar choice is for the phone tab bar; the desktop sidebar always has room for Home. */}
-          {!wide && <View testID="toolbar-settings" style={s.card}><View style={s.inline}><PanelsTopLeft size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.toolbar')}</Text></View><Text style={s.bodySmall}>{t('settings.toolbarHelp')}</Text>
-            <Tap accessibilityRole="switch" aria-checked={showHome} accessibilityState={{ checked: showHome }} accessibilityLabel={t('settings.showHome')} haptic="select" onPress={() => setShowHome(!showHome)} style={[s.radioRow, showHome && s.allergySelected]} pressedStyle={!showHome && { backgroundColor: C.pale }}><CheckMark checked={showHome} /><Text style={[s.navText, { flex: 1 }]}>{t('settings.showHome')}</Text></Tap></View>}
           <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
           {isAdmin && !wide && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
         {page === 'admin' && isAdmin && adminPage}
@@ -983,7 +978,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   progressTrack: { height: 4, borderRadius: 4, backgroundColor: C.pale, overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: C.green },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandTap: { alignSelf: 'flex-start', borderRadius: 14, marginLeft: -6, padding: 6, minHeight: 44 }, mobileBrandRow: { flexDirection: 'row' }, mobileBrand: { borderRadius: 12, paddingVertical: 4, paddingRight: 8, minHeight: 44, gap: 8 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
   // The rail keeps its narrow width in the layout; the panel inside grows over the page on hover, so nothing reflows.
   sidebarRail: { width: 88, zIndex: 10 },
   sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingHorizontal: 16, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },

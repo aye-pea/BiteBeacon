@@ -1,45 +1,33 @@
 import { expect, test } from '@playwright/test';
 
-test('phones start without Home in the tab bar, and Settings can turn it on', async ({ page }) => {
+test('Home has no tab: the BiteBeacon logo at the top opens it on phones and desktop', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  // Phones open on Scan, with no Home tab and no Toolbar setting.
   await expect(page.getByRole('button', { name: 'Scan a Product', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
-  await page.screenshot({ path: 'artifacts/home-hidden-phone.png' });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  const toggle = page.getByTestId('toolbar-settings').getByRole('switch', { name: 'Show Home in the toolbar' });
-  await expect(toggle).not.toBeChecked();
-  await toggle.click();
-  await expect(toggle).toBeChecked();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
-  await page.getByTestId('toolbar-settings').screenshot({ path: 'artifacts/toolbar-setting.png' });
+  await expect(page.getByText('Show Home in the toolbar')).toHaveCount(0);
+  await page.getByTestId('brand-home').click();
+  await expect(page.getByTestId('home-hero')).toBeVisible();
+  await page.waitForTimeout(4500); // let the demo toast fade
+  await page.screenshot({ path: 'artifacts/logo-home-phone.png' });
 
-  // The choice is remembered on this device.
-  await page.reload();
-  await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByTestId('toolbar-settings').getByRole('switch', { name: 'Show Home in the toolbar' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
-  expect(errors).toEqual([]);
-});
-
-test('desktop always keeps Home in the sidebar and has no Toolbar setting', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Explore employer demo' }).click();
-  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expect(page.getByTestId('appearance-settings')).toBeVisible();
-  await expect(page.getByTestId('toolbar-settings')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toHaveCount(0);
+  await page.getByTestId('brand-home').click();
+  await expect(page.getByTestId('home-hero')).toBeVisible();
+  await page.mouse.move(900, 500);
+  await page.screenshot({ path: 'artifacts/logo-home-desktop.png' });
+  expect(errors).toEqual([]);
 });
 
 test('the Presentation theme uses the pitch deck colours and the footer shows version 1.2', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
@@ -47,7 +35,7 @@ test('the Presentation theme uses the pitch deck colours and the footer shows ve
   await expect(page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' })).toBeChecked();
   await expect(page.getByText('BiteBeacon · Version 1.2')).toBeVisible();
   await page.screenshot({ path: 'artifacts/presentation-settings.png' });
-  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await page.getByTestId('brand-home').click();
   await page.screenshot({ path: 'artifacts/presentation-home.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
@@ -91,7 +79,6 @@ test('the desktop sidebar is an icon rail that opens on hover, and rows light up
 test('the account holder can save their own list with no allergies and still check for family', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true'));
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Allergies', exact: true }).click();
@@ -99,7 +86,7 @@ test('the account holder can save their own list with no allergies and still che
   await page.getByRole('checkbox', { name: 'Tree nuts', exact: true }).click();
   await page.getByRole('button', { name: /Save allergy profile/ }).click();
   await expect(page.getByTestId('toast')).toContainText('Allergy profile saved.');
-  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await page.getByTestId('brand-home').click();
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('product-result')).toBeVisible();
   // Alex is still listed under Everyone, honestly marked as having no allergies saved.
@@ -116,7 +103,7 @@ test('the Presentation theme shows the glass logo in the top-left corner; other 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' }).click();
   await expect(page.getByTestId('glass-logo')).toBeVisible();
-  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await page.getByTestId('brand-home').click();
   await expect.poll(() => page.getByTestId('glass-logo').locator('img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   await page.waitForTimeout(4500); // let the demo toast fade
   await page.screenshot({ path: 'artifacts/glass-logo-desktop.png' });

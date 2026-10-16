@@ -5,7 +5,6 @@ import { vi } from '../../src/i18n/vi';
 import { zhHant } from '../../src/i18n/zhHant';
 
 // These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
-test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
 
 test('choosing Español in Settings translates the app and results', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
@@ -26,7 +25,7 @@ test('choosing Español in Settings translates the app and results', async ({ pa
   await page.getByTestId('language-settings').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'artifacts/language-settings-es.png' });
 
-  await page.getByRole('button', { name: es['nav.overview'], exact: true }).click();
+  await page.getByRole('button', { name: es['nav.brandHome'], exact: true }).click();
   await page.getByRole('button', { name: es['samples.try'].replace('{name}', 'Peanut Crunch Granola') }).click();
   // Product names and ingredients stay as the source wrote them; everything around them is Spanish.
   await expect(page.getByTestId('household-summary')).toContainText(es['summary.contains_other'].replace('{c}', '4').replace('{n}', '8'));

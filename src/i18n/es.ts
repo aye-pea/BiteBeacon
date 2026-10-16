@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Spanish (es-US). Machine-drafted; needs native-speaker review before launch.
 export const es: Messages = {
   'app.opening': 'Abriendo BiteBeacon…',
-  'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio',
+  'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio', 'nav.brandHome': 'BiteBeacon, ir a Inicio',
   'nav.scan': 'Escanear un producto', 'nav.scan.short': 'Escanear',
   'nav.allergies': 'Alergias', 'nav.allergies.short': 'Alergias',
   'nav.history': 'Escaneos recientes', 'nav.history.short': 'Historial',
@@ -297,5 +297,4 @@ export const es: Messages = {
   'auth.emailOptionalHelp': 'Solo se usa para restablecer tu contraseña si la olvidas. Puedes añadirlo o cambiarlo después en Configuración.',
   'auth.emailNotSaved': 'Cuenta creada, pero no se pudo guardar ese correo. Puedes añadirlo en Configuración.',
   'settings.appearance.presentation': 'Presentación', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
-  'settings.toolbar': 'Barra de navegación', 'settings.toolbarHelp': 'Elige qué aparece en la barra de pestañas y la barra lateral. Se guarda en este dispositivo.', 'settings.showHome': 'Mostrar Inicio en la barra',
 };

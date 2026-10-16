@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Haitian Creole (ht-HT). Machine-drafted; needs native-speaker review before launch.
 export const ht: Messages = {
   'app.opening': 'N ap louvri BiteBeacon…',
-  'nav.overview': 'Apèsi', 'nav.overview.short': 'Akèy',
+  'nav.overview': 'Apèsi', 'nav.overview.short': 'Akèy', 'nav.brandHome': 'BiteBeacon, ale nan Akèy',
   'nav.scan': 'Eskane yon pwodui', 'nav.scan.short': 'Eskane',
   'nav.allergies': 'Alèji', 'nav.allergies.short': 'Alèji',
   'nav.history': 'Dènye eskanè yo', 'nav.history.short': 'Istorik',
@@ -297,5 +297,4 @@ export const ht: Messages = {
   'auth.emailOptionalHelp': 'Se sèlman pou reyinisyalize modpas ou si ou bliye l. Ou ka ajoute oswa chanje l pita nan Paramèt.',
   'auth.emailNotSaved': 'Kont lan kreye, men nou pa t ka anrejistre imèl sa a. Ou ka ajoute l nan Paramèt.',
   'settings.appearance.presentation': 'Prezantasyon', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
-  'settings.toolbar': 'Ba zouti', 'settings.toolbarHelp': 'Chwazi sa ki parèt nan ba onglè a ak ba bò a. Li sere sou aparèy sa a.', 'settings.showHome': 'Montre Akèy nan ba zouti a',
 };

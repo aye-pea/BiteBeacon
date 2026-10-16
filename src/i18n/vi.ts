@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Vietnamese (vi-VN). Machine-drafted; needs native-speaker review before launch.
 export const vi: Messages = {
   'app.opening': 'Đang mở BiteBeacon…',
-  'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ',
+  'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ', 'nav.brandHome': 'BiteBeacon, về Trang chủ',
   'nav.scan': 'Quét sản phẩm', 'nav.scan.short': 'Quét',
   'nav.allergies': 'Dị ứng', 'nav.allergies.short': 'Dị ứng',
   'nav.history': 'Lượt quét gần đây', 'nav.history.short': 'Lịch sử',
@@ -297,5 +297,4 @@ export const vi: Messages = {
   'auth.emailOptionalHelp': 'Chỉ dùng để đặt lại mật khẩu khi bạn quên. Bạn có thể thêm hoặc đổi sau trong Cài đặt.',
   'auth.emailNotSaved': 'Đã tạo tài khoản, nhưng không thể lưu email này. Bạn có thể thêm trong Cài đặt.',
   'settings.appearance.presentation': 'Bản trình bày', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
-  'settings.toolbar': 'Thanh công cụ', 'settings.toolbarHelp': 'Chọn những gì hiện trên thanh tab và thanh bên. Được lưu trên thiết bị này.', 'settings.showHome': 'Hiện Trang chủ trên thanh công cụ',
 };

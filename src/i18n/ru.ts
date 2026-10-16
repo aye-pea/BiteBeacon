@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Russian (ru-RU). Machine-drafted; needs native-speaker review before launch.
 export const ru: Messages = {
   'app.opening': 'Открываем BiteBeacon…',
-  'nav.overview': 'Обзор', 'nav.overview.short': 'Главная',
+  'nav.overview': 'Обзор', 'nav.overview.short': 'Главная', 'nav.brandHome': 'BiteBeacon, перейти на главную',
   'nav.scan': 'Сканировать продукт', 'nav.scan.short': 'Скан',
   'nav.allergies': 'Аллергии', 'nav.allergies.short': 'Аллергии',
   'nav.history': 'Недавние сканы', 'nav.history.short': 'История',
@@ -297,5 +297,4 @@ export const ru: Messages = {
   'auth.emailOptionalHelp': 'Нужен только для сброса забытого пароля. Его можно добавить или изменить позже в Настройках.',
   'auth.emailNotSaved': 'Аккаунт создан, но этот email сохранить не удалось. Его можно добавить в Настройках.',
   'settings.appearance.presentation': 'Презентация', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
-  'settings.toolbar': 'Панель навигации', 'settings.toolbarHelp': 'Выберите, что показывать на панели вкладок и в боковом меню. Сохраняется на этом устройстве.', 'settings.showHome': 'Показывать «Главную» на панели',
 };

@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Korean (ko-KR). Machine-drafted; needs native-speaker review before launch.
 export const ko: Messages = {
   'app.opening': 'BiteBeacon을 여는 중…',
-  'nav.overview': '개요', 'nav.overview.short': '홈',
+  'nav.overview': '개요', 'nav.overview.short': '홈', 'nav.brandHome': 'BiteBeacon, 홈으로 이동',
   'nav.scan': '제품 스캔', 'nav.scan.short': '스캔',
   'nav.allergies': '알레르기', 'nav.allergies.short': '알레르기',
   'nav.history': '최근 스캔', 'nav.history.short': '기록',
@@ -297,5 +297,4 @@ export const ko: Messages = {
   'auth.emailOptionalHelp': '비밀번호를 잊었을 때 재설정하는 데에만 사용됩니다. 나중에 설정에서 추가하거나 바꿀 수 있습니다.',
   'auth.emailNotSaved': '계정이 만들어졌지만 이메일을 저장하지 못했습니다. 설정에서 추가할 수 있습니다.',
   'settings.appearance.presentation': '프레젠테이션', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '비밀번호 표시', 'auth.hidePassword': '비밀번호 숨기기',
-  'settings.toolbar': '도구 막대', 'settings.toolbarHelp': '탭 막대와 사이드바에 표시할 항목을 선택하세요. 이 기기에 저장돼요.', 'settings.showHome': '도구 막대에 홈 표시',
 };

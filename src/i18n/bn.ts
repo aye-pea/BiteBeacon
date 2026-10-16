@@ -2,7 +2,7 @@ import { Messages } from './en';
 // Bengali (bn-BD). Machine-drafted; needs native-speaker review before launch.
 export const bn: Messages = {
   'app.opening': 'BiteBeacon খোলা হচ্ছে…',
-  'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম',
+  'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম', 'nav.brandHome': 'BiteBeacon, হোমে যান',
   'nav.scan': 'পণ্য স্ক্যান করুন', 'nav.scan.short': 'স্ক্যান',
   'nav.allergies': 'অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
   'nav.history': 'সাম্প্রতিক স্ক্যান', 'nav.history.short': 'ইতিহাস',
@@ -297,5 +297,4 @@ export const bn: Messages = {
   'auth.emailOptionalHelp': 'শুধু পাসওয়ার্ড ভুলে গেলে রিসেট করতে ব্যবহার হয়। পরে সেটিংসে যোগ বা পরিবর্তন করতে পারেন।',
   'auth.emailNotSaved': 'অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু ইমেলটি সংরক্ষণ করা যায়নি। সেটিংসে যোগ করতে পারেন।',
   'settings.appearance.presentation': 'উপস্থাপনা', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
-  'settings.toolbar': 'টুলবার', 'settings.toolbarHelp': 'ট্যাব বার ও সাইডবারে কী দেখাবে তা বেছে নিন। এই ডিভাইসে সংরক্ষিত হয়।', 'settings.showHome': 'টুলবারে হোম দেখান',
 };
