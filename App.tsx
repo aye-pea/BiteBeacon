@@ -19,7 +19,7 @@ import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
-import { CartLogo } from './src/ui/logo';
+import { BrandLogo, CartLogo } from './src/ui/logo';
 import { setShowHome, useShowHome } from './src/ui/prefs';
 import { APP_VERSION } from './src/version';
 import { IS_BETA } from './src/lib/beta';
@@ -641,7 +641,7 @@ function AppContent() {
   if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
-      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
       <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
       <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />)}
@@ -651,7 +651,7 @@ function AppContent() {
   </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
-      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
       <Text style={[s.welcomeTitle, { fontSize: wide ? 58 : 40, lineHeight: wide ? 64 : 46 }]}>{t('welcome.title')}</Text>
       <Text style={[s.body, { maxWidth: 430 }]}>{t('welcome.body')}</Text>
@@ -739,7 +739,7 @@ function AppContent() {
   </>;
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {wide && <View style={s.sidebar}>
-      <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
       {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
         <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}
