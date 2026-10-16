@@ -244,7 +244,7 @@ export const zhHant: Messages = {
   'admin.refresh': '重新整理',
   'admin.loadFailed': '無法載入數據。請稍後再試。',
   'admin.scans': '累計掃描次數',
-  'admin.scansNote': '任何人的每次條碼查詢都會計入，無論是否登入或在示範模式中。範例產品不計入。只儲存數字，從不儲存掃描了什麼或是誰掃描的。',
+  'admin.scansNote': '已登入帳戶的每次條碼查詢都會計入。示範模式中的查詢和範例產品不計入。只儲存數字，從不儲存掃描了什麼或由誰掃描。',
   'admin.accounts': '帳號',
   'admin.accountsSub': '最近 7 天新增 {n} 個 · 30 天內 {m} 個',
   'admin.active': '最近 7 天登入過',

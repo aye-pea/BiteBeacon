@@ -244,7 +244,7 @@ export const es: Messages = {
   'admin.refresh': 'Actualizar',
   'admin.loadFailed': 'No se pudieron cargar los números. Inténtalo de nuevo en un momento.',
   'admin.scans': 'Escaneos en total',
-  'admin.scansNote': 'Cada búsqueda de código de barras de cualquier persona, con sesión iniciada o en la demo. Los productos de muestra no cuentan. Solo se guarda el número, nunca qué se escaneó ni quién lo hizo.',
+  'admin.scansNote': 'Cada búsqueda de código de barras desde una cuenta con sesión iniciada. Las búsquedas en la demo y los productos de muestra no cuentan. Solo se guarda el número, nunca qué se escaneó ni quién lo hizo.',
   'admin.accounts': 'Cuentas',
   'admin.accountsSub': '{n} nuevas en los últimos 7 días · {m} en 30 días',
   'admin.active': 'Iniciaron sesión, últimos 7 días',

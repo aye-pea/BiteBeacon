@@ -244,7 +244,7 @@ export const vi: Messages = {
   'admin.refresh': 'Làm mới',
   'admin.loadFailed': 'Không tải được số liệu. Hãy thử lại sau giây lát.',
   'admin.scans': 'Tổng lượt quét',
-  'admin.scansNote': 'Mọi lượt tra mã vạch của bất kỳ ai, dù đã đăng nhập hay đang dùng bản demo. Sản phẩm mẫu không được tính. Chỉ lưu con số, không bao giờ lưu đã quét gì hay ai quét.',
+  'admin.scansNote': 'Mọi lượt tra mã vạch từ tài khoản đã đăng nhập. Lượt tra trong bản demo và sản phẩm mẫu không được tính. Chỉ lưu con số, không bao giờ lưu đã quét gì hay ai quét.',
   'admin.accounts': 'Tài khoản',
   'admin.accountsSub': '{n} mới trong 7 ngày qua · {m} trong 30 ngày',
   'admin.active': 'Đã đăng nhập, 7 ngày qua',

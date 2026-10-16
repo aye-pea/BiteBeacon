@@ -244,7 +244,7 @@ export const ht: Messages = {
   'admin.refresh': 'Rafrechi',
   'admin.loadFailed': 'Nou pa t ka chaje chif yo. Eseye ankò nan yon ti moman.',
   'admin.scans': 'Total eskanè',
-  'admin.scansNote': 'Chak fwa yon moun chèche yon kòd ba, kit li konekte kit li nan demo a. Pwodwi egzanp yo pa konte. Se sèlman chif la nou kenbe, janm sa yo te eskane oswa kiyès ki te fè l.',
+  'admin.scansNote': 'Chak fwa yon kont ki konekte chèche yon kòd ba. Rechèch nan demo a ak pwodwi egzanp yo pa konte. Se sèlman chif la nou kenbe, janm sa yo te eskane oswa kiyès ki te fè l.',
   'admin.accounts': 'Kont',
   'admin.accountsSub': '{n} nouvo nan 7 dènye jou yo · {m} nan 30 jou',
   'admin.active': 'Te konekte, 7 dènye jou yo',

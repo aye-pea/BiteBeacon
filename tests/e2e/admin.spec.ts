@@ -80,7 +80,7 @@ test('limited admins see scans, accounts, activity and sign-ins, without pantry,
   await page.screenshot({ path: 'artifacts/admin-dashboard-limited.png', fullPage: true });
 });
 
-test('the dashboard is hidden from other accounts and from the demo; sample taps are not counted', async ({ page }) => {
+test('the dashboard is hidden from other accounts and from the demo; demo lookups and sample taps are not counted', async ({ page }) => {
   const calls = await fakeSupabase(page, false);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -96,9 +96,10 @@ test('the dashboard is hidden from other accounts and from the demo; sample taps
   await page.getByRole('button', { name: 'Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('product-result')).toBeVisible();
   expect(calls.scans).toBe(0);
-  // Demo lookups count too, signed out.
+  // Demo lookups don't count either; only signed-in accounts add to the total.
   await lookUp(page);
-  await expect.poll(() => calls.scans).toBe(1);
+  await page.waitForTimeout(500);
+  expect(calls.scans).toBe(0);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByTestId('open-admin')).toHaveCount(0);
   expect(calls.stats).toBe(0);

@@ -244,7 +244,7 @@ export const en = {
   'admin.refresh': 'Refresh',
   'admin.loadFailed': 'Couldn’t load the numbers. Try again in a moment.',
   'admin.scans': 'Scans, all time',
-  'admin.scansNote': 'Every barcode lookup by anyone, signed in or in the demo. Sample products don’t count. Only the number is stored, never what was scanned or by whom.',
+  'admin.scansNote': 'Every barcode lookup by a signed-in account. Lookups in the demo and sample products don’t count. Only the number is stored, never what was scanned or by whom.',
   'admin.accounts': 'Accounts',
   'admin.accountsSub': '{n} new in the last 7 days · {m} in 30 days',
   'admin.active': 'Signed in, last 7 days',

@@ -244,7 +244,7 @@ export const fr: Messages = {
   'admin.refresh': 'Actualiser',
   'admin.loadFailed': 'Impossible de charger les chiffres. Réessayez dans un instant.',
   'admin.scans': 'Scans au total',
-  'admin.scansNote': 'Chaque recherche de code-barres, par n’importe qui, connecté ou en démo. Les produits d’exemple ne comptent pas. Seul le nombre est enregistré, jamais ce qui a été scanné ni par qui.',
+  'admin.scansNote': 'Chaque recherche de code-barres depuis un compte connecté. Les recherches en démo et les produits d’exemple ne comptent pas. Seul le nombre est enregistré, jamais ce qui a été scanné ni par qui.',
   'admin.accounts': 'Comptes',
   'admin.accountsSub': '{n} nouveaux ces 7 derniers jours · {m} sur 30 jours',
   'admin.active': 'Connectés ces 7 derniers jours',

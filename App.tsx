@@ -378,8 +378,9 @@ function AppContent() {
     const current = generation.current;
     try {
       const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
-      // One more for the app-wide total: only the count goes up, nothing about the barcode or person.
-      recordScan();
+      // One more for the app-wide total, for signed-in accounts only (demo lookups don't count).
+      // Only the count goes up, nothing about the barcode or person.
+      if (!demo) recordScan();
       if (generation.current !== current) return;
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }

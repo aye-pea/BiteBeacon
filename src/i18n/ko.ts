@@ -244,7 +244,7 @@ export const ko: Messages = {
   'admin.refresh': '새로고침',
   'admin.loadFailed': '숫자를 불러오지 못했습니다. 잠시 후 다시 시도하세요.',
   'admin.scans': '전체 스캔 수',
-  'admin.scansNote': '로그인 여부나 데모와 관계없이 누구든 바코드를 조회할 때마다 집계됩니다. 샘플 제품은 집계하지 않습니다. 숫자만 저장하며 무엇을 누가 스캔했는지는 저장하지 않습니다.',
+  'admin.scansNote': '로그인한 계정의 바코드 조회마다 집계됩니다. 데모에서의 조회와 샘플 제품은 집계하지 않습니다. 숫자만 저장하며, 무엇을 누가 스캔했는지는 저장하지 않습니다.',
   'admin.accounts': '계정',
   'admin.accountsSub': '최근 7일 신규 {n}개 · 30일 {m}개',
   'admin.active': '최근 7일 로그인',

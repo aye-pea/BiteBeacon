@@ -244,7 +244,7 @@ export const zh: Messages = {
   'admin.refresh': '刷新',
   'admin.loadFailed': '无法加载数据。请稍后再试。',
   'admin.scans': '累计扫描次数',
-  'admin.scansNote': '任何人的每次条形码查询都会计入，无论是否登录或在演示模式中。示例产品不计入。只保存数字，从不保存扫描了什么或是谁扫描的。',
+  'admin.scansNote': '已登录账户的每次条形码查询都会计入。演示模式中的查询和示例产品不计入。只保存数字，从不保存扫描了什么或由谁扫描。',
   'admin.accounts': '账户',
   'admin.accountsSub': '最近 7 天新增 {n} 个 · 30 天内 {m} 个',
   'admin.active': '最近 7 天登录过',
