@@ -115,7 +115,8 @@ test('someone with no allergies saved can scan and gets a normal result with not
   await page.route('**/fdc/v1/**', route => route.fulfill({ json: { foods: [{ gtinUpc: '3017620422003', description: 'HAZELNUT SPREAD', brandOwner: 'Test', ingredients: 'SUGAR, PALM OIL, HAZELNUTS, MILK', dataType: 'Branded' }] } }));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
-  await signIn(page, 'choose your allergies');
+  // A saved list with nothing selected is a real choice, so the app opens normally instead of on Allergies.
+  await signIn(page, 'profile loaded');
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Choose your allergies' })).toHaveCount(0);
   await page.getByLabel('Barcode number').fill('3017620422003');

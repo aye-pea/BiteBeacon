@@ -4,7 +4,7 @@ import { expect, Page, test } from '@playwright/test';
 const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
 const USER = { id: '0b0b0b0b-0000-4000-8000-000000000004', aud: 'authenticated', role: 'authenticated', email: 'pat@users.bitebeacon.org', app_metadata: {}, user_metadata: {}, created_at: '2026-10-15T00:00:00Z' };
 // An account that never saved its own allergies: no profiles row and nobody in the household yet.
-async function fakeSupabase(page: Page) {
+async function fakeSupabase(page: Page, profile?: Record<string, unknown>) {
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: USER.id, role: 'authenticated', aud: 'authenticated', exp })}.test`;
   const seen: { profileInserts: Record<string, unknown>[]; memberInserts: Record<string, unknown>[] } = { profileInserts: [], memberInserts: [] };
@@ -16,7 +16,7 @@ async function fakeSupabase(page: Page) {
   await page.route('**/rest/v1/profiles**', route => {
     const method = route.request().method();
     if (method === 'POST') { seen.profileInserts.push(route.request().postDataJSON()); return route.fulfill({ status: 201, body: '' }); }
-    if (method === 'GET') return route.fulfill({ json: [] });
+    if (method === 'GET') return route.fulfill({ json: profile ? [profile] : [] });
     return route.fulfill({ status: 204, body: '' });
   });
   await page.route('**/rest/v1/household_members**', route => {
@@ -59,6 +59,7 @@ test('someone with no allergies of their own can add family and check food for t
   await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByTestId('toast')).toContainText('choose your allergies');
+  await expect(page.getByTestId('page-scroll').getByRole('heading').first()).toHaveText('Allergies');
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByText('Save your own allergy profile first')).toHaveCount(0);
@@ -80,5 +81,19 @@ test('someone with no allergies of their own can add family and check food for t
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Choose allergies' })).toHaveCount(0);
   await page.screenshot({ path: 'artifacts/family-without-own-allergies-scan.png' });
+  expect(errors).toEqual([]);
+});
+
+test('a first visit opens on Allergies, but a list saved with nothing selected opens the app as usual', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await fakeSupabase(page, { id: USER.id, allergies: [], consent_version: '2026-09-30', display_name: 'pat' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
+  await page.getByLabel('Username or email').fill('pat');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByTestId('toast')).toContainText('profile loaded');
+  await expect(page.getByTestId('page-scroll').getByRole('heading').first()).toHaveText('Good food starts with a check.');
   expect(errors).toEqual([]);
 });

@@ -238,8 +238,9 @@ function AppContent() {
       hasProfile.current = !!data;
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
-      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(selected.length || loaded.length ? 'overview' : 'allergies');
-      toast(selected.length || loaded.length ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
+      // Only a first visit (no profile saved yet) opens on Allergies; a list saved with nothing selected is a real choice.
+      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? 'overview' : 'allergies');
+      toast(data ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
     });
   }, [session?.user.id]);
 
