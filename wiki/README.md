@@ -242,3 +242,11 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - App details no longer has the "Next chapter: label recognition" card (strings removed from all dictionaries).
 - `canScan` is just `profileReady`: an account with no allergies saved can scan; results are a normal `no-match` ("No selected allergens found") with reason `no-allergies` and its own detail text ("No allergies are saved for this person, so nothing was flagged… not a safe-to-eat guarantee"). Alex asked for this for parents without allergies whose children have them.
 - **Change password** (own Settings card under Sign-in & recovery, signed-in only, 2026-10-16): current + new password (12+ chars; one shared eye state, either button shows or hides both). `changePassword` re-checks the current password with `signInWithPassword` (same user, so no profile reload) before `updateUser({ password })`. Strings `settings.password*` in all 11 languages. Add-person name placeholder is "e.g. Banjo" (languages that used Kha).
+
+## Version 1.2: Apple and Partiful appearances — 2026-10-16
+
+- Jonathan Tran's pastel liquid-glass look (his fork `dnvjsdfj/BiteBeacon`, branch `ui-blue-gradient-refresh`, built on 1.0) is rebuilt on 1.1 as two new appearance choices: **Apple** (light) and **Partiful** (dark). Settings order: Auto, Apple, Partiful, Light, Dark, Presentation.
+- Auto follows the device: Apple/Partiful on beta builds (`EXPO_PUBLIC_BETA`), Light/Dark on bitebeacon.org. A choice made in Settings always wins.
+- `src/ui/theme.ts` adds the `apple` and `partiful` palettes, `gradientFill` and `profileAvatarFill`. Every palette carries the pastel tokens so types line up; `pastel: true` switches on the overrides in `pastelStyles` (App.tsx) and `withPastel` (controls.tsx). Light, Dark and Presentation are unchanged.
+- Apple/Partiful: icy-blue gradient buttons and selected chips, lavender secondary controls, rose allergy chips, translucent cards, pastel initials, a multicolour Home banner with the glass cart image (`assets/bitebeacon-original.png`). Red and amber warnings and all allergen logic are unchanged.
+- Tests: `tests/e2e/apple-partiful.spec.ts` checks the order, both canvases, gradient avatars and that the choice is remembered.

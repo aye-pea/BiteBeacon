@@ -296,7 +296,7 @@ export const en = {
   'auth.emailOptional': 'Email (optional)',
   'auth.emailOptionalHelp': 'Only used to reset your password if you forget it. You can add or change it later in Settings.',
   'auth.emailNotSaved': 'Account created, but that email couldn’t be saved. You can add it in Settings.',
-  'settings.appearance.presentation': 'Presentation', 'auth.showPassword': 'Show password', 'auth.hidePassword': 'Hide password',
+  'settings.appearance.presentation': 'Presentation', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Show password', 'auth.hidePassword': 'Hide password',
   'settings.toolbar': 'Toolbar', 'settings.toolbarHelp': 'Choose what appears in the tab bar and sidebar. Saved on this device.', 'settings.showHome': 'Show Home in the toolbar',
 } as const;
 

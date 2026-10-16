@@ -296,6 +296,6 @@ export const es: Messages = {
   'auth.emailOptional': 'Correo (opcional)',
   'auth.emailOptionalHelp': 'Solo se usa para restablecer tu contraseña si la olvidas. Puedes añadirlo o cambiarlo después en Configuración.',
   'auth.emailNotSaved': 'Cuenta creada, pero no se pudo guardar ese correo. Puedes añadirlo en Configuración.',
-  'settings.appearance.presentation': 'Presentación', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
+  'settings.appearance.presentation': 'Presentación', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
   'settings.toolbar': 'Barra de navegación', 'settings.toolbarHelp': 'Elige qué aparece en la barra de pestañas y la barra lateral. Se guarda en este dispositivo.', 'settings.showHome': 'Mostrar Inicio en la barra',
 };

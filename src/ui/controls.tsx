@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, PanResponder, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Check, CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
-import { bothSchemes, nativeDriver, Palette, themes, Tone, type, useScheme } from './theme';
+import { bothSchemes, gradientFill, nativeDriver, Palette, themes, Tone, type, useScheme } from './theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { haptic, HapticKind } from './haptics';
 
@@ -33,7 +33,7 @@ export function Button({ children, onPress, variant = 'primary', secondary = fal
   { children: string; onPress: () => void; variant?: Variant; secondary?: boolean; disabled?: boolean; loading?: boolean; icon?: React.ReactNode; testID?: string; hapticKind?: HapticKind }) {
   const scheme = useScheme(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
   const v: Variant = secondary ? 'secondary' : variant;
-  const fg = v === 'secondary' ? C.green : C.onAccent;
+  const fg = !C.pastel ? (v === 'secondary' ? C.green : C.onAccent) : v === 'secondary' ? C.secondaryInk : v === 'danger' ? C.red : C.primaryInk;
   const off = disabled || loading;
   return <Tap testID={testID} accessibilityRole="button" accessibilityState={{ disabled: off, busy: loading }} aria-busy={loading} onPress={onPress} disabled={off} haptic={hapticKind}
     style={[s.button, s[v], off && s.buttonOff]} pressedStyle={s[`${v}Pressed`]}>
@@ -44,7 +44,7 @@ export function Button({ children, onPress, variant = 'primary', secondary = fal
 
 export function Notice({ children, kind = 'warning' }: { children: React.ReactNode; kind?: Tone }) {
   const scheme = useScheme(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
-  return <View style={[s.notice, { backgroundColor: tone[kind].bg }]}><ToneIcon kind={kind} size={18} /><Text style={[s.noticeText, { color: tone[kind].fg }]}>{children}</Text></View>;
+  return <View style={[s.notice, { backgroundColor: tone[kind].bg }, C.pastel && (kind === 'danger' ? gradientFill(C.dangerFrom, C.dangerTo) : kind === 'warning' ? gradientFill(C.warmFrom, C.warmTo) : gradientFill(C.panelFrom, C.blueSoft))]}><ToneIcon kind={kind} size={18} /><Text style={[s.noticeText, { color: tone[kind].fg }]}>{children}</Text></View>;
 }
 
 /** Fades and lifts children in when mounted, or whenever `trigger` changes. */
@@ -76,7 +76,7 @@ export function CheckMark({ checked, round = false }: { checked: boolean; round?
   const t = useRef(new Animated.Value(checked ? 1 : 0)).current;
   useEffect(() => { Animated.spring(t, { toValue: checked ? 1 : 0, useNativeDriver: nativeDriver, speed: 28, bounciness: 12 }).start(); }, [checked]);
   return <View accessible={false} style={[s.checkbox, round && { borderRadius: 20 }, checked && s.checked]}>
-    <Animated.View style={{ opacity: t, transform: [{ scale: t }] }}><Check size={15} color={C.onAccent} strokeWidth={3} /></Animated.View>
+    <Animated.View style={{ opacity: t, transform: [{ scale: t }] }}><Check size={15} color={C.onPrimary} strokeWidth={3} /></Animated.View>
   </View>;
 }
 
@@ -119,7 +119,7 @@ export function SwipeRow({ children, onRight, onLeft, rightLabel, leftLabel, rig
     accessibilityActions={[{ name: 'right', label: rightLabel }, { name: 'left', label: leftLabel }]}
     onAccessibilityAction={e => e.nativeEvent.actionName === 'right' ? onRight() : onLeft()}>
     <Animated.View accessible={false} style={[s.swipeUnder, s.swipeRight, { opacity: rightOpacity }]}>{rightIcon}<Text style={s.swipeText}>{rightLabel}</Text></Animated.View>
-    <Animated.View accessible={false} style={[s.swipeUnder, s.swipeLeft, { opacity: leftOpacity }]}><Text style={s.swipeText}>{leftLabel}</Text>{leftIcon}</Animated.View>
+    <Animated.View accessible={false} style={[s.swipeUnder, s.swipeLeft, { opacity: leftOpacity }]}><Text style={[s.swipeText, s.swipeDestructiveText]}>{leftLabel}</Text>{leftIcon}</Animated.View>
     <Animated.View {...pan.panHandlers} style={{ transform: [{ translateX: x }] }}>{children(guard)}</Animated.View>
   </View>;
 }
@@ -162,7 +162,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   </ToastContext.Provider>;
 }
 
-const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
+const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(C, {
+  swipeDestructiveText: {},
   // Capsule buttons, filled for the primary action and tinted for the rest (buttons.md › Style: style, not size, marks the preferred choice).
   button: { minHeight: 50, paddingVertical: 13, paddingHorizontal: 22, borderRadius: 999, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   primary: { backgroundColor: C.green }, primaryPressed: { backgroundColor: C.greenDeep },
@@ -179,4 +180,16 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   swipeText: { color: C.onAccent, ...type.headline },
   toastIcon: { padding: 6, borderRadius: 20 }, toastText: { flexShrink: 1, color: C.toastText, ...type.subhead, fontWeight: '600' },
   toastTitle: { color: C.toastText, ...type.headline }, toastBody: { color: C.toastText, ...type.subhead, opacity: .85 },
-}));
+})));
+
+// Apple and Partiful: translucent capsule gradients keep primary, secondary and destructive actions distinct.
+function withPastel<T extends object>(C: Palette, base: T): T {
+  return C.pastel ? { ...base, ...{
+    primary: { ...gradientFill(C.primaryFrom, C.primaryTo), boxShadow: `inset 0px 1px 0px ${C.glassRim}, 0px 4px 12px ${C.shadow}` }, primaryPressed: { ...gradientFill(C.primaryTo, C.primaryFrom) },
+    secondary: { ...gradientFill(C.lilacFrom, C.lilacTo), boxShadow: `inset 0px 1px 0px ${C.glassHighlight}` }, secondaryPressed: { ...gradientFill(C.lilacTo, C.lilacFrom) },
+    danger: { ...gradientFill(C.dangerFrom, C.dangerTo) }, dangerPressed: { ...gradientFill(C.dangerTo, C.dangerFrom) },
+    checked: { ...gradientFill(C.primaryFrom, C.primaryTo), borderColor: C.green },
+    swipeRight: { justifyContent: 'flex-start', ...gradientFill(C.primaryFrom, C.primaryTo) }, swipeLeft: { justifyContent: 'flex-end', ...gradientFill(C.dangerFrom, C.dangerTo) },
+    swipeText: { color: C.primaryInk, ...type.headline }, swipeDestructiveText: { color: C.red },
+  } } : base;
+}

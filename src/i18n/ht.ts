@@ -296,6 +296,6 @@ export const ht: Messages = {
   'auth.emailOptional': 'Imèl (opsyonèl)',
   'auth.emailOptionalHelp': 'Se sèlman pou reyinisyalize modpas ou si ou bliye l. Ou ka ajoute oswa chanje l pita nan Paramèt.',
   'auth.emailNotSaved': 'Kont lan kreye, men nou pa t ka anrejistre imèl sa a. Ou ka ajoute l nan Paramèt.',
-  'settings.appearance.presentation': 'Prezantasyon', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
+  'settings.appearance.presentation': 'Prezantasyon', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
   'settings.toolbar': 'Ba zouti', 'settings.toolbarHelp': 'Chwazi sa ki parèt nan ba onglè a ak ba bò a. Li sere sou aparèy sa a.', 'settings.showHome': 'Montre Akèy nan ba zouti a',
 };

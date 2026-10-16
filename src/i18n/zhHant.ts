@@ -296,6 +296,6 @@ export const zhHant: Messages = {
   'auth.emailOptional': '電子郵件（選填）',
   'auth.emailOptionalHelp': '僅用於在你忘記密碼時重設密碼。之後可在「設定」中新增或變更。',
   'auth.emailNotSaved': '帳號已建立，但此電子郵件未能儲存。你可以在「設定」中新增。',
-  'settings.appearance.presentation': '簡報', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
+  'settings.appearance.presentation': '簡報', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
   'settings.toolbar': '工具列', 'settings.toolbarHelp': '選擇標籤列和側邊欄中顯示的內容。儲存在此裝置上。', 'settings.showHome': '在工具列中顯示「首頁」',
 };

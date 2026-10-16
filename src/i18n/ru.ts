@@ -296,6 +296,6 @@ export const ru: Messages = {
   'auth.emailOptional': 'Email (необязательно)',
   'auth.emailOptionalHelp': 'Нужен только для сброса забытого пароля. Его можно добавить или изменить позже в Настройках.',
   'auth.emailNotSaved': 'Аккаунт создан, но этот email сохранить не удалось. Его можно добавить в Настройках.',
-  'settings.appearance.presentation': 'Презентация', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
+  'settings.appearance.presentation': 'Презентация', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
   'settings.toolbar': 'Панель навигации', 'settings.toolbarHelp': 'Выберите, что показывать на панели вкладок и в боковом меню. Сохраняется на этом устройстве.', 'settings.showHome': 'Показывать «Главную» на панели',
 };

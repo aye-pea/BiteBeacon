@@ -296,6 +296,6 @@ export const bn: Messages = {
   'auth.emailOptional': 'ইমেল (ঐচ্ছিক)',
   'auth.emailOptionalHelp': 'শুধু পাসওয়ার্ড ভুলে গেলে রিসেট করতে ব্যবহার হয়। পরে সেটিংসে যোগ বা পরিবর্তন করতে পারেন।',
   'auth.emailNotSaved': 'অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু ইমেলটি সংরক্ষণ করা যায়নি। সেটিংসে যোগ করতে পারেন।',
-  'settings.appearance.presentation': 'উপস্থাপনা', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
+  'settings.appearance.presentation': 'উপস্থাপনা', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
   'settings.toolbar': 'টুলবার', 'settings.toolbarHelp': 'ট্যাব বার ও সাইডবারে কী দেখাবে তা বেছে নিন। এই ডিভাইসে সংরক্ষিত হয়।', 'settings.showHome': 'টুলবারে হোম দেখান',
 };

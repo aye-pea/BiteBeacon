@@ -296,6 +296,6 @@ export const vi: Messages = {
   'auth.emailOptional': 'Email (không bắt buộc)',
   'auth.emailOptionalHelp': 'Chỉ dùng để đặt lại mật khẩu khi bạn quên. Bạn có thể thêm hoặc đổi sau trong Cài đặt.',
   'auth.emailNotSaved': 'Đã tạo tài khoản, nhưng không thể lưu email này. Bạn có thể thêm trong Cài đặt.',
-  'settings.appearance.presentation': 'Bản trình bày', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
+  'settings.appearance.presentation': 'Bản trình bày', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
   'settings.toolbar': 'Thanh công cụ', 'settings.toolbarHelp': 'Chọn những gì hiện trên thanh tab và thanh bên. Được lưu trên thiết bị này.', 'settings.showHome': 'Hiện Trang chủ trên thanh công cụ',
 };
