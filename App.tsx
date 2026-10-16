@@ -752,13 +752,13 @@ function AppContent() {
     {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
     {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
       {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
-      <View style={s.brand}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} />{railOpen && <Text numberOfLines={1} style={s.brandText}>BiteBeacon</Text>}</View>
+      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
       {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
-        <Icon name={item.page} color={active ? C.green : C.muted} />{railOpen ? <><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</> : item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
+        <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
       </Tap>; })}
       <View style={{ flex: 1 }} />
-      <Tap accessibilityRole="button" accessibilityLabel={demo ? t('account.demo') : t('account.yours')} disabled={busy || saving} onPress={leave} style={s.account} hoverStyle={s.accountHover} pressedStyle={{ opacity: .7 }}><View style={s.avatar}><UserRound size={19} color={C.green} /></View>{railOpen && <><View style={{ flex: 1 }}><Text numberOfLines={1} style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text>{demo && <Text style={s.footnote}>{t('account.demoSub')}</Text>}</View><LogOut size={18} color={C.muted} /></>}</Tap>
+      <Tap accessibilityRole="button" accessibilityLabel={demo ? t('account.demo') : t('account.yours')} disabled={busy || saving} onPress={leave} style={s.account} hoverStyle={s.accountHover} pressedStyle={{ opacity: .7 }}><View style={[s.avatar, { flexShrink: 0 }]}><UserRound size={19} color={C.green} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={1} style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text>{demo && <Text numberOfLines={1} style={s.footnote}>{t('account.demoSub')}</Text>}</View><LogOut size={18} color={C.muted} /></View></Tap>
     </View></View>}
     <View style={s.main}>
       {wide && <View style={s.topbar}>
@@ -950,6 +950,9 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sidebarRail: { width: 88, zIndex: 10 },
   sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingHorizontal: 16, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
   sidebarClosed: { width: 88 }, sidebarOpen: { width: 264, boxShadow: shadow.raised },
+  // Labels stay in the layout either way and only fade, so rows keep their height and the icons never move.
+  railLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, overflow: 'hidden' },
+  railFade: Platform.OS === 'web' ? { transitionProperty: 'opacity', transitionDuration: '150ms' } as object : {}, railHidden: { opacity: 0 },
   railBadge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 8, backgroundColor: C.red },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
   navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft },

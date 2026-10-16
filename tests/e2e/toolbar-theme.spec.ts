@@ -62,15 +62,20 @@ test('the desktop sidebar is an icon rail that opens on hover, and rows light up
   const sidebar = page.getByTestId('sidebar');
   const width = () => sidebar.evaluate(el => el.getBoundingClientRect().width);
   await expect.poll(width).toBeLessThan(100);
-  await expect(sidebar.getByText('Pantry', { exact: true })).toHaveCount(0);
+  const label = () => sidebar.getByText('Pantry', { exact: true }).evaluate(el => getComputedStyle(el.parentElement!).opacity);
+  await expect.poll(label).toBe('0');
   await page.waitForTimeout(4500); // let the demo toast fade
   await page.screenshot({ path: 'artifacts/sidebar-collapsed.png' });
   const pantry = page.getByRole('button', { name: 'Pantry', exact: true });
   const shadow = () => pantry.evaluate(el => getComputedStyle(el).boxShadow);
+  // Icons must sit in exactly the same place closed and open (the last svg is the faded-out Log Out arrow, which rides at the row's end).
+  const icons = () => sidebar.locator('svg, img').evaluateAll(els => els.slice(0, -1).map(el => { const r = el.getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y), Math.round(r.width)]; }));
+  const closedIcons = await icons();
   expect(await shadow()).not.toContain('inset');
   await pantry.hover();
   await expect.poll(width).toBeGreaterThan(250);
-  await expect(sidebar.getByText('Pantry', { exact: true })).toBeVisible();
+  expect(await icons()).toEqual(closedIcons);
+  await expect.poll(label).toBe('1');
   await expect.poll(shadow).toContain('inset');
   await page.screenshot({ path: 'artifacts/sidebar-hover.png' });
   // The page underneath keeps its place: the open sidebar floats over it.
