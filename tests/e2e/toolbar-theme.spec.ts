@@ -77,6 +77,37 @@ test('the desktop sidebar is an icon rail that opens on hover, and rows light up
   await expect(page.getByText('Private allergy profile')).toHaveCount(0);
 });
 
+test('coming back to the browser window does not pop the sidebar open, but Tab still does', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  const sidebar = page.getByTestId('sidebar');
+  const width = () => sidebar.evaluate(el => el.getBoundingClientRect().width);
+  // Click a sidebar row, then move the mouse off the sidebar: focus stays on that row.
+  await page.getByRole('button', { name: 'Pantry', exact: true }).click();
+  await page.mouse.move(900, 500);
+  await expect.poll(width).toBeLessThan(100);
+  // Swiping to another full-screen app and back: the window loses focus, then the browser hands it back to the same row
+  // (and Safari can report the mouse entering wherever it happens to sit).
+  await page.evaluate(() => {
+    const row = document.activeElement as HTMLElement;
+    row.blur(); window.dispatchEvent(new Event('blur'));
+    window.dispatchEvent(new Event('focus')); row.focus();
+    document.querySelector('[data-testid="sidebar"]')!.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, relatedTarget: document.body }));
+  });
+  await page.waitForTimeout(400);
+  expect(await width()).toBeLessThan(100);
+  // Moving the mouse onto it still opens it, and leaving closes it.
+  await page.getByRole('button', { name: 'Allergies', exact: true }).hover();
+  await expect.poll(width).toBeGreaterThan(250);
+  await page.mouse.move(900, 500);
+  await expect.poll(width).toBeLessThan(100);
+  // Keyboard users still get the open sidebar when Tab lands in it.
+  await page.getByTestId('brand-home').focus();
+  await page.keyboard.press('Tab');
+  await expect.poll(width).toBeGreaterThan(250);
+});
+
 test('the account holder can save their own list with no allergies and still check for family', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });

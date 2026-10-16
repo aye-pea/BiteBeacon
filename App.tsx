@@ -134,6 +134,26 @@ function AppContent() {
   const [settingsView, setSettingsView] = useState<'main' | 'account' | 'app'>('main');
   const [showPassword, setShowPassword] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+  // When the browser window becomes active again (for example swiping back to a full-screen browser on a Mac), it hands focus back
+  // to the sidebar row that was clicked last and may report a mouseenter without the mouse moving. Neither should open the sidebar:
+  // until a real key press or mouse movement, the rail only opens for a Tab focus ring or an actual hover.
+  const railReturning = useRef(false);
+  const railHovered = useRef(false);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const away = () => { railReturning.current = true; };
+    const back = () => { railReturning.current = false; };
+    window.addEventListener('blur', away);
+    for (const name of ['keydown', 'pointerdown', 'mousemove']) window.addEventListener(name, back, true);
+    return () => { window.removeEventListener('blur', away); for (const name of ['keydown', 'pointerdown', 'mousemove']) window.removeEventListener(name, back, true); };
+  }, []);
+  const railEvents = {
+    onMouseEnter: () => { railHovered.current = true; if (!railReturning.current) setRailOpen(true); },
+    onMouseMove: () => { railHovered.current = true; setRailOpen(true); },
+    onMouseLeave: () => { railHovered.current = false; setRailOpen(false); },
+    onFocus: (e: { target: { matches?: (q: string) => boolean } }) => { if (!railReturning.current && e.target.matches?.(':focus-visible')) setRailOpen(true); },
+    onBlur: (e: { currentTarget: { contains: (n: unknown) => boolean }; relatedTarget: unknown }) => { if (!railHovered.current && !e.currentTarget.contains(e.relatedTarget)) setRailOpen(false); },
+  };
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -793,7 +813,7 @@ function AppContent() {
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
     {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
-      {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
+      {...(railEvents as object)}>
       <Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.98} onPress={() => navigate('overview')} style={[s.brand, s.brandTap]} hoverStyle={{ backgroundColor: C.pale }} pressedStyle={{ opacity: .7 }}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></Tap>
       <View style={{ height: 32 }} />
       {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
