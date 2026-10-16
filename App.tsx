@@ -193,9 +193,13 @@ function AppContent() {
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data, error }) => { if (error) say(t('err.sessionRestore')); setSession(data.session); setBooting(false); });
-    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next); setBooting(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next ? { ...next } : null); setBooting(false); });
     const app = AppState.addEventListener('change', state => {
-      if (state === 'active') supabase?.auth.startAutoRefresh();
+      if (state === 'active') {
+        supabase?.auth.startAutoRefresh();
+        // Picks up an email change confirmed in another tab or app, so Settings shows the new address.
+        void supabase?.auth.getUser().then(({ data }) => { const user = data.user; if (user) setSession(s => s && s.user.id === user.id ? { ...s, user } : s); });
+      }
       else { supabase?.auth.stopAutoRefresh(); setCamera(false); }
     });
     return () => { listener.subscription.unsubscribe(); app.remove(); };
@@ -296,6 +300,8 @@ function AppContent() {
     setPassword(''); setShowPassword(false); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
   };
   const accountEmail = session?.user.email && !usernameFromEmail(session.user.email) ? session.user.email : null;
+  // An address change waiting for its confirmation link; until then resets still go to accountEmail.
+  const pendingEmail = session?.user.new_email && session.user.new_email.toLowerCase() !== session.user.email?.toLowerCase() ? session.user.new_email : null;
   const saveRecoveryEmail = async () => {
     if (!supabase || !session) return;
     const next = emailDraft.trim();
@@ -306,6 +312,8 @@ function AppContent() {
     setEmailBusy(false);
     if (error) { haptic.error(); say(t('settings.emailFailed'), 'danger'); return; }
     setEmailDraft(''); setEmailAgain('');
+    // supabase-js updates its session object in place, so hand React a new one to redraw the address.
+    const user = data.user; if (user) setSession(s => s && s.user.id === user.id ? { ...s, user } : s);
     // With "Confirm email" off the address changes at once; otherwise Supabase first mails a confirmation link.
     if (data.user?.email?.toLowerCase() === next.toLowerCase()) { haptic.success(); say(t('settings.emailSaved'), 'success'); }
     else { haptic.success(); say(t('settings.emailCheck', { email: next }), 'success'); }
@@ -870,6 +878,7 @@ function AppContent() {
             {username && <Text style={s.navText}>{t('settings.usernameIs', { name: username })}</Text>}
             <Text style={s.bodySmall}>{t('settings.recoveryHelp')}</Text>
             {accountEmail ? <Text style={s.navText}>{t('settings.recoveryCurrent', { email: accountEmail })}</Text> : <Notice>{t('settings.recoveryNone')}</Notice>}
+            {pendingEmail && <View testID="recovery-pending"><Notice>{t('settings.recoveryPending', { email: pendingEmail })}</Notice></View>}
             <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="recovery-email" accessibilityLabel={t('auth.email')} style={s.input} value={emailDraft} onChangeText={setEmailDraft} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" editable={!emailBusy} />
             <Text style={s.label}>{t('settings.emailConfirm')}</Text><TextInput testID="recovery-email-again" accessibilityLabel={t('settings.emailConfirm')} style={s.input} value={emailAgain} onChangeText={setEmailAgain} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="off" editable={!emailBusy} onSubmitEditing={() => void saveRecoveryEmail()} />
             {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}

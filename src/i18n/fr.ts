@@ -288,6 +288,7 @@ export const fr: Messages = {
   'settings.recoveryHelp': 'Facultatif. Un e-mail permet de réinitialiser un mot de passe oublié, et vous pouvez aussi vous connecter avec. Nous n’envoyons jamais de publicité.',
   'settings.recoveryNone': 'Aucun e-mail ajouté. Si vous oubliez votre mot de passe, ce compte ne pourra pas être récupéré.',
   'settings.recoveryCurrent': 'E-mail de récupération : {email}',
+  'settings.recoveryPending': 'Changement vers {email} : ouvrez le lien de confirmation envoyé à cette adresse pour terminer. D’ici là, les réinitialisations de mot de passe vont à l’adresse ci-dessus.',
   'settings.emailConfirm': 'Saisissez à nouveau l’e-mail',
   'settings.emailSave': 'Enregistrer l’e-mail',
   'settings.emailMismatch': 'Les deux adresses e-mail ne correspondent pas.',

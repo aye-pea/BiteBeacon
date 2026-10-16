@@ -228,3 +228,7 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - **Glass logo in Presentation**: with the Presentation theme on, the top-left brand mark (desktop sidebar, sign-in page, new-password card) is Alex's frosted-glass cart (`assets/glass-logo.png`, cut from his upload with the white background made transparent; drawn at 85% inside the same box so its brackets match the flat mark's). Light, Dark and Auto keep the green cart; app icon unchanged; the favicon is the glass cart in every theme (one per site). `BrandLogo` in `src/ui/logo.tsx`.
 - Validation: TypeScript, unit tests (version, empty-profile database test) and Playwright incl. new `family-first.spec.ts` and `toolbar-theme.spec.ts`.
 - **Sidebar polish**: desktop sidebar rows show a tint and a green left bar under the mouse (`hoverStyle` on `Tap`); the signed-in account row no longer says "Private allergy profile" (key `account.yoursSub` removed).
+
+## Recovery email display (2026-10-16)
+- Settings › Sign-in & recovery shows `session.user.email`. supabase-js mutates its session in place on `updateUser`, so `App.tsx` passes React a copied session after saving, on every auth event, and after `getUser()` when the app becomes active (picks up a change confirmed in another tab).
+- If Supabase holds a change for confirmation (`user.new_email`), the card keeps the current address and shows `settings.recoveryPending` naming the new one. Covered in `tests/e2e/username.spec.ts`.

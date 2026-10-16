@@ -288,6 +288,7 @@ export const vi: Messages = {
   'settings.recoveryHelp': 'Không bắt buộc. Có email, bạn có thể đặt lại mật khẩu khi quên và cũng có thể đăng nhập bằng email. Chúng tôi không bao giờ gửi quảng cáo.',
   'settings.recoveryNone': 'Chưa thêm email. Nếu quên mật khẩu, tài khoản này sẽ không thể khôi phục.',
   'settings.recoveryCurrent': 'Email khôi phục: {email}',
+  'settings.recoveryPending': 'Đang đổi sang {email}: hãy mở liên kết xác nhận gửi tới địa chỉ đó để hoàn tất. Trước đó, email đặt lại mật khẩu vẫn gửi tới địa chỉ ở trên.',
   'settings.emailConfirm': 'Nhập lại email',
   'settings.emailSave': 'Lưu email',
   'settings.emailMismatch': 'Hai địa chỉ email không khớp.',

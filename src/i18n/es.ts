@@ -288,6 +288,7 @@ export const es: Messages = {
   'settings.recoveryHelp': 'Opcional. Con un correo puedes restablecer una contraseña olvidada y también iniciar sesión. Nunca enviamos publicidad.',
   'settings.recoveryNone': 'No has añadido un correo. Si olvidas tu contraseña, no se podrá recuperar esta cuenta.',
   'settings.recoveryCurrent': 'Correo de recuperación: {email}',
+  'settings.recoveryPending': 'Cambiando a {email}: abre el enlace de confirmación enviado a esa dirección para terminar. Hasta entonces, los restablecimientos de contraseña van a la dirección de arriba.',
   'settings.emailConfirm': 'Escribe el correo otra vez',
   'settings.emailSave': 'Guardar correo',
   'settings.emailMismatch': 'Los dos correos no coinciden.',

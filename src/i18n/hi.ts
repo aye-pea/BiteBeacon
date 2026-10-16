@@ -288,6 +288,7 @@ export const hi: Messages = {
   'settings.recoveryHelp': 'वैकल्पिक। ईमेल होने पर आप भूला हुआ पासवर्ड रीसेट कर सकते हैं, और उससे साइन इन भी कर सकते हैं। हम कभी विज्ञापन नहीं भेजते।',
   'settings.recoveryNone': 'कोई ईमेल नहीं जोड़ा गया। पासवर्ड भूलने पर यह खाता वापस नहीं मिल सकेगा।',
   'settings.recoveryCurrent': 'रिकवरी ईमेल: {email}',
+  'settings.recoveryPending': '{email} पर बदला जा रहा है: पूरा करने के लिए वहाँ भेजा गया पुष्टि लिंक खोलें। तब तक पासवर्ड रीसेट ईमेल ऊपर वाले पते पर जाएँगे।',
   'settings.emailConfirm': 'ईमेल दोबारा लिखें',
   'settings.emailSave': 'ईमेल सहेजें',
   'settings.emailMismatch': 'दोनों ईमेल पते मेल नहीं खाते।',

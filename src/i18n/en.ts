@@ -288,6 +288,7 @@ export const en = {
   'settings.recoveryHelp': 'Optional. An email lets you reset a forgotten password, and you can sign in with it too. We never send marketing.',
   'settings.recoveryNone': 'No email added. If you forget your password, this account can’t be recovered.',
   'settings.recoveryCurrent': 'Recovery email: {email}',
+  'settings.recoveryPending': 'Changing to {email}: open the confirmation link sent there to finish. Until then, password resets go to the address above.',
   'settings.emailConfirm': 'Type the email again',
   'settings.emailSave': 'Save email',
   'settings.emailMismatch': 'The two email addresses don’t match.',

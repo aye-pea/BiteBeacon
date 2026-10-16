@@ -8,11 +8,13 @@ async function fakeSupabase(page: Page) {
   const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: USER.id, role: 'authenticated', aud: 'authenticated', exp })}.test`;
   const session = { access_token: token, token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'test-refresh' };
   const seen: { signup?: Record<string, unknown>; signIn?: Record<string, unknown>; lookup?: Record<string, unknown>; emailChange?: Record<string, unknown>; reset?: Record<string, unknown> } = {};
-  let user = { ...USER };
+  let user: Record<string, unknown> = { ...USER };
+  // Off: an email change applies at once. On: Supabase holds it in new_email until the link is opened.
+  const opts = { confirmChanges: false };
   await page.route('**/auth/v1/signup**', route => { seen.signup = route.request().postDataJSON(); return route.fulfill({ json: { ...session, user } }); });
   await page.route('**/auth/v1/token**', route => { seen.signIn = route.request().postDataJSON(); return route.fulfill({ json: { ...session, user } }); });
   await page.route('**/auth/v1/user**', route => {
-    if (route.request().method() === 'PUT') { seen.emailChange = route.request().postDataJSON(); user = { ...user, email: String(seen.emailChange?.email) }; }
+    if (route.request().method() === 'PUT') { seen.emailChange = route.request().postDataJSON(); const email = String(seen.emailChange?.email); user = opts.confirmChanges ? { ...user, new_email: email } : { ...user, email }; }
     return route.fulfill({ json: user });
   });
   await page.route('**/auth/v1/recover**', route => { seen.reset = route.request().postDataJSON(); return route.fulfill({ json: {} }); });
@@ -23,7 +25,7 @@ async function fakeSupabase(page: Page) {
   await page.route('**/rest/v1/household_members**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/pantry_items**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/rpc/is_admin**', route => route.fulfill({ json: false }));
-  return seen;
+  return Object.assign(seen, { opts });
 }
 
 test.skip(!process.env.EXPO_PUBLIC_SUPABASE_URL && !require('node:fs').existsSync('.env'), 'needs Supabase URL configured so the sign-in form shows');
@@ -64,6 +66,22 @@ test('signs up with a username, then adds a recovery email in Settings', async (
   await expect(page.getByTestId('settings-feedback')).toContainText('Recovery email saved');
   expect(seen.emailChange?.email).toBe('sam@example.com');
   await expect(card).toContainText('Recovery email: sam@example.com');
+
+  // Changing to another address shows the new one straight away.
+  await page.getByTestId('recovery-email').fill('sam.k@example.com');
+  await page.getByTestId('recovery-email-again').fill('sam.k@example.com');
+  await page.getByRole('button', { name: 'Save email' }).click();
+  await expect(card).toContainText('Recovery email: sam.k@example.com');
+  await expect(page.getByTestId('recovery-pending')).toHaveCount(0);
+
+  // When Supabase wants the new address confirmed first, the old one stays and the pending one is named.
+  seen.opts.confirmChanges = true;
+  await page.getByTestId('recovery-email').fill('sam.new@example.com');
+  await page.getByTestId('recovery-email-again').fill('sam.new@example.com');
+  await page.getByRole('button', { name: 'Save email' }).click();
+  await expect(page.getByTestId('settings-feedback')).toContainText('Check sam.new@example.com');
+  await expect(card).toContainText('Recovery email: sam.k@example.com');
+  await expect(page.getByTestId('recovery-pending')).toContainText('Changing to sam.new@example.com');
 });
 
 test('signs in with a username via the lookup, and sends a reset link to an added email', async ({ page }) => {

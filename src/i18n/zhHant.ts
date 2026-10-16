@@ -288,6 +288,7 @@ export const zhHant: Messages = {
   'settings.recoveryHelp': '選填。新增電子郵件後可以重設忘記的密碼，也可以用它登入。我們從不寄送行銷郵件。',
   'settings.recoveryNone': '尚未新增電子郵件。如果忘記密碼，此帳號將無法復原。',
   'settings.recoveryCurrent': '復原電子郵件：{email}',
+  'settings.recoveryPending': '正在變更為 {email}：請開啟寄到該信箱的確認連結以完成。在此之前，重設密碼郵件仍會寄到上方的地址。',
   'settings.emailConfirm': '再次輸入電子郵件',
   'settings.emailSave': '儲存電子郵件',
   'settings.emailMismatch': '兩個電子郵件地址不一致。',

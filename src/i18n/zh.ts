@@ -288,6 +288,7 @@ export const zh: Messages = {
   'settings.recoveryHelp': '可选。添加邮箱后可以重置忘记的密码，也可以用它登录。我们从不发送营销邮件。',
   'settings.recoveryNone': '尚未添加邮箱。如果忘记密码，此账户将无法找回。',
   'settings.recoveryCurrent': '找回邮箱：{email}',
+  'settings.recoveryPending': '正在更改为 {email}：请打开发送到该邮箱的确认链接以完成。在此之前，重置密码邮件仍发送到上面的地址。',
   'settings.emailConfirm': '再次输入邮箱',
   'settings.emailSave': '保存邮箱',
   'settings.emailMismatch': '两个邮箱地址不一致。',

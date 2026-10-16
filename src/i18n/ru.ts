@@ -288,6 +288,7 @@ export const ru: Messages = {
   'settings.recoveryHelp': 'Необязательно. С email можно сбросить забытый пароль, а также входить по нему. Мы никогда не присылаем рекламу.',
   'settings.recoveryNone': 'Email не добавлен. Если вы забудете пароль, восстановить этот аккаунт будет нельзя.',
   'settings.recoveryCurrent': 'Email для восстановления: {email}',
+  'settings.recoveryPending': 'Смена на {email}: откройте ссылку подтверждения, отправленную на этот адрес, чтобы завершить. До тех пор письма для сброса пароля приходят на адрес выше.',
   'settings.emailConfirm': 'Введите email ещё раз',
   'settings.emailSave': 'Сохранить email',
   'settings.emailMismatch': 'Адреса email не совпадают.',

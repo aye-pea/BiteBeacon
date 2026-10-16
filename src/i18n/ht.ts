@@ -288,6 +288,7 @@ export const ht: Messages = {
   'settings.recoveryHelp': 'Opsyonèl. Avèk yon imèl ou ka reyinisyalize yon modpas ou bliye, epi ou ka konekte avè l tou. Nou pa janm voye piblisite.',
   'settings.recoveryNone': 'Pa gen imèl. Si ou bliye modpas ou, nou p ap ka rekipere kont sa a.',
   'settings.recoveryCurrent': 'Imèl rekiperasyon: {email}',
+  'settings.recoveryPending': 'N ap chanje pou {email}: louvri lyen konfimasyon nou voye la a pou fini. Jiskaske sa fèt, imèl pou chanje modpas ap ale nan adrès ki anwo a.',
   'settings.emailConfirm': 'Tape imèl la ankò',
   'settings.emailSave': 'Anrejistre imèl la',
   'settings.emailMismatch': 'De adrès imèl yo pa menm.',
