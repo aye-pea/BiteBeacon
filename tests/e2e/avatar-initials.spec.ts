@@ -13,8 +13,8 @@ test('household avatars tell apart people who share a first letter', async ({ pa
   const label = (id: string) => page.getByTestId(`profile-avatar-${id}`);
   await expect(label('self')).toHaveText('A');
   await expect(label('demo-kha')).toHaveText('K');
-  await expect(label('demo-banjo')).toHaveText('Ba');
-  await expect(label('demo-bitebeacon')).toHaveText('Bi');
+  await expect(label('demo-dfk')).toHaveText('D');
+  await expect(label('demo-nafis')).toHaveText('N');
   await expect(label('demo-jonathan')).toHaveText('J');
 
   await page.getByRole('button', { name: 'Add a person' }).click();

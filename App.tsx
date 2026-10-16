@@ -7,6 +7,7 @@ import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, C
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
+import { DEMO_FIXED_KEY, demoLineup } from './src/data/demo';
 import { titleCase } from './src/domain/names';
 import { avatarColorSlots, avatarLabels } from './src/domain/initials';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
@@ -40,11 +41,12 @@ const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | nu
   const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
   return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
 };
-const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }, { id: 'demo-jonathan', name: 'Jonathan', allergies: ['tree-nuts', 'soy'] }, { id: 'demo-nafis', name: 'Nafis', allergies: ['gluten', 'mustard'] }, { id: 'demo-banjo', name: 'Banjo', allergies: ['eggs', 'shellfish', 'mollusks'] }, { id: 'demo-bitebeacon', name: 'BiteBeacon', allergies: ['peanuts', 'sesame'] }, { id: 'demo-capstone', name: 'Capstone', allergies: ['fish', 'celery', 'sulfites'] }];
 type Entry = { product: Product; at: string };
 // Fictional demo pantry, dated relative to today so the expiry alerts always show.
 const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[0], 1], [SAMPLES[1], 20]].map(([product, days], i) =>
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
+// End-to-end tests pin the demo to its listed order (Alex signed in) via localStorage.
+const demoFixedOrder = () => { try { return Platform.OS === 'web' && localStorage.getItem(DEMO_FIXED_KEY) === '1'; } catch { return false; } };
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
   const Component = { overview: House, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
@@ -255,10 +257,12 @@ function AppContent() {
   }, [session?.user.id]);
 
   const enterDemo = () => {
-    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
-    resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
+    // Each demo start signs in as a random one of the five demo people, with the other four shuffled.
+    const { me, household } = demoLineup(demoFixedOrder() ? null : Math.random);
+    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(me.allergies); setDraft(me.allergies);
+    resetHousehold(); setMyName(me.name); setNameDraft(me.name); setMembers(household); setDefaultView([EVERYONE]); setView([EVERYONE]);
     setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage(landing);
-    haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
+    haptic.success(); toast(t('toast.demoReady', { n: 1 + household.length, names: i18n.list([me.name, ...household.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => {
     // The Allergies page always opens on your own list; a member's unsaved picks are dropped.

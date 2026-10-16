@@ -69,7 +69,7 @@ test('evidence explains hidden allergen sources instead of repeating the allerge
   await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   // Narrow to Kha alone: untick Everyone (leaves Alex), tick Kha, untick Alex.
-  await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();
+  await page.getByRole('checkbox', { name: 'Check for Everyone (5)' }).click();
   await page.getByRole('checkbox', { name: 'Check for Kha' }).click();
   await page.getByRole('checkbox', { name: 'Check for Alex' }).click();
   const why = page.getByTestId('result-evidence');
