@@ -9,6 +9,7 @@ const brand = {
   sky: '#6CC7F6', periwinkle: '#8FA7FF', ice: '#DDEEFF', lavender: '#C7B9FF',
   yellow: '#EFE88A', pink: '#F4A6D7', coral: '#F28C8C',
   heroInk: '#233548', heroMuted: '#41566C', heroButton: '#8FA7FF', heroButtonPressed: '#7E96F0',
+  heroCopyInk: '#233548', heroCopyMuted: '#41566C',
   logoBacking: '#FFFFFF', avatarInk: '#344653',
   heroStart: '#F4FAFF', heroMiddle: '#E3E2FB', heroEnd: '#FBE7EE',
   heroPinkGlow: 'rgba(246,187,218,0.68)', heroCoralGlow: 'rgba(255,213,181,0.72)', heroYellowGlow: 'rgba(250,241,174,0.72)',
@@ -49,7 +50,12 @@ const pastelDarkExtras: typeof pastelLightExtras = {
   ambientSky: 'rgba(83,132,166,0.12)', ambientRose: 'rgba(151,78,114,0.12)', ambientLilac: 'rgba(116,94,161,0.12)',
   secondaryInk: '#CDC9D8', secondarySoft: '#332C45', chipInk: '#E2BDD7', chipSoft: '#392C3A',
   peachInk: '#E9C0AA', peachSoft: '#3D2F2A', yellowSoft: '#363226', navSurface: 'rgba(63,57,81,0.80)',
-  artworkGlass: 'rgba(255,255,255,0.48)', artworkRim: 'rgba(255,255,255,0.92)',
+  artworkGlass: 'rgba(255,255,255,0.48)', artworkRim: 'rgba(255,255,255,0.92)',  // Partiful's Home banner: deep night violet with the periwinkle-to-magenta glow of its glass logo, light copy.
+  heroCopyInk: '#F3EEFF', heroCopyMuted: '#C9BEDF',
+  heroStart: '#16131F', heroMiddle: '#1E1730', heroEnd: '#26152F',
+  heroSkyGlow: 'rgba(110,120,230,0.30)', heroLavenderGlow: 'rgba(150,120,255,0.38)', heroPinkGlow: 'rgba(190,80,200,0.30)',
+  heroCoralGlow: 'rgba(220,90,190,0.34)', heroYellowGlow: 'rgba(90,70,160,0.30)',
+  heroNativePink: '#2A1B3A', heroNativePeach: '#33183A', heroNativeYellow: '#1E1830',
 };
 
 // Grouped-background palette: tinted canvas, content cards, one green accent kept for actions and selection.
