@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
+
 test('add a scanned product to the pantry, see expiry alerts, mark items used or thrown out and put one back', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });

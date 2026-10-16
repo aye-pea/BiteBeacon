@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image, View } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
 /** BiteBeacon mark: a shopping cart inside barcode-scan brackets (assets/logo.svg). */
@@ -13,4 +14,15 @@ export function CartLogo({ size = 32, color }: { size?: number; color: string })
     </G>
     <G fill={color}><Circle cx={547} cy={940} r={67} /><Circle cx={755} cy={940} r={67} /></G>
   </Svg>;
+}
+
+/** Top-left brand mark: the frosted-glass cart (assets/glass-logo.png, background cut out) in the Presentation theme,
+ *  the flat cart everywhere else. */
+export function BrandLogo({ size, color, glass }: { size: number; color: string; glass: boolean }) {
+  if (!glass) return <CartLogo size={size} color={color} />;
+  // The glass art is cropped to its edges while the flat mark has padding inside its box, so draw it at 85% in the
+  // same-size box: the brackets then line up with the green cart's.
+  return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+    <Image testID="glass-logo" accessible={false} source={require('../../assets/glass-logo.png')} style={{ width: Math.round(size * 0.85), height: Math.round(size * 0.85) }} resizeMode="contain" />
+  </View>;
 }

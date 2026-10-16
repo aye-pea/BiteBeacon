@@ -1,6 +1,7 @@
 // Shape of the admin dashboard's numbers, read defensively from the database's JSON.
 export type AdminStats = {
-  generatedAt: string; scans: number; accounts: number; profiles: number; members: number;
+  // False for limited admins: the database leaves out pantry, household, allergen and language totals.
+  full: boolean; generatedAt: string; scans: number; accounts: number; profiles: number; members: number;
   signups7d: number; signups30d: number; active1d: number; active7d: number; active30d: number;
   signupsByDay: { day: string; count: number }[];
   recentSignIns: { email: string; createdAt: string; lastSignInAt: string | null }[];
@@ -18,7 +19,7 @@ const counts = (v: unknown) => Object.fromEntries(Object.entries(obj(v)).map(([k
 export function parseAdminStats(raw: unknown): AdminStats {
   const r = obj(raw); const p = obj(r.pantry);
   return {
-    generatedAt: str(r.generated_at), scans: num(r.scans), accounts: num(r.accounts), profiles: num(r.profiles), members: num(r.members),
+    full: r.full !== false, generatedAt: str(r.generated_at), scans: num(r.scans), accounts: num(r.accounts), profiles: num(r.profiles), members: num(r.members),
     signups7d: num(r.signups_7d), signups30d: num(r.signups_30d), active1d: num(r.active_1d), active7d: num(r.active_7d), active30d: num(r.active_30d),
     signupsByDay: arr(r.signups_by_day).map(d => ({ day: str(obj(d).day).slice(0, 10), count: num(obj(d).count) })),
     recentSignIns: arr(r.recent_sign_ins).map(u => ({ email: str(obj(u).email), createdAt: str(obj(u).created_at), lastSignInAt: str(obj(u).last_sign_in_at) || null })),

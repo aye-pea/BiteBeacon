@@ -1,0 +1,40 @@
+name: Beta branch
+
+# Keeps the "beta" branch pointing at the newest commit of the open batch pull request
+# (any branch named batch-...). Netlify builds the "beta" branch as a free branch deploy,
+# and beta.bitebeacon.org sends visitors there, so the beta link never changes between batches.
+# Nobody commits to "beta" by hand: this workflow moves it.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: beta-branch
+  cancel-in-progress: true
+
+jobs:
+  move-beta:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'batch-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Point beta at the open batch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          sha=$(gh pr list -R "$REPO" --state open --base main --json headRefName,headRefOid,number \
+            --jq '[.[] | select(.headRefName | startswith("batch-"))] | sort_by(.number) | last | .headRefOid // empty')
+          if [ -z "$sha" ]; then echo "No open batch pull request; beta stays where it is."; exit 0; fi
+          echo "beta -> $sha"
+          if gh api "repos/$REPO/git/ref/heads/beta" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/$REPO/git/refs/heads/beta" -f sha="$sha" -F force=true >/dev/null
+          else
+            gh api -X POST "repos/$REPO/git/refs" -f ref=refs/heads/beta -f sha="$sha" >/dev/null
+          fi

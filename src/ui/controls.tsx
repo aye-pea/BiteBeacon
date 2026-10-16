@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, PanResponder, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Check, CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
 import { bothSchemes, nativeDriver, Palette, themes, Tone, type, useScheme } from './theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { haptic, HapticKind } from './haptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -11,17 +12,20 @@ const ToneIcon = ({ kind, size = 20 }: { kind: Tone; size?: number }) => {
   return <Component accessible={false} size={size} color={tone[kind].fg} strokeWidth={2} />;
 };
 
-/** Pressable with a spring press-in scale, pressed tint and optional haptic on press. */
-export function Tap({ style, pressedStyle, haptic: kind = 'tap', scaleTo = .97, onPress, onPressIn, onPressOut, disabled, children, ...rest }:
-  Omit<PressableProps, 'style' | 'children'> & { style?: StyleProp<ViewStyle>; pressedStyle?: StyleProp<ViewStyle>; haptic?: HapticKind | null; scaleTo?: number; children?: React.ReactNode }) {
+/** Pressable with a spring press-in scale, pressed tint, optional mouse-hover tint and optional haptic on press. */
+export function Tap({ style, pressedStyle, hoverStyle, haptic: kind = 'tap', scaleTo = .97, onPress, onPressIn, onPressOut, onHoverIn, onHoverOut, disabled, children, ...rest }:
+  Omit<PressableProps, 'style' | 'children'> & { style?: StyleProp<ViewStyle>; pressedStyle?: StyleProp<ViewStyle>; hoverStyle?: StyleProp<ViewStyle>; haptic?: HapticKind | null; scaleTo?: number; children?: React.ReactNode }) {
   const scale = useRef(new Animated.Value(1)).current;
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const spring = (toValue: number) => Animated.spring(scale, { toValue, useNativeDriver: nativeDriver, speed: 40, bounciness: toValue === 1 ? 8 : 0 }).start();
   return <AnimatedPressable {...rest} disabled={disabled}
     onPressIn={e => { setPressed(true); spring(scaleTo); onPressIn?.(e); }}
     onPressOut={e => { setPressed(false); spring(1); onPressOut?.(e); }}
     onPress={e => { if (kind) haptic[kind](); onPress?.(e); }}
-    style={[style, pressed && pressedStyle, { transform: [{ scale }] }]}>{children}</AnimatedPressable>;
+    onHoverIn={e => { setHovered(true); onHoverIn?.(e); }}
+    onHoverOut={e => { setHovered(false); onHoverOut?.(e); }}
+    style={[style, hovered && !disabled && hoverStyle, pressed && pressedStyle, { transform: [{ scale }] }]}>{children}</AnimatedPressable>;
 }
 
 type Variant = 'primary' | 'secondary' | 'danger';
@@ -120,31 +124,38 @@ export function SwipeRow({ children, onRight, onLeft, rightLabel, leftLabel, rig
   </View>;
 }
 
-type Toast = { id: number; message: string; kind: Tone };
-const ToastContext = createContext<(message: string, kind?: Tone) => void>(() => undefined);
+type ToastOptions = { title?: string; duration?: number };
+type Toast = { id: number; message: string; kind: Tone; title?: string; duration: number };
+const ToastContext = createContext<(message: string, kind?: Tone, options?: ToastOptions) => void>(() => undefined);
 export const useToast = () => useContext(ToastContext);
 /** Short transient confirmation. Never the only place important information appears. */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const scheme = useScheme(); const { C, tone } = themes[scheme]; const s = STYLES[scheme];
+  const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<Toast | null>(null);
   const t = useRef(new Animated.Value(0)).current;
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const show = useCallback((message: string, kind: Tone = 'success') => {
+  const show = useCallback((message: string, kind: Tone = 'success', { title, duration = 2600 }: ToastOptions = {}) => {
     clearTimeout(timer.current);
-    setToast({ id: Date.now(), message, kind });
-    if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(message);
+    setToast({ id: Date.now(), message, kind, title, duration });
+    if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(title ? `${title}. ${message}` : message);
+  }, []);
+  // Animate once the new toast is on screen, so a page change in the same tap can't interrupt it.
+  useEffect(() => {
+    if (!toast) return;
     t.setValue(0);
     Animated.spring(t, { toValue: 1, useNativeDriver: nativeDriver, speed: 18, bounciness: 7 }).start();
-    timer.current = setTimeout(() => Animated.timing(t, { toValue: 0, duration: 220, useNativeDriver: nativeDriver }).start(({ finished }) => { if (finished) setToast(null); }), 2600);
-  }, []);
+    timer.current = setTimeout(() => Animated.timing(t, { toValue: 0, duration: 220, useNativeDriver: nativeDriver }).start(({ finished }) => { if (finished) setToast(null); }), toast.duration);
+  }, [toast?.id]);
   useEffect(() => () => clearTimeout(timer.current), []);
   return <ToastContext.Provider value={show}>
     <View style={{ flex: 1 }}>
       {children}
-      {toast && <View pointerEvents="none" style={s.toastLayer}>
+      {/* Pinned to the screen (not the page) just below the status bar or notch, like a push notification. */}
+      {toast && <View pointerEvents="none" style={[s.toastLayer, { top: insets.top + 10 }]}>
         <Animated.View testID="toast" key={toast.id} accessibilityLiveRegion="polite" style={[s.toast, { opacity: t, transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }, { scale: t.interpolate({ inputRange: [0, 1], outputRange: [.96, 1] }) }] }]}>
           <View style={[s.toastIcon, { backgroundColor: tone[toast.kind].bg }]}><ToneIcon kind={toast.kind} size={18} /></View>
-          <Text style={s.toastText}>{toast.message}</Text>
+          {toast.title ? <View style={{ flexShrink: 1, gap: 2 }}><Text style={s.toastTitle}>{toast.title}</Text><Text style={s.toastBody}>{toast.message}</Text></View> : <Text style={s.toastText}>{toast.message}</Text>}
         </Animated.View>
       </View>}
     </View>
@@ -160,11 +171,12 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   buttonOff: { opacity: .5 }, buttonText: { flexShrink: 1, textAlign: 'center', ...type.headline },
   notice: { borderRadius: 16, padding: 14, gap: 10, flexDirection: 'row', alignItems: 'flex-start' }, noticeText: { flex: 1, ...type.subhead, fontWeight: '500' },
   checkbox: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: C.borderStrong, backgroundColor: C.paper, justifyContent: 'center', alignItems: 'center' }, checked: { backgroundColor: C.green, borderColor: C.green },
-  toastLayer: { position: 'absolute', top: '2%', left: '4%', right: '4%', alignItems: 'center' },
+  toastLayer: { position: Platform.OS === 'web' ? 'fixed' as 'absolute' : 'absolute', left: '4%', right: '4%', zIndex: 50, alignItems: 'center' },
   toast: { maxWidth: 460, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 12, paddingRight: 18, borderRadius: 18, backgroundColor: C.toast, boxShadow: shadow.raised },
   swipeWrap: { borderRadius: 22, overflow: 'hidden' },
   swipeUnder: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: '6%' },
   swipeRight: { justifyContent: 'flex-start', backgroundColor: C.green }, swipeLeft: { justifyContent: 'flex-end', backgroundColor: C.red },
   swipeText: { color: C.onAccent, ...type.headline },
   toastIcon: { padding: 6, borderRadius: 20 }, toastText: { flexShrink: 1, color: C.toastText, ...type.subhead, fontWeight: '600' },
+  toastTitle: { color: C.toastText, ...type.headline }, toastBody: { color: C.toastText, ...type.subhead, opacity: .85 },
 }));

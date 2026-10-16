@@ -12,6 +12,8 @@ const light = {
   toast: '#17332B', toastText: '#FFFFFF', shadow: 'rgba(23,51,43,0.04)', shadowRaised: 'rgba(23,51,43,0.18)',
   // Liquid Glass tab bar: see-through tint, bright rim and top highlight, soft outline so it holds on white pages.
   glass: 'rgba(255,255,255,0.62)', glassSolid: 'rgba(255,255,255,0.94)', glassRim: 'rgba(255,255,255,0.75)', glassHighlight: 'rgba(255,255,255,0.9)', glassEdge: 'rgba(23,51,43,0.10)',
+  // Home hero card; the web also paints `canvasImage` / `heroImage` gradients over the solid colours when a theme sets them.
+  hero: '#214B3C', heroArt: '#2D5A48', heroEyebrow: '#CBD9AE', limePressed: '#C6E26C', canvasImage: '', heroImage: '',
 };
 export type Palette = typeof light;
 const dark: Palette = {
@@ -21,6 +23,20 @@ const dark: Palette = {
   red: '#FF928A', redPressed: '#FFB3AD', redSoft: '#3A1E1C', amber: '#F0C46C', amberSoft: '#32280F', amberPressed: '#40341A', blue: '#93C6E8', blueSoft: '#152839',
   toast: '#E9EFEA', toastText: '#0E1311', shadow: 'rgba(0,0,0,0)', shadowRaised: 'rgba(0,0,0,0.5)',
   glass: 'rgba(34,42,38,0.58)', glassSolid: 'rgba(30,37,33,0.95)', glassRim: 'rgba(255,255,255,0.14)', glassHighlight: 'rgba(255,255,255,0.12)', glassEdge: 'rgba(0,0,0,0.35)',
+  hero: '#214B3C', heroArt: '#2D5A48', heroEyebrow: '#CBD9AE', limePressed: '#C6E26C', canvasImage: '', heroImage: '',
+};
+// Presentation: the colours of the BiteBeacon pitch deck in Canva (teal to sage to butter-yellow backdrop, cards in
+// periwinkle, butter, mint and coral). Text and buttons use deeper shades of the same hues so they stay readable.
+const presentation: Palette = {
+  bg: '#D9EEEA', paper: '#FFFFFF', chrome: '#F3FAF8', ink: '#123C44', muted: '#3F616A', faint: '#4F6F78',
+  green: '#16687A', greenDeep: '#0E4D5B', greenSoft: '#DCF0F4', greenSoftPressed: '#C6E6EC', lime: '#F0DD78', onAccent: '#FFFFFF',
+  border: '#CBE3DF', borderStrong: '#A9D0CB', pale: '#E8F5F2', separator: 'rgba(18,60,68,0.12)', fill: '#EEF7F5',
+  red: '#AD3437', redPressed: '#88272A', redSoft: '#FFE4E2', amber: '#7A5600', amberSoft: '#FFF3C4', amberPressed: '#FBE6A0', blue: '#3A4FA3', blueSoft: '#E3EAFF',
+  toast: '#123C44', toastText: '#FFFFFF', shadow: 'rgba(18,60,68,0.05)', shadowRaised: 'rgba(18,60,68,0.2)',
+  glass: 'rgba(255,255,255,0.6)', glassSolid: 'rgba(255,255,255,0.94)', glassRim: 'rgba(255,255,255,0.8)', glassHighlight: 'rgba(255,255,255,0.9)', glassEdge: 'rgba(18,60,68,0.12)',
+  hero: '#17697A', heroArt: '#5FA79B', heroEyebrow: '#F0DD78', limePressed: '#E4CF5E',
+  canvasImage: 'linear-gradient(115deg, #BFE6EE 0%, #D6EBD9 50%, #F6EDBE 100%)',
+  heroImage: 'linear-gradient(120deg, #17697A 0%, #23786F 55%, #3E7F4E 100%)',
 };
 /** Light palette, for the few module-level defaults that render before a scheme is known. */
 export const C = light;
@@ -48,16 +64,17 @@ const toneOf = (P: Palette): Record<Tone, { fg: string; bg: string }> => ({
 });
 export const tone = toneOf(light);
 
-export type Scheme = 'light' | 'dark';
-export const palettes: Record<Scheme, Palette> = { light, dark };
+export type Scheme = 'light' | 'dark' | 'presentation';
+export const palettes: Record<Scheme, Palette> = { light, dark, presentation };
 export const themes: Record<Scheme, { C: Palette; tone: Record<Tone, { fg: string; bg: string }>; shadow: ReturnType<typeof shadowOf> }> = {
   light: { C: light, tone: toneOf(light), shadow: shadowOf(light) },
   dark: { C: dark, tone: toneOf(dark), shadow: shadowOf(dark) },
+  presentation: { C: presentation, tone: toneOf(presentation), shadow: shadowOf(presentation) },
 };
-// Light / Dark / Auto choice from Settings. Auto (the default) follows the device. Kept on this device only:
+// Light / Dark / Auto / Presentation choice from Settings. Auto (the default) follows the device. Kept on this device only:
 // localStorage on the web (falls back to memory when blocked), SecureStore on native.
 export type Appearance = 'auto' | Scheme;
-export const APPEARANCES: readonly Appearance[] = ['auto', 'light', 'dark'];
+export const APPEARANCES: readonly Appearance[] = ['auto', 'light', 'dark', 'presentation'];
 const APPEARANCE_KEY = 'bitebeacon.appearance';
 const isAppearance = (v: unknown): v is Appearance => APPEARANCES.includes(v as Appearance);
 const web = Platform.OS === 'web';
@@ -77,7 +94,7 @@ export function useScheme(): Scheme {
   const device = useColorScheme(); const chosen = useAppearance();
   return chosen === 'auto' ? (device === 'dark' ? 'dark' : 'light') : chosen;
 }
-/** Builds a StyleSheet for both appearances once, at module load. */
+/** Builds a StyleSheet for every appearance once, at module load. */
 export function bothSchemes<T>(make: (P: Palette, sh: ReturnType<typeof shadowOf>) => T): Record<Scheme, T> {
-  return { light: make(light, shadowOf(light)), dark: make(dark, shadowOf(dark)) };
+  return { light: make(light, shadowOf(light)), dark: make(dark, shadowOf(dark)), presentation: make(presentation, shadowOf(presentation)) };
 }

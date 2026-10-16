@@ -23,6 +23,9 @@ beforeAll(async () => {
   await db.exec(readFileSync('supabase/migrations/202610150004_default_view_people.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150005_more_allergens.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/202610150006_admin_stats.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150009_admin_levels.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610160001_limited_admins_no_sign_ins.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150010_profile_without_allergies.sql', 'utf8'));
 });
 afterAll(async () => { await db?.close(); });
 async function asUser(id: string) { await db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${id}', false);`); }
@@ -41,11 +44,21 @@ describe('owner-only database boundary', () => {
     expect((await db.query('delete from public.profiles where id = $1 returning id', [A])).rows).toHaveLength(0);
     await expect(db.query(`insert into public.profiles(id, allergies, consent_version) values ($1, array['milk'], '2026-09-30')`, [A])).rejects.toThrow(/row-level security/);
   });
-  it('blocks unsupported, empty, and null allergy entries', async () => {
+  it('blocks unsupported and null allergy entries', async () => {
     await asUser(A);
-    for (const value of ["array['banana']", 'array[]::text[]', 'array[null]::text[]']) {
+    for (const value of ["array['banana']", 'array[null]::text[]']) {
       await expect(db.query(`update public.profiles set allergies = ${value} where id = $1`, [A])).rejects.toThrow(/supported_allergies/);
     }
+  });
+  it('allows an empty own allergy list so family can be set up first, but not an empty member', async () => {
+    await asUser(B);
+    await db.query(`insert into public.profiles(id, allergies, consent_version, display_name) values ($1, array[]::text[], '2026-09-30', 'Sam')`, [B]);
+    expect((await db.query<{ allergies: string[] }>('select allergies from public.profiles')).rows[0].allergies).toEqual([]);
+    await db.query(`insert into public.household_members(name, allergies, position) values ('Kid', array['peanuts'], 0)`);
+    await expect(db.query(`insert into public.household_members(name, allergies, position) values ('Empty', array[]::text[], 1)`)).rejects.toThrow(/member_supported_allergies/);
+    await db.exec('reset role;');
+    await db.query('delete from public.household_members where owner_id = $1', [B]);
+    await db.query('delete from public.profiles where id = $1', [B]);
   });
   it('blocks impersonation through changed id', async () => {
     await asUser(A);
@@ -253,5 +266,19 @@ describe('scan total and admin statistics', () => {
     expect(stats.allergens.gluten).toBe(2);
     expect(Object.values(stats.household_sizes as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(stats.profiles);
     expect(stats.pantry.items).toBe(await count('select count(*) as n from public.pantry_items'));
+  });
+  it('gives a limited admin only scans, accounts, activity and sign-ups', async () => {
+    const LIMITED = '77777777-aaaa-4777-8777-777777777777';
+    await db.exec(`reset role; insert into auth.users(id, email) values ('${LIMITED}', 'limited@example.com'); insert into public.admins(user_id, full_access) values ('${LIMITED}', false);`);
+    await asUser(LIMITED);
+    const stats = (await db.query<{ s: Record<string, any> }>('select public.admin_stats() as s')).rows[0].s;
+    expect(stats.full).toBe(false);
+    expect(Object.keys(stats).sort()).toEqual(['accounts', 'active_1d', 'active_30d', 'active_7d', 'full', 'generated_at', 'scans', 'signups_30d', 'signups_7d', 'signups_by_day']);
+    await asUser('99999999-9999-4999-8999-999999999999');
+    const full = (await db.query<{ s: Record<string, any> }>('select public.admin_stats() as s')).rows[0].s;
+    expect(full.full).toBe(true);
+    expect(full.pantry).toBeDefined();
+    expect(full.recent_sign_ins).toBeDefined();
+    await db.exec('reset role;');
   });
 });

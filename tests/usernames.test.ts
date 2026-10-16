@@ -14,13 +14,14 @@ beforeAll(async () => {
   // Supabase Auth fixtures: auth.users with a bcrypt password, as Supabase stores it.
   await db.exec(`create role anon; create role authenticated;
     create schema extensions; create extension pgcrypto with schema extensions;
-    create schema auth; create table auth.users(id uuid primary key, email text unique, encrypted_password text,
+    create schema auth; create table auth.users(id uuid primary key, email text unique, encrypted_password text, raw_user_meta_data jsonb,
       created_at timestamptz not null default now(), last_sign_in_at timestamptz);
     create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema public, auth to authenticated, anon;
     grant execute on function auth.uid() to authenticated, anon;`);
   await db.exec(readFileSync('supabase/migrations/202610150007_usernames.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/202610150008_username_display_name.sql', 'utf8'));
   const add = (id: string, email: string) => db.query(`insert into auth.users(id, email, encrypted_password)
     values ($1, $2, extensions.crypt($3, extensions.gen_salt('bf')))`, [id, email, PASSWORD]);
   await add(A, 'alex@users.bitebeacon.org');
@@ -34,6 +35,11 @@ describe('usernames', () => {
   it('claims the username of a username account, and only those', async () => {
     await db.exec('reset role;');
     expect((await db.query('select user_id, username from public.usernames')).rows).toEqual([{ user_id: A, username: 'alex' }]);
+  });
+  it('shows the username as the display name of username accounts only', async () => {
+    await db.exec('reset role;');
+    const rows = (await db.query<{ id: string; name: string | null }>(`select id, raw_user_meta_data->>'display_name' as name from auth.users order by id`)).rows;
+    expect(rows).toEqual([{ id: A, name: 'alex' }, { id: B, name: null }]);
   });
   it('refuses a username that is already held, even after its owner switched to a real email', async () => {
     await db.exec(`reset role; update auth.users set email = 'alex.real@example.com' where id = '${A}';`);

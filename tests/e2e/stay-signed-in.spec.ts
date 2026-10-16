@@ -16,7 +16,7 @@ async function fakeSupabase(page: Page) {
 async function signIn(page: Page, stay: boolean) {
   await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
   await page.getByLabel('Username or email').fill(USER.email);
-  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   const box = page.getByRole('checkbox', { name: /Stay signed in on this browser/ });
   await expect(box).toBeChecked();
   if (!stay) await box.click();

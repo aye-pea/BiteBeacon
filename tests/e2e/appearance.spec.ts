@@ -1,5 +1,8 @@
 import { expect, Page, test } from '@playwright/test';
 
+// These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
+
 const LIGHT = 'rgb(242, 244, 239)', DARK = 'rgb(14, 19, 17)';
 const canvas = (page: Page) => page.getByTestId('page-scroll').evaluate(el => {
   for (let node: Element | null = el; node; node = node.parentElement) {

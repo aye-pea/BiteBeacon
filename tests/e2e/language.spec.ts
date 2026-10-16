@@ -4,6 +4,9 @@ import { es } from '../../src/i18n/es';
 import { vi } from '../../src/i18n/vi';
 import { zhHant } from '../../src/i18n/zhHant';
 
+// These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
+
 test('choosing Español in Settings translates the app and results', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });

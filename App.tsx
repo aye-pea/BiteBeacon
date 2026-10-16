@@ -3,7 +3,7 @@ import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, Scro
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Eye, EyeOff, House, PanelsTopLeft, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
 import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
@@ -19,7 +19,10 @@ import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
 import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
-import { CartLogo } from './src/ui/logo';
+import { BrandLogo, CartLogo } from './src/ui/logo';
+import { setShowHome, useShowHome } from './src/ui/prefs';
+import { APP_VERSION } from './src/version';
+import { IS_BETA } from './src/lib/beta';
 
 type Page = 'overview' | 'scan' | 'pantry' | 'allergies' | 'history' | 'settings' | 'about' | 'admin';
 // 'me' is the account holder (allergies in profiles); other ids are household members.
@@ -33,7 +36,7 @@ const ticked = (pick: ViewPick, id: string, people: Person[]) => { const ids = p
 // Ticks or unticks one option. Returns null when that would leave nobody selected.
 const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | null => {
   const ids = picked(pick, people).map(p => p.id);
-  if (id === EVERYONE) return ids.length === people.length ? [ME] : [EVERYONE];
+  if (id === EVERYONE) return ids.length === people.length ? [people[0].id] : [EVERYONE];
   const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
   return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
 };
@@ -44,7 +47,7 @@ const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
-  const Component = { overview: Leaf, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
+  const Component = { overview: House, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
   return <Component accessible={false} size={size} color={color} strokeWidth={1.9} />;
 };
 // "No match" is deliberately informational blue with a neutral haptic, never a green check or success buzz: it is not a safety verdict.
@@ -62,8 +65,8 @@ function words({ t, tp, list, day }: I18n) {
   const allergyLabel = (id: AllergenId) => t(`allergen.${id}` as MessageKey);
   const labelOf = (english: string) => { const a = ALLERGENS.find(x => x.label === english); return a ? allergyLabel(a.id) : english; };
   const evidenceText = (e: Evidence) => t(`evidence.${e.via}` as MessageKey, { term: e.term, allergen: labelOf(e.allergen).toLowerCase() });
-  const kindTitle = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.title') : t(`${KIND_KEY[a.kind]}.title` as MessageKey);
-  const kindDetail = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.detail') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
+  const kindTitle = (a: Assessment) => t(`${KIND_KEY[a.kind]}.title` as MessageKey);
+  const kindDetail = (a: Assessment) => a.reason === 'no-allergies' ? t('kind.noMatch.noAllergies') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
   const summaryTitle = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'contains' ? tp('summary.contains', sm.count, { c: sm.count, n: sm.total })
     : sm.kind === 'traces' ? t('summary.traces', { c: sm.count, n: sm.total }) : sm.kind === 'unknown' ? t('summary.unknown', { c: sm.count, n: sm.total }) : t('summary.noMatch', { n: sm.total });
   const summaryDetail = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'no-match' ? t('summary.noMatchDetail') : sm.kind === 'unknown' ? `${t('summary.missing')} ${t('summary.caution')}` : t('summary.caution');
@@ -118,7 +121,11 @@ function AppContent() {
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const insets = useSafeAreaInsets();
+  const homeChoice = useShowHome(wide);
+  const showHome = wide || homeChoice; // the setting lives on phones only, so desktop always keeps Home
   const [page, setPage] = useState<Page>('overview');
+  const [showPassword, setShowPassword] = useState(false);
+  const [railOpen, setRailOpen] = useState(false);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -145,7 +152,7 @@ function AppContent() {
   // Sign-up takes a username; sign-in takes a username or an email added later in Settings.
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : 'signup');
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'reset'>(resetLinkFailed ? 'reset' : IS_BETA ? 'login' : 'signup');
   // Set while someone who opened a password reset link chooses their new password.
   const [recovering, setRecovering] = useState(openedResetLink);
   const [username, setUsername] = useState<string | null>(null);
@@ -153,6 +160,9 @@ function AppContent() {
   const [emailDraft, setEmailDraft] = useState('');
   const [emailAgain, setEmailAgain] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState(''); const [pwNew, setPwNew] = useState(''); const [pwBusy, setPwBusy] = useState(false);
+  // One eye state for both Change password boxes, so either button shows or hides both.
+  const [showPw, setShowPw] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stay, setStay] = useState(staySignedIn);
@@ -160,6 +170,9 @@ function AppContent() {
   const [myName, setMyName] = useState('');
   const [nameDraft, setNameDraft] = useState('');
   const [members, setMembers] = useState<Person[]>([]);
+  // Whether this account has a profiles row yet. Someone who skips their own allergies can still add family;
+  // the first household setting they save creates the row with an empty allergy list.
+  const hasProfile = useRef(false);
   const [defaultView, setDefaultView] = useState<ViewPick>([ME]);
   const [view, setView] = useState<ViewPick>([ME]);
   const [editing, setEditing] = useState<{ id: string | null; name: string; allergies: AllergenId[] } | null>(null);
@@ -173,19 +186,25 @@ function AppContent() {
   const [pantryDraft, setPantryDraft] = useState<{ date: string; none: boolean; error: boolean }>({ date: '', none: false, error: false });
   // Admins are listed in the database by hand; the dashboard shows only for them, never in the demo.
   const [isAdmin, setIsAdmin] = useState(false);
+  // Beta builds (deploy previews) are for admins only; the app waits for the admin check before showing anything.
+  const [adminChecked, setAdminChecked] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [statsFailed, setStatsFailed] = useState(false);
   const [statsBusy, setStatsBusy] = useState(false);
   const today = dayOf(new Date());
-  const resetHousehold = () => { setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
+  const resetHousehold = () => { hasProfile.current = false; setMyName(''); setNameDraft(''); setMembers([]); setDefaultView([ME]); setView([ME]); setEditing(null); setRemoving(null); setAllergyPerson(ME); };
   const say = (message: string, kind: Tone = 'warning') => { setFeedback(message); setFeedbackTone(kind); };
 
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data, error }) => { if (error) say(t('err.sessionRestore')); setSession(data.session); setBooting(false); });
-    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next); setBooting(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, next) => { if (event === 'PASSWORD_RECOVERY') setRecovering(true); setSession(next ? { ...next } : null); setBooting(false); });
     const app = AppState.addEventListener('change', state => {
-      if (state === 'active') supabase?.auth.startAutoRefresh();
+      if (state === 'active') {
+        supabase?.auth.startAutoRefresh();
+        // Picks up an email change confirmed in another tab or app, so Settings shows the new address.
+        void supabase?.auth.getUser().then(({ data }) => { const user = data.user; if (user) setSession(s => s && s.user.id === user.id ? { ...s, user } : s); });
+      }
       else { supabase?.auth.stopAutoRefresh(); setCamera(false); }
     });
     return () => { listener.subscription.unsubscribe(); app.remove(); };
@@ -193,9 +212,14 @@ function AppContent() {
   useEffect(() => {
     const current = ++generation.current;
     setHistory([]); setPantry([]); setProduct(null); setCamera(false); setProfileReady(false); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage());
-    setIsAdmin(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain('');
+    setIsAdmin(false); setAdminChecked(false); setStats(null); setStatsFailed(false); setUsername(null); setEmailDraft(''); setEmailAgain(''); setPwCurrent(''); setPwNew('');
     if (!session || !supabase || demo) return;
-    void checkAdmin().then(ok => { if (generation.current === current) setIsAdmin(ok); });
+    void checkAdmin().then(ok => {
+      if (generation.current !== current) return;
+      setIsAdmin(ok); setAdminChecked(true);
+      // Signing out locally keeps the person signed in on bitebeacon.org and their other devices.
+      if (IS_BETA && !ok) { haptic.error(); say(t('beta.adminsOnly'), 'danger'); void supabase?.auth.signOut({ scope: 'local' }); }
+    });
     // The username survives switching to a real email; before the usernames table exists it comes from the address.
     void loadUsername().then(name => { if (generation.current === current) setUsername(name ?? usernameFromEmail(session.user.email)); });
     Promise.all([
@@ -215,10 +239,12 @@ function AppContent() {
         : loaded.some(p => p.id === data?.default_member_id) ? [data!.default_member_id as string] : [ME];
       const preferred: ViewPick = data?.default_everyone ? [EVERYONE] : listed.length ? listed : [ME];
       const name = typeof data?.display_name === 'string' ? data.display_name : '';
+      hasProfile.current = !!data;
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
-      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(selected.length ? 'overview' : 'allergies');
-      toast(selected.length ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
+      // Only a first visit (no profile saved yet) opens on Allergies; a list saved with nothing selected is a real choice.
+      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? 'overview' : 'allergies');
+      toast(data ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
     });
   }, [session?.user.id]);
 
@@ -257,7 +283,7 @@ function AppContent() {
         const { error } = await supabase.auth.signInWithPassword({ email: await signInAddress(typed, password), password });
         if (error) throw error;
       }
-      setPassword('');
+      setPassword(''); setShowPassword(false);
     } catch { haptic.error(); say(t('auth.failed'), 'danger'); }
     finally { setAuthBusy(false); }
   };
@@ -277,9 +303,11 @@ function AppContent() {
     const { error } = await supabase.auth.updateUser({ password });
     setAuthBusy(false);
     if (error) { haptic.error(); say(t('auth.newPasswordFailed'), 'danger'); return; }
-    setPassword(''); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
+    setPassword(''); setShowPassword(false); setRecovering(false); haptic.success(); toast(t('auth.newPasswordDone'));
   };
   const accountEmail = session?.user.email && !usernameFromEmail(session.user.email) ? session.user.email : null;
+  // An address change waiting for its confirmation link; until then resets still go to accountEmail.
+  const pendingEmail = session?.user.new_email && session.user.new_email.toLowerCase() !== session.user.email?.toLowerCase() ? session.user.new_email : null;
   const saveRecoveryEmail = async () => {
     if (!supabase || !session) return;
     const next = emailDraft.trim();
@@ -290,15 +318,31 @@ function AppContent() {
     setEmailBusy(false);
     if (error) { haptic.error(); say(t('settings.emailFailed'), 'danger'); return; }
     setEmailDraft(''); setEmailAgain('');
+    // supabase-js updates its session object in place, so hand React a new one to redraw the address.
+    const user = data.user; if (user) setSession(s => s && s.user.id === user.id ? { ...s, user } : s);
     // With "Confirm email" off the address changes at once; otherwise Supabase first mails a confirmation link.
     if (data.user?.email?.toLowerCase() === next.toLowerCase()) { haptic.success(); say(t('settings.emailSaved'), 'success'); }
     else { haptic.success(); say(t('settings.emailCheck', { email: next }), 'success'); }
+  };
+  // Changing the password checks the current one first (a fresh sign-in as the same user), so an unlocked device can't be used to lock someone out.
+  const changePassword = async () => {
+    if (!supabase || !session?.user.email || pwBusy) return;
+    if (!pwCurrent) { haptic.warning(); say(t('settings.passwordWrong')); return; }
+    if (pwNew.length < 12) { haptic.warning(); say(t('settings.passwordShort')); return; }
+    if (pwNew === pwCurrent) { haptic.warning(); say(t('settings.passwordSame')); return; }
+    setPwBusy(true); setFeedback('');
+    const check = await supabase.auth.signInWithPassword({ email: session.user.email, password: pwCurrent });
+    if (check.error) { setPwBusy(false); haptic.error(); say(t('settings.passwordWrong'), 'danger'); return; }
+    const { error } = await supabase.auth.updateUser({ password: pwNew });
+    setPwBusy(false);
+    if (error) { haptic.error(); say(t('settings.passwordFailed'), 'danger'); return; }
+    setPwCurrent(''); setPwNew(''); setShowPw(false); haptic.success(); say(t('settings.passwordDone'), 'success');
   };
   const saveAllergies = async () => {
     if (saving) return;
     setProfileSaved(false);
     if (allergyPerson !== ME) { await saveMemberAllergies(allergyPerson); return; }
-    if (!draft.length) { haptic.warning(); say(t('allergies.chooseOne')); return; }
+    // An empty own list is allowed (migration 202610150010): someone may only shop for family. Members still need one.
     setSaving(true); setFeedback('');
     const current = generation.current;
     try {
@@ -306,14 +350,13 @@ function AppContent() {
         if (!session || !supabase) throw new Error('Sign in again.');
         const { error } = await supabase.from('profiles').upsert({ id: session.user.id, allergies: draft, consent_version: '2026-09-30' });
         if (error) throw error;
+        hasProfile.current = true;
       }
       if (current !== generation.current) return;
-      setAllergies([...draft]); setProfileReady(true); setProfileSaved(true);
-      const message = demo
-        ? t('allergies.savedDemo')
-        : t('allergies.savedCloud');
-      say(message, 'success'); haptic.success();
-      if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(message);
+      setAllergies([...draft]); setProfileReady(true);
+      // Confirm at the top of the screen and go straight to Scan; the pop-up stays until it fades. Errors stay on this page.
+      haptic.success(); toast(demo ? t('allergies.savedDemo') : t('allergies.savedCloud'), 'success', { title: t('allergies.profileSaved'), duration: 3000 });
+      navigate('scan');
     } catch { haptic.error(); say(t('allergies.saveFailed'), 'danger'); }
     finally { setSaving(false); }
   };
@@ -356,15 +399,16 @@ function AppContent() {
     toast(viewPeople.length > 1 ? t('toast.checkedPeople', { n: viewPeople.length }) : viewPeople[0].id === ME ? tp('toast.checkedMine', allergies.length) : t('toast.checkedFor', { name: viewPeople[0].name }), 'info');
   };
   const scan = async (code: string, fromCamera = false) => {
-    if (scanLock.current || !profileReady || !allergies.length) return;
+    if (scanLock.current || !canScan) return;
     scanLock.current = true; if (fromCamera) haptic.firm();
     pendingScroll.current = true;
     setBusy(true); setCamera(false); setProduct(null); setFeedback(''); setBarcode(code.trim());
     const current = generation.current;
     try {
       const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
-      // One more for the app-wide total: only the count goes up, nothing about the barcode or person.
-      recordScan();
+      // One more for the app-wide total, for signed-in accounts only (demo lookups don't count).
+      // Only the count goes up, nothing about the barcode or person.
+      if (!demo) recordScan();
       if (generation.current !== current) return;
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }
@@ -395,11 +439,18 @@ function AppContent() {
     ++generation.current; setSession(null); setAllergies([]); setDraft([]); resetHousehold(); setLang(detectLanguage()); setHistory([]); setPantry([]); setProduct(null); setProfileReady(false); setDeleteConfirm(false); say(t('account.deleted'), 'success');
   };
   // Settings changes are saved straight away; in the demo they only live in memory.
-  const settingsReady = profileReady && (demo || allergies.length > 0);
+  const settingsReady = profileReady;
   const failSettings = (message: string) => { haptic.error(); say(message, 'danger'); };
   const saveProfileFields = async (fields: Record<string, unknown>) => {
     if (demo) return true;
     if (!session || !supabase) return false;
+    if (!hasProfile.current) {
+      // No profiles row yet (own allergies never saved): create it, with the same consent given at sign-up.
+      const { error } = await supabase.from('profiles').insert({ id: session.user.id, allergies: [], consent_version: '2026-09-30', ...fields });
+      if (!error) { hasProfile.current = true; return true; }
+      if (error.code !== '23505') return false;
+      hasProfile.current = true;
+    }
     const { error } = await supabase.from('profiles').update(fields).eq('id', session.user.id);
     return !error;
   };
@@ -414,19 +465,21 @@ function AppContent() {
   };
   const toggleDefault = async (id: string) => {
     if (settingsBusy) return;
-    const next = togglePick(defaultView, id, people);
+    const next = togglePick(shownDefault, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
-    if (samePick(next, defaultView)) return;
+    if (!usable(next)) { haptic.warning(); toast(t('settings.keepAllergic'), 'info'); return; }
+    if (samePick(next, shownDefault)) return;
     const everyone = next.includes(EVERYONE);
     setSettingsBusy(true); setFeedback('');
     const ok = await saveProfileFields({ default_everyone: everyone, default_member_id: null, default_include_me: everyone || next.includes(ME), default_member_ids: everyone ? [] : next.filter(x => x !== ME) });
     setSettingsBusy(false);
     if (!ok) { failSettings(t('settings.defaultFailed')); return; }
-    setDefaultView(next); setView(next); haptic.select(); toast(everyone ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: i18n.list(picked(next, people).map(p => p.name)) }), 'info');
+    setDefaultView(next); setView(next); haptic.select(); toast(everyone ? t('toast.defaultEveryone') : t('toast.defaultPerson', { name: i18n.list(picked(next, checkPeople).map(p => p.name)) }), 'info');
   };
   const toggleView = (id: string) => {
-    const next = togglePick(activeView, id, people);
+    const next = togglePick(activeView, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
+    if (!usable(next)) { haptic.warning(); toast(t('settings.keepAllergic'), 'info'); return; }
     setView(next);
   };
   const saveMember = async () => {
@@ -471,7 +524,7 @@ function AppContent() {
   const chooseLanguage = async (next: Lang) => {
     if (settingsBusy || next === lang) return;
     setLang(next); setFeedback(''); haptic.select();
-    if (demo || !allergies.length) { toast(translate(next, 'toast.languageSaved', { name: languageName(next) }), 'info'); return; }
+    if (demo) { toast(translate(next, 'toast.languageSaved', { name: languageName(next) }), 'info'); return; }
     setSettingsBusy(true);
     const ok = await saveProfileFields({ language: next });
     setSettingsBusy(false);
@@ -527,17 +580,27 @@ function AppContent() {
               <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? t('member.saveChanges') : t('member.addToHousehold')}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>{t('common.cancel')}</Button></View></Reveal>;
   const people: Person[] = [{ id: ME, name: myName || t('common.you'), allergies }, ...members];
   const household = members.length > 0;
-  const activeView: ViewPick = household && picked(view, people).length ? view : [ME];
-  const viewPeople = picked(activeView, people);
-  const defaultPeople = picked(defaultView, people);
-  const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: people.length }) }, ...people.map(p => ({ id: p.id, label: p.name }))];
+  // The account holder is always listed once there is family, even with no allergies saved (parents whose kids have them).
+  const checkPeople = household || allergies.length ? people : members;
+  const multi = checkPeople.length > 1;
+  const anyAllergies = checkPeople.some(p => p.allergies.length > 0);
+  // A pick must include someone with allergies saved (when anyone has some), so a scan never quietly checks an empty list.
+  const usable = (pick: ViewPick) => { const ps = picked(pick, checkPeople); return ps.length > 0 && (!anyAllergies || ps.some(p => p.allergies.length > 0)); };
+  const firstPick: ViewPick = [(checkPeople.find(p => p.allergies.length > 0) ?? checkPeople[0])?.id ?? ME];
+  const activeView: ViewPick = multi && usable(view) ? view : firstPick;
+  const shownDefault: ViewPick = usable(defaultView) ? defaultView : firstPick;
+  // Nobody has allergies yet: lists render against the account holder, whose empty list flags nothing.
+  const viewPeople = checkPeople.length ? picked(activeView, checkPeople) : [people[0]];
+  const defaultPeople = picked(shownDefault, checkPeople);
+  const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: checkPeople.length }) }, ...checkPeople.map(p => ({ id: p.id, label: p.name }))];
   const results = product ? assessPeople(product, viewPeople) : [];
   const single = results.length === 1 ? results[0] : null;
   const summary = results.length > 1 ? householdSummary(results) : null;
   const assessment = single?.assessment ?? null;
   const evidence = single?.evidence ?? [];
   const focusAllergies = unionAllergies(viewPeople);
-  const canScan = profileReady && allergies.length > 0;
+  // Scanning works with no allergies saved: a normal "No selected allergens found" result (assess 'no-allergies').
+  const canScan = profileReady;
   const allergyOwner = allergyPerson === ME ? null : members.find(m => m.id === allergyPerson) ?? null;
   const savedDraft = allergyOwner ? allergyOwner.allergies : allergies;
   const profileChanged = draft.length !== savedDraft.length || draft.some(id => !savedDraft.includes(id));
@@ -583,11 +646,13 @@ function AppContent() {
   useEffect(() => {
     if (!docScroll) return;
     const el = document.createElement('style');
-    el.textContent = `html, body { height: auto; min-height: 100%; overflow: visible; background-color: ${C.bg}; } #root { height: auto; min-height: 100dvh; }`;
+    el.textContent = `html, body { height: auto; min-height: 100%; overflow: visible; background-color: ${C.bg};${C.canvasImage ? ` background-image: ${C.canvasImage}; background-attachment: fixed;` : ''} } #root { height: auto; min-height: 100dvh; }`;
     document.head.appendChild(el);
     return () => el.remove();
-  }, [docScroll, C.bg]);
+  }, [docScroll, C.bg, C.canvasImage]);
   useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
+  // With Home hidden from the toolbar, Scan is the first page instead.
+  useEffect(() => { if (!showHome && page === 'overview') setPage('scan'); }, [showHome, page]);
   // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
   const refreshStats = async () => {
     const current = generation.current;
@@ -604,20 +669,25 @@ function AppContent() {
   }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
+  // Password box with an eye button that shows or hides what was typed.
+  const passwordField = (input: React.ReactElement, shown = showPassword, setShown = setShowPassword, testID = 'toggle-password') => <View style={s.passwordBox}>{input}
+    <Tap testID={testID} accessibilityRole="button" accessibilityLabel={shown ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShown(!shown)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
+      {shown ? <EyeOff accessible={false} size={20} color={C.muted} /> : <Eye accessible={false} size={20} color={C.muted} />}</Tap></View>;
   if (booting) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
+  if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
-      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
       <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
-      <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />
+      <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />)}
       <Button loading={authBusy} onPress={saveNewPassword}>{authBusy ? t('auth.wait') : t('auth.newPasswordSave')}</Button>
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
     </View>
   </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
-      <View style={s.brand}><CartLogo size={42} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
       <Text style={[s.welcomeTitle, { fontSize: wide ? 58 : 40, lineHeight: wide ? 64 : 46 }]}>{t('welcome.title')}</Text>
       <Text style={[s.body, { maxWidth: 430 }]}>{t('welcome.body')}</Text>
@@ -636,23 +706,25 @@ function AppContent() {
         <Text style={s.label}>{authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')}</Text><TextInput testID="auth-login" accessibilityLabel={authMode === 'signup' ? t('auth.username') : t('auth.usernameOrEmail')} style={s.input} value={login} onChangeText={setLogin} placeholder={authMode === 'signup' ? 'alex_p' : ''} placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} autoComplete="username" maxLength={authMode === 'signup' ? 20 : 254} />
         {authMode === 'signup' && <Text style={s.footnote}>{t('auth.usernameHelp')}</Text>}
         {authMode === 'signup' && <><Text style={s.label}>{t('auth.emailOptional')}</Text><TextInput testID="signup-email" accessibilityLabel={t('auth.emailOptional')} accessibilityHint={t('auth.emailOptionalHelp')} style={s.input} value={signupEmail} onChangeText={setSignupEmail} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" maxLength={254} /><Text style={s.footnote}>{t('auth.emailOptionalHelp')}</Text></>}
-        <Text style={s.label}>{t('auth.password')}</Text><TextInput accessibilityLabel={t('auth.password')} style={s.input} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />
+        <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={authMode === 'signup' ? t('auth.passwordNew') : t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'} />)}
         {authMode === 'signup' && <Tap accessibilityRole="checkbox" aria-checked={consent} accessibilityState={{ checked: consent }} haptic="select" scaleTo={.99} onPress={() => setConsent(!consent)} style={s.consent}><CheckMark checked={consent} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.consent')}</Text></Tap>}
         {authMode === 'signup' && <View style={s.legalRow}><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('terms')}><Text style={s.link}>{t('legal.terms')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('privacy')}><Text style={s.link}>{t('legal.privacy')}</Text></Tap></View>}
         {Platform.OS === 'web' && <Tap testID="stay-signed-in" accessibilityRole="checkbox" aria-checked={stay} accessibilityState={{ checked: stay }} haptic="select" scaleTo={.99} onPress={() => setStay(!stay)} style={s.consent}><CheckMark checked={stay} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('auth.remember')}</Text></Tap>}
         <Button loading={authBusy} onPress={auth}>{authBusy ? t('auth.wait') : authMode === 'signup' ? t('auth.create') : t('auth.signIn')}</Button>
         {authMode === 'login' && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode('reset'); setLogin(''); setFeedback(''); }}><Text style={s.link}>{t('auth.forgot')}</Text></Tap>}
-        <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>
+        {!IS_BETA && <Tap accessibilityRole="button" haptic="select" onPress={() => { setAuthMode(authMode === 'signup' ? 'login' : 'signup'); setFeedback(''); }}><Text style={s.link}>{authMode === 'signup' ? t('auth.toLogin') : t('auth.toSignup')}</Text></Tap>}
       </> : <Notice kind="info">{t('auth.noCloud')}</Notice>}
       {feedback ? <Reveal trigger={feedback}><View accessibilityRole="alert"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
-      <Button secondary onPress={enterDemo} icon={<Sparkles accessible={false} size={18} color={C.green} />}>{t('demo.explore')}</Button>
-      <View style={s.inline}><LockKeyhole size={16} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('demo.memoryOnly')}</Text></View>
+      {IS_BETA ? <Notice kind="info">{t('beta.notice')}</Notice> : <>
+        <Button secondary onPress={enterDemo} icon={<Sparkles accessible={false} size={18} color={C.green} />}>{t('demo.explore')}</Button>
+        <View style={s.inline}><LockKeyhole size={16} color={C.muted} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('demo.memoryOnly')}</Text></View>
+      </>}
       <Text style={s.footnote}>{t('disclaimer.welcome')}</Text>
       <Tap accessibilityRole="link" haptic="select" onPress={() => openLegal('disclaimer')}><Text style={s.link}>{t('legal.disclaimer')}</Text></Tap>
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = (['overview', 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  const navItems: { page: Page; label: string; short: string }[] = ([...(showHome ? ['overview'] as const : []), 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
   // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
   // App details lives in Settings on every screen size.
@@ -682,50 +754,52 @@ function AppContent() {
       <View style={[s.statGrid, singleColumn && { flexDirection: 'column' }]}>
         {statTile('accounts', t('admin.accounts'), stats.accounts, t('admin.accountsSub', { n: stats.signups7d, m: stats.signups30d }))}
         {statTile('active', t('admin.active'), stats.active7d, t('admin.activeSub', { n: stats.active1d, m: stats.active30d }))}
-        {statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
-        {statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
+        {stats.full && statTile('members', t('admin.members'), stats.members, t('admin.membersSub', { n: stats.profiles }))}
+        {stats.full && statTile('pantry', t('admin.pantry'), stats.pantry.items, t('admin.pantrySub', { active: stats.pantry.active, expiry: stats.pantry.withExpiry, n: stats.pantry.accounts }))}
       </View>
       <View style={s.card}><Text style={s.cardTitle}>{t('admin.signups')}</Text>
         <View testID="admin-signups" accessible accessibilityLabel={`${t('admin.signups')}: ${big(stats.signups30d)}`} style={s.signupChart}>{stats.signupsByDay.map(d => <View key={d.day} style={s.signupColumn}><View style={[s.signupBar, { height: `${Math.max(d.count ? 6 : 2, (d.count / signupMax) * 100)}%`, opacity: d.count ? 1 : .35 }]} /></View>)}</View>
         {stats.signupsByDay.length > 0 && <View style={s.between}><Text style={s.footnote}>{i18n.day(stats.signupsByDay[0].day)}</Text><Text style={s.footnote}>{i18n.day(stats.signupsByDay[stats.signupsByDay.length - 1].day)}</Text></View>}</View>
-      <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
+      {stats.full && <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
         <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('admin.allergens')}</Text><Text style={s.footnote}>{t('admin.allergensNote')}</Text>
           {barRows(ALLERGENS.map(a => ({ key: a.id, label: allergyLabel(a.id), value: stats.allergens[a.id] ?? 0 })).sort((a, b) => b.value - a.value))}</View>
         <View style={[{ gap: 20 }, wide && { flex: 1 }]}>
           <View style={s.card}><Text style={s.cardTitle}>{t('admin.households')}</Text>{barRows(stats.householdSizes.map(h => ({ key: String(h.size), label: t('admin.householdSize', { n: h.size }), value: h.accounts })))}</View>
           <View style={s.card}><Text style={s.cardTitle}>{t('admin.languages')}</Text>{barRows(Object.entries(stats.languages).map(([code, value]) => ({ key: code, label: isLang(code) ? languageName(code) : t('admin.deviceLanguage'), value })).sort((a, b) => b.value - a.value))}</View>
         </View>
-      </View>
-      <View style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
+      </View>}
+      {stats.full && <View testID="admin-recent" style={s.card}><Text style={s.cardTitle}>{t('admin.recent')}</Text>
         {stats.recentSignIns.length ? stats.recentSignIns.slice(0, 20).map((u, i) => <View key={`${u.email}-${i}`} style={[s.memberRow, i > 0 && { borderTopWidth: 1, borderColor: C.separator }]}><UserRound size={18} color={C.muted} /><View style={{ flex: 1 }}><Text style={s.navText}>{usernameFromEmail(u.email) ?? u.email}</Text><Text style={s.footnote}>{u.lastSignInAt ? t('admin.lastSignIn', { time: i18n.dateTime(u.lastSignInAt), date: i18n.date(u.createdAt) }) : t('admin.neverSignedIn', { date: i18n.date(u.createdAt) })}</Text></View></View>)
-          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>
+          : <Text style={s.footnote}>{t('admin.empty')}</Text>}</View>}
     </>}
   </>;
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
-    {wide && <View style={s.sidebar}>
-      <View style={s.brand}><CartLogo size={40} color={C.green} /><Text style={s.brandText}>BiteBeacon</Text></View>
+    {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
+    {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
+      {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
+      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
       <View style={{ height: 32 }} />
-      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} pressedStyle={!active && { backgroundColor: C.pale }}>
-        <Icon name={item.page} color={active ? C.green : C.muted} /><Text style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}
+      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
+        <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
       </Tap>; })}
       <View style={{ flex: 1 }} />
-      <Tap accessibilityRole="button" disabled={busy || saving} onPress={leave} style={s.account} pressedStyle={{ opacity: .7 }}><View style={s.avatar}><UserRound size={19} color={C.green} /></View><View style={{ flex: 1 }}><Text style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text><Text style={s.footnote}>{demo ? t('account.demoSub') : t('account.yoursSub')}</Text></View><LogOut size={18} color={C.muted} /></Tap>
-    </View>}
+      <Tap accessibilityRole="button" accessibilityLabel={demo ? t('account.demo') : t('account.yours')} disabled={busy || saving} onPress={leave} style={s.account} hoverStyle={s.accountHover} pressedStyle={{ opacity: .7 }}><View style={[s.avatar, { flexShrink: 0 }]}><UserRound size={19} color={C.green} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={1} style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text>{demo && <Text numberOfLines={1} style={s.footnote}>{t('account.demoSub')}</Text>}</View><LogOut size={18} color={C.muted} /></View></Tap>
+    </View></View>}
     <View style={s.main}>
       {wide && <View style={s.topbar}>
         <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{navItems.find(n => n.page === page)?.label}</Text></Text></View>
-        <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : t('mode.connected')}</Text></View>
+        <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : IS_BETA ? t('mode.beta') : t('mode.connected')}</Text></View>
       </View>}
       <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}
         {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
         {page === 'overview' && <>
-          <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><Leaf size={28} color={C.green} /></View>}</View>
+          <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><CartLogo size={28} color={C.green} /></View>}</View>
           {alertCount > 0 && <Tap testID="pantry-alert" accessibilityRole="button" accessibilityHint={t('pantry.open')} haptic="select" scaleTo={.98} onPress={() => navigate('pantry')} style={[s.card, s.historyRow, { backgroundColor: tone[alerts.expired ? 'danger' : 'warning'].bg }]}>
             <CalendarClock size={24} color={tone[alerts.expired ? 'danger' : 'warning'].fg} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('pantry.alertTitle')}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{alertText}</Text></View><Text style={s.textLink}>{t('pantry.open')}</Text></Tap>}
           <View style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
-            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: '#C6E26C' }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
+            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: C.limePressed }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
             <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
@@ -770,7 +844,7 @@ function AppContent() {
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? t('result.fictional') : t('result.live')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('result.close')} haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
                 <Text style={s.sectionTitle}>{product.name}</Text><Text style={s.bodySmall}>{product.brand} · {product.barcode}</Text>
-                {household && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
+                {multi && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
                 {summary ? <>
                   <View testID="household-summary" style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{summaryTitle(summary)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{summaryDetail(summary)}</Text></View></View>
                   {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
@@ -825,7 +899,6 @@ function AppContent() {
               <Tap accessibilityRole="button" accessibilityLabel={t('history.deleteLabel', { name })} haptic={null} onPress={() => void deletePantryItem(item.id)} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><X size={18} color={C.red} /></Tap>
             </View>; })}</>}
         {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('settings.title')}</Text><Text style={s.body}>{t('settings.body')}</Text>
-          {!settingsReady && <Notice>{t('settings.saveFirst')}</Notice>}
           {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
           <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
@@ -834,9 +907,15 @@ function AppContent() {
             {username && <Text style={s.navText}>{t('settings.usernameIs', { name: username })}</Text>}
             <Text style={s.bodySmall}>{t('settings.recoveryHelp')}</Text>
             {accountEmail ? <Text style={s.navText}>{t('settings.recoveryCurrent', { email: accountEmail })}</Text> : <Notice>{t('settings.recoveryNone')}</Notice>}
+            {pendingEmail && <View testID="recovery-pending"><Notice>{t('settings.recoveryPending', { email: pendingEmail })}</Notice></View>}
             <Text style={s.label}>{t('auth.email')}</Text><TextInput testID="recovery-email" accessibilityLabel={t('auth.email')} style={s.input} value={emailDraft} onChangeText={setEmailDraft} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" editable={!emailBusy} />
             <Text style={s.label}>{t('settings.emailConfirm')}</Text><TextInput testID="recovery-email-again" accessibilityLabel={t('settings.emailConfirm')} style={s.input} value={emailAgain} onChangeText={setEmailAgain} placeholder="you@example.com" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="off" editable={!emailBusy} onSubmitEditing={() => void saveRecoveryEmail()} />
             {emailDraft.trim() !== '' && <Button loading={emailBusy} onPress={saveRecoveryEmail}>{t('settings.emailSave')}</Button>}</View>}
+          {!demo && session && <View testID="password-settings" style={s.card}><View style={s.inline}><KeyRound size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.passwordTitle')}</Text></View>
+              <Text style={s.bodySmall}>{t('settings.passwordHelp')}</Text>
+              <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPw, setShowPw, 'toggle-current-password')}
+              <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPw, setShowPw, 'toggle-new-password')}
+              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}
           <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
             <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
             {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
@@ -846,26 +925,29 @@ function AppContent() {
             {editing && !editing.id ? memberForm
               : !editing && members.length < MAX_MEMBERS && <Button secondary disabled={!settingsReady || settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: null, name: '', allergies: [] }); }} icon={<Plus accessible={false} size={18} color={C.green} />}>{t('member.add')}</Button>}
             {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>{t('settings.full', { n: MAX_MEMBERS })}</Text>}</View>
-          <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
-            <View testID="show-for-settings" style={{ gap: 6 }}>{(household ? viewOptions : viewOptions.filter(o => o.id === ME)).map(o => { const on = !household ? o.id === ME : ticked(defaultView, o.id, people); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
-            {!household && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>
+          {/* Choosing whose results show only makes sense once there is someone besides you. */}
+          {household && <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
+            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(shownDefault, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
+            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>
             {langOpen && <Reveal style={s.dropdownMenu}><View accessibilityRole="radiogroup">{LANGUAGES.map((l, i) => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} scaleTo={.99} disabled={settingsBusy} onPress={() => { setLangOpen(false); void chooseLanguage(l.code); }} style={[s.dropdownRow, i < LANGUAGES.length - 1 && s.groupedSeparator]} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }, on && { color: C.green, fontWeight: '700' }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></Reveal>}
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
+          {/* The toolbar choice is for the phone tab bar; the desktop sidebar always has room for Home. */}
+          {!wide && <View testID="toolbar-settings" style={s.card}><View style={s.inline}><PanelsTopLeft size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.toolbar')}</Text></View><Text style={s.bodySmall}>{t('settings.toolbarHelp')}</Text>
+            <Tap accessibilityRole="switch" aria-checked={showHome} accessibilityState={{ checked: showHome }} accessibilityLabel={t('settings.showHome')} haptic="select" onPress={() => setShowHome(!showHome)} style={[s.radioRow, showHome && s.allergySelected]} pressedStyle={!showHome && { backgroundColor: C.pale }}><CheckMark checked={showHome} /><Text style={[s.navText, { flex: 1 }]}>{t('settings.showHome')}</Text></Tap></View>}
           <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
-          {isAdmin && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+          {isAdmin && !wide && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
         {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sourcesTitle')}</Text><Text style={s.body}>{t('about.sourcesBody')}</Text><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://fdc.nal.usda.gov')}><Text style={s.link}>{t('about.usdaLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://world.openfoodfacts.org')}><Text style={s.link}>{t('about.offLink')}</Text></Tap><Tap accessibilityRole="link" haptic="select" onPress={() => Linking.openURL('https://opendatacommons.org/licenses/odbl/1-0/')}><Text style={s.link}>{t('about.license')}</Text></Tap></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('legal.title')}</Text>{lang !== 'en' && <Text style={s.footnote}>{t('legal.english')}</Text>}{(['disclaimer', 'privacy', 'terms'] as const).map(name => <Tap key={name} accessibilityRole="link" haptic="select" onPress={() => openLegal(name)}><Text style={s.link}>{t(`legal.${name}`)}</Text></Tap>)}</View>
-          <View style={[s.card, { backgroundColor: C.pale }]}><Sparkles size={25} color={C.green} /><Text style={s.cardTitle}>{t('about.nextTitle')}</Text><Text style={s.body}>{t('about.nextBody')}</Text></View>
           <View style={s.card}><Text style={s.cardTitle}>{t('about.sessionTitle')}</Text><Text style={s.bodySmall}>{demo ? t('about.sessionDemo') : t('about.sessionCloud')}</Text><Button secondary disabled={busy || saving} onPress={leave} icon={<LogOut accessible={false} size={17} color={C.ink} />}>{demo ? t('about.exitDemo') : t('about.signOut')}</Button>
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
-        <View style={s.footer}><Leaf size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version')}</Text></View>
+        <View style={s.footer}><CartLogo size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version', { version: APP_VERSION })}</Text></View>
       </Scroller>
       <View style={docScroll && [s.fixedBottom, { paddingBottom: insets.bottom }]} onLayout={docScroll ? e => setBottomBarHeight(e.nativeEvent.layout.height) : undefined}>
       {page === 'allergies' && <View style={s.profileActions}>
@@ -886,27 +968,39 @@ export default function App() { return <SafeAreaProvider><ToastProvider><AppCont
 
 // Browsers without backdrop blur get a nearly solid pill so the tab labels stay readable.
 const glassBlur = Platform.OS === 'web' && typeof CSS !== 'undefined' && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)'));
+// Gradient themes paint over their solid colour on the web; native keeps the solid colour.
+const webGradient = (image: string) => (Platform.OS === 'web' && image ? { backgroundImage: image } as object : {});
 const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bg, ...webGradient(C.canvasImage) }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: C.bg },
   appFrame: { flex: 1, flexDirection: 'row' }, main: { flex: 1, minWidth: 0, minHeight: 0 }, pageScroll: { flex: 1, minHeight: 0 },
   saveConfirmation: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.greenSoft },
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   progressTrack: { height: 4, borderRadius: 4, backgroundColor: C.pale, overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: C.green },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
-  sidebar: { width: '20%', maxWidth: 290, minWidth: 238, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, padding: 24 },
+  // The rail keeps its narrow width in the layout; the panel inside grows over the page on hover, so nothing reflows.
+  sidebarRail: { width: 88, zIndex: 10 },
+  sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingHorizontal: 16, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
+  sidebarClosed: { width: 88 }, sidebarOpen: { width: 264, boxShadow: shadow.raised },
+  // Labels stay in the layout either way and only fade, so rows keep their height and the icons never move.
+  railLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, overflow: 'hidden' },
+  railFade: Platform.OS === 'web' ? { transitionProperty: 'opacity', transitionDuration: '150ms' } as object : {}, railHidden: { opacity: 0 },
+  railBadge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 8, backgroundColor: C.red },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
-  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },
-  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, borderTopWidth: 1, borderColor: C.border }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
+  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft },
+  // Mouse hover on the sidebar: a tint plus a green bar on the left edge, so the row under the pointer is obvious.
+  navHover: { backgroundColor: C.pale, boxShadow: `inset 4px 0px 0px ${C.green}` }, navActiveHover: { boxShadow: `inset 4px 0px 0px ${C.green}` },
+  accountHover: { backgroundColor: C.pale }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },
+  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, paddingBottom: 6, paddingHorizontal: 6, borderTopWidth: 1, borderColor: C.border, borderRadius: 12 }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
   topbar: { paddingVertical: 12, paddingHorizontal: 18, flexWrap: 'wrap', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.chrome, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   breadcrumb: { fontSize: 13, color: C.muted, flexShrink: 1 }, modeBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenSoft, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 }, modeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1, color: C.green },
   content: { padding: 36, gap: 24, width: '100%', maxWidth: 1320, alignSelf: 'center' },
   demoBar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4, backgroundColor: C.amberSoft, borderRadius: 16, paddingVertical: 4, paddingLeft: 14, paddingRight: 4 }, demoExit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }, pageTitle: { ...type.largeTitle, color: C.ink, marginBottom: 4, flexShrink: 1 },
   body: { ...type.body, color: C.muted }, bodySmall: { ...type.subhead, color: C.muted }, footnote: { ...type.footnote, color: C.muted }, roundLeaf: { padding: 16, borderWidth: 1, borderColor: C.border, borderRadius: 50, backgroundColor: C.paper },
-  hero: { flexDirection: 'row', backgroundColor: '#214B3C', borderRadius: 26, overflow: 'hidden' }, heroCopy: { flex: 1.35, padding: 32, gap: 16 }, heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: '#CBD9AE' }, heroTitle: { color: '#FAFCF4', fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 }, heroBody: { color: '#C7D4C7', fontSize: 15, lineHeight: 22, maxWidth: 360 }, heroCaption: { color: '#ADC2B0', ...type.footnote },
+  hero: { flexDirection: 'row', backgroundColor: C.hero, ...webGradient(C.heroImage), borderRadius: 26, overflow: 'hidden' }, heroCopy: { flex: 1.35, padding: 32, gap: 16 }, heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: C.heroEyebrow }, heroTitle: { color: '#FAFCF4', fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 }, heroBody: { color: '#C7D4C7', fontSize: 15, lineHeight: 22, maxWidth: 360 }, heroCaption: { color: '#ADC2B0', ...type.footnote },
   limeButton: { backgroundColor: C.lime, minHeight: 50, paddingVertical: 13, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 999 }, limeButtonText: { color: HERO_INK, ...type.headline },
-  heroArt: { flex: .8, padding: 26, backgroundColor: '#2D5A48', alignItems: 'center', justifyContent: 'center' }, scanIllustration: { backgroundColor: '#FCFCF5', borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, transform: [{ rotate: '5deg' }], gap: 12, boxShadow: '0px 14px 35px #183E3333' }, tinyLeaf: { padding: 5, backgroundColor: '#EDF2DD', borderRadius: 30 }, labelMini: { fontSize: 8, letterSpacing: 2, fontWeight: '700', color: C.green }, packageIllustration: { backgroundColor: '#E8EACD', padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 }, packageBrand: { color: '#64754A', fontSize: 14, fontStyle: 'italic' }, packageName: { color: C.green, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 }, packageBottom: { fontSize: 7, letterSpacing: 1, color: C.muted }, illustrationBarcode: { alignItems: 'center' },
+  heroArt: { flex: .8, padding: 26, backgroundColor: C.heroArt, alignItems: 'center', justifyContent: 'center' }, scanIllustration: { backgroundColor: '#FCFCF5', borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, transform: [{ rotate: '5deg' }], gap: 12, boxShadow: '0px 14px 35px #183E3333' }, tinyLeaf: { padding: 5, backgroundColor: '#EDF2DD', borderRadius: 30 }, labelMini: { fontSize: 8, letterSpacing: 2, fontWeight: '700', color: C.green }, packageIllustration: { backgroundColor: '#E8EACD', padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 }, packageBrand: { color: '#64754A', fontSize: 14, fontStyle: 'italic' }, packageName: { color: C.green, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 }, packageBottom: { fontSize: 7, letterSpacing: 1, color: C.muted }, illustrationBarcode: { alignItems: 'center' },
   // Cards share a row's width with flex only when wide. In the phone column a flex basis of 0 squeezed them
   // shorter than their content (clipped Household row, caption spilling under the lookup card).
   columns: { flexDirection: 'row', gap: 20 }, card: { backgroundColor: C.paper, borderRadius: 22, padding: 20, gap: 13, boxShadow: shadow.card },
@@ -931,7 +1025,8 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sampleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, borderBottomWidth: 1, borderColor: C.border }, sampleSwatch: { padding: 7, borderRadius: 9 },
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
-  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
+  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  passwordBox: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 3, borderWidth: 1, borderColor: C.fill, borderRadius: 14, backgroundColor: C.fill }, passwordInput: { flex: 1, minWidth: 0, minHeight: 50, paddingVertical: 13, paddingLeft: 16, ...type.body, color: C.ink }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }, statTile: { flexGrow: 1, gap: 6 }, statNumber: { ...type.largeTitle, color: C.ink },

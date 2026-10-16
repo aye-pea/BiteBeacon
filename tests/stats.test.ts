@@ -19,4 +19,9 @@ describe('admin statistics', () => {
     expect(s.allergens).toEqual({});
     expect(parseAdminStats(null).pantry.items).toBe(0);
   });
+  it('treats stats as full unless the database says the admin is limited', () => {
+    expect(parseAdminStats({}).full).toBe(true);
+    expect(parseAdminStats({ full: true }).full).toBe(true);
+    expect(parseAdminStats({ full: false }).full).toBe(false);
+  });
 });

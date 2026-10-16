@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { en as EN } from '../../src/i18n/en';
 
 // Supabase is answered locally by page.route, so no real account or project is touched.
 const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -13,29 +14,29 @@ const STATS = {
   household_sizes: { 1: 18, 2: 7, 3: 5, 4: 3 }, languages: { device: 22, es: 6, zh: 3, en: 2 },
   pantry: { items: 88, active: 52, with_expiry: 61, accounts: 11 },
 };
-async function fakeSupabase(page: Page, admin: boolean) {
+async function fakeSupabase(page: Page, admin: boolean, extra: object = {}, allergies: string[] = ['milk']) {
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: USER.id, role: 'authenticated', aud: 'authenticated', exp })}.test`;
   const calls = { scans: 0, stats: 0 };
   await page.route('**/auth/v1/token**', route => route.fulfill({ json: { access_token: token, token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: 'test-refresh', user: USER } }));
   await page.route('**/auth/v1/user**', route => route.fulfill({ json: USER }));
   await page.route('**/auth/v1/logout**', route => route.fulfill({ status: 204, body: '' }));
-  await page.route('**/rest/v1/profiles**', route => route.fulfill({ json: { allergies: ['milk'], display_name: null, default_everyone: false, default_member_id: null, language: null } }));
+  await page.route('**/rest/v1/profiles**', route => route.fulfill({ json: { allergies, display_name: null, default_everyone: false, default_member_id: null, language: null } }));
   await page.route('**/rest/v1/household_members**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/pantry_items**', route => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/rpc/is_admin**', route => route.fulfill({ json: admin }));
-  await page.route('**/rest/v1/rpc/admin_stats**', route => { calls.stats++; return admin ? route.fulfill({ json: { ...STATS, scans: STATS.scans + calls.scans } }) : route.fulfill({ status: 400, json: { message: 'admin_only' } }); });
+  await page.route('**/rest/v1/rpc/admin_stats**', route => { calls.stats++; return admin ? route.fulfill({ json: { ...STATS, ...extra, scans: STATS.scans + calls.scans } }) : route.fulfill({ status: 400, json: { message: 'admin_only' } }); });
   await page.route('**/rest/v1/rpc/record_scan**', async route => { calls.scans++; expect(route.request().postData() ?? '').not.toMatch(/\d{8}/); await route.fulfill({ status: 204, body: '' }); });
   await page.route('**/fdc/v1/**', route => route.fulfill({ json: { foods: [] } }));
   await page.route('**/api/v2/product/**', route => route.fulfill({ json: { status: 0 } }));
   return calls;
 }
-async function signIn(page: Page) {
+async function signIn(page: Page, toast = 'Signed in · profile loaded') {
   await page.getByRole('button', { name: 'Already have an account? Sign in' }).click();
   await page.getByLabel('Username or email').fill(USER.email);
-  await page.getByLabel('Password').fill('local-test-only-password');
+  await page.getByLabel('Password', { exact: true }).fill('local-test-only-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByTestId('toast')).toContainText('Signed in · profile loaded');
+  await expect(page.getByTestId('toast')).toContainText(toast);
 }
 async function lookUp(page: Page) {
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
@@ -54,7 +55,7 @@ test('admins see the live dashboard, and each lookup adds one to the anonymous t
   await lookUp(page);
   await expect.poll(() => calls.scans).toBe(1);
 
-  await page.getByRole('button', { name: 'Admin dashboard', exact: true }).click();
+  await page.getByRole('button', { name: 'Admin Dashboard', exact: true }).click();
   await expect(page.getByTestId('admin-scans')).toContainText('1,205');
   await expect(page.getByTestId('admin-accounts')).toContainText('37');
   await expect(page.getByText('new.person@example.test')).toBeVisible();
@@ -62,7 +63,29 @@ test('admins see the live dashboard, and each lookup adds one to the anonymous t
   await page.screenshot({ path: 'artifacts/admin-dashboard.png' });
 });
 
-test('the dashboard is hidden from other accounts and from the demo; sample taps are not counted', async ({ page }) => {
+test('limited admins see scans, accounts, activity and sign-ups, without sign-in list, pantry, household, allergen or language panes', async ({ page }) => {
+  await fakeSupabase(page, true, { full: false });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'Admin Dashboard', exact: true }).click();
+  await expect(page.getByTestId('admin-scans')).toContainText('1,204');
+  await expect(page.getByTestId('admin-accounts')).toContainText('37');
+  await expect(page.getByTestId('admin-active')).toBeVisible();
+  await expect(page.getByTestId('admin-signups')).toBeVisible();
+  await expect(page.getByTestId('admin-recent')).toHaveCount(0);
+  await expect(page.getByTestId('admin-members')).toHaveCount(0);
+  await expect(page.getByTestId('admin-pantry')).toHaveCount(0);
+  for (const key of ['admin.allergens', 'admin.households', 'admin.languages'] as const) await expect(page.getByText(EN[key], { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/admin-dashboard-limited.png', fullPage: true });
+  // The sidebar already links the dashboard on desktop, so Settings only offers it on phones.
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByTestId('open-admin')).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByTestId('open-admin')).toBeVisible();
+});
+
+test('the dashboard is hidden from other accounts and from the demo; demo lookups and sample taps are not counted', async ({ page }) => {
   const calls = await fakeSupabase(page, false);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -78,10 +101,27 @@ test('the dashboard is hidden from other accounts and from the demo; sample taps
   await page.getByRole('button', { name: 'Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('product-result')).toBeVisible();
   expect(calls.scans).toBe(0);
-  // Demo lookups count too, signed out.
+  // Demo lookups don't count either; only signed-in accounts add to the total.
   await lookUp(page);
-  await expect.poll(() => calls.scans).toBe(1);
+  await page.waitForTimeout(500);
+  expect(calls.scans).toBe(0);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByTestId('open-admin')).toHaveCount(0);
   expect(calls.stats).toBe(0);
+});
+
+test('someone with no allergies saved can scan and gets a normal result with nothing flagged', async ({ page }) => {
+  const calls = await fakeSupabase(page, false, {}, []);
+  await page.route('**/fdc/v1/**', route => route.fulfill({ json: { foods: [{ gtinUpc: '3017620422003', description: 'HAZELNUT SPREAD', brandOwner: 'Test', ingredients: 'SUGAR, PALM OIL, HAZELNUTS, MILK', dataType: 'Branded' }] } }));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  // A saved list with nothing selected is a real choice, so the app opens normally instead of on Allergies.
+  await signIn(page, 'profile loaded');
+  await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Choose your allergies' })).toHaveCount(0);
+  await page.getByLabel('Barcode number').fill('3017620422003');
+  await page.getByRole('button', { name: 'Look up product' }).click();
+  await expect(page.getByText('No selected allergens found').first()).toBeVisible();
+  await expect(page.getByText(/No allergies are saved for this person/).first()).toBeVisible();
+  await expect.poll(() => calls.scans).toBe(1);
 });

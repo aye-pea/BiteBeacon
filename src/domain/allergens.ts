@@ -24,10 +24,11 @@ export type Product = {
   source: 'sample' | 'usda' | 'openfoodfacts'; sourceId?: string; fetchedAt: string; updatedAt?: string; ingredientLanguage: 'en' | 'unknown';
 };
 // title/detail are the English wording; the UI translates from kind and reason.
-export type Assessment = { kind: 'contains' | 'traces' | 'unknown' | 'no-match'; title: string; detail: string; matches: string[]; reason?: 'no-profile' | 'gluten' };
+export type Assessment = { kind: 'contains' | 'traces' | 'unknown' | 'no-match'; title: string; detail: string; matches: string[]; reason?: 'no-allergies' | 'gluten' };
 const tag = (s: string) => s.toLowerCase().replace(/^[a-z]{2}:/, '');
 export function assess(product: Product, selected: AllergenId[]): Assessment {
-  if (!selected.length) return { kind: 'unknown', title: 'Choose your allergies first', detail: 'No allergy profile is selected. This product has not been checked for you.', matches: [], reason: 'no-profile' };
+  // Nobody to check for (e.g. a parent with no allergies): a normal result with nothing flagged, still never "safe".
+  if (!selected.length) return { kind: 'no-match', title: 'No selected allergens found', detail: 'No allergies are saved for this person, so nothing was flagged. This is not a safe-to-eat guarantee; always check the package.', matches: [], reason: 'no-allergies' };
   const active = ALLERGENS.filter(a => selected.includes(a.id));
   const contains = active.filter(a => a.tags.some(t => product.allergens.map(tag).includes(t)));
   const traces = active.filter(a => a.tags.some(t => product.traces.map(tag).includes(t)));
