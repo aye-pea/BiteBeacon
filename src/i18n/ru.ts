@@ -141,7 +141,7 @@ export const ru: Messages = {
   'toast.nameSaved': 'Имя сохранено · в результатах: «{name}»', 'toast.nameCleared': 'Имя удалено · в результатах: «{you}»',
   'settings.household': 'Семья', 'settings.count': '{n} из {max} чел.', 'settings.youTag': '(вы)', 'settings.noAllergies': 'Аллергии ещё не сохранены',
   'settings.editYours': 'Изменить свои аллергии', 'settings.full': 'Семья заполнена: не более {n} чел. помимо вас.',
-  'settings.showFor': 'Показывать результаты для', 'settings.showForHelp': 'Кого скан проверяет по умолчанию. Отметьте одного человека или любое сочетание. Изменить можно и в любом результате.', 'settings.keepOne': 'Оставьте выбранным хотя бы одного человека.',
+  'settings.showFor': 'Показывать результаты для', 'settings.showForHelp': 'Кого скан проверяет по умолчанию. Отметьте одного человека или любое сочетание. Изменить можно и в любом результате.', 'settings.keepOne': 'Оставьте выбранным хотя бы одного человека.', 'settings.keepAllergic': 'Оставьте выбранным хотя бы одного человека с сохранёнными аллергиями.',
   'settings.defaultLabel': 'По умолчанию: {label}', 'settings.addToChoose': 'Добавьте человека, чтобы выбрать «{everyone}».',
   'settings.defaultFailed': 'Не удалось сохранить выбор по умолчанию. Прежний выбор по-прежнему действует.',
   'toast.defaultEveryone': 'Теперь по умолчанию показываются все', 'toast.defaultPerson': 'Теперь по умолчанию показывается: {name}',

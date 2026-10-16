@@ -448,9 +448,10 @@ function AppContent() {
   };
   const toggleDefault = async (id: string) => {
     if (settingsBusy) return;
-    const next = togglePick(defaultView, id, checkPeople);
+    const next = togglePick(shownDefault, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
-    if (samePick(next, defaultView)) return;
+    if (!usable(next)) { haptic.warning(); toast(t('settings.keepAllergic'), 'info'); return; }
+    if (samePick(next, shownDefault)) return;
     const everyone = next.includes(EVERYONE);
     setSettingsBusy(true); setFeedback('');
     const ok = await saveProfileFields({ default_everyone: everyone, default_member_id: null, default_include_me: everyone || next.includes(ME), default_member_ids: everyone ? [] : next.filter(x => x !== ME) });
@@ -461,6 +462,7 @@ function AppContent() {
   const toggleView = (id: string) => {
     const next = togglePick(activeView, id, checkPeople);
     if (!next) { haptic.warning(); toast(t('settings.keepOne'), 'info'); return; }
+    if (!usable(next)) { haptic.warning(); toast(t('settings.keepAllergic'), 'info'); return; }
     setView(next);
   };
   const saveMember = async () => {
@@ -561,14 +563,18 @@ function AppContent() {
               <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? t('member.saveChanges') : t('member.addToHousehold')}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>{t('common.cancel')}</Button></View></Reveal>;
   const people: Person[] = [{ id: ME, name: myName || t('common.you'), allergies }, ...members];
   const household = members.length > 0;
-  // Results are only checked for people with allergies saved, so an account holder without any can still check for family.
-  const checkPeople = allergies.length ? people : members;
+  // The account holder is always listed once there is family, even with no allergies saved (parents whose kids have them).
+  const checkPeople = household || allergies.length ? people : members;
   const multi = checkPeople.length > 1;
-  const firstPick: ViewPick = [checkPeople[0]?.id ?? ME];
-  const activeView: ViewPick = multi && picked(view, checkPeople).length ? view : firstPick;
+  const anyAllergies = checkPeople.some(p => p.allergies.length > 0);
+  // A pick must include someone with allergies saved (when anyone has some), so a scan never quietly checks an empty list.
+  const usable = (pick: ViewPick) => { const ps = picked(pick, checkPeople); return ps.length > 0 && (!anyAllergies || ps.some(p => p.allergies.length > 0)); };
+  const firstPick: ViewPick = [(checkPeople.find(p => p.allergies.length > 0) ?? checkPeople[0])?.id ?? ME];
+  const activeView: ViewPick = multi && usable(view) ? view : firstPick;
+  const shownDefault: ViewPick = usable(defaultView) ? defaultView : firstPick;
   // Nobody has allergies yet: lists render against the account holder, whose empty list flags nothing.
   const viewPeople = checkPeople.length ? picked(activeView, checkPeople) : [people[0]];
-  const defaultPeople = picked(defaultView, checkPeople);
+  const defaultPeople = picked(shownDefault, checkPeople);
   const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: checkPeople.length }) }, ...checkPeople.map(p => ({ id: p.id, label: p.name }))];
   const results = product ? assessPeople(product, viewPeople) : [];
   const single = results.length === 1 ? results[0] : null;
@@ -899,7 +905,7 @@ function AppContent() {
             {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>{t('settings.full', { n: MAX_MEMBERS })}</Text>}</View>
           {/* Choosing whose results show only makes sense once there is someone besides you. */}
           {household && <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
-            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(defaultView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
+            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(shownDefault, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
             {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}
           <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>

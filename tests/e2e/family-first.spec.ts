@@ -79,6 +79,16 @@ test('someone with no allergies of their own can add family and check food for t
   await expect(page.getByRole('button', { name: 'Save name' })).toHaveCount(0);
   expect(seen.profileInserts[0]).toMatchObject({ allergies: [], consent_version: '2026-09-30', display_name: 'Pat' });
 
+  // The account holder is listed too, even with no allergies, but a scan must still check someone who has some.
+  const showFor = page.getByTestId('show-for-settings');
+  await expect(showFor.getByRole('checkbox')).toHaveCount(3); // Everyone, you, Mia
+  await expect(showFor.getByRole('checkbox', { name: 'Default: Mia' })).toBeChecked();
+  await expect(showFor.getByRole('checkbox', { name: /^Default: (You|Pat)$/ })).not.toBeChecked();
+  await showFor.getByRole('checkbox', { name: /^Default: (You|Pat)$/ }).click();
+  await expect(showFor.getByRole('checkbox', { name: /^Default: (You|Pat)$/ })).toBeChecked();
+  await showFor.getByRole('checkbox', { name: 'Default: Mia' }).click();
+  await expect(page.getByTestId('toast')).toContainText('Keep at least one person with allergies saved selected.');
+  await expect(showFor.getByRole('checkbox', { name: 'Default: Mia' })).toBeChecked();
   // Scanning is open (it checks Mia's list) instead of sending Pat to choose allergies.
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Choose allergies' })).toHaveCount(0);

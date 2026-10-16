@@ -141,7 +141,7 @@ export const zhHant: Messages = {
   'toast.nameSaved': '名字已儲存 · 結果將顯示「{name}」', 'toast.nameCleared': '名字已清除 · 結果將顯示「{you}」',
   'settings.household': '家庭成員', 'settings.count': '{n}/{max} 人', 'settings.youTag': '（你）', 'settings.noAllergies': '尚未儲存過敏原',
   'settings.editYours': '編輯你的過敏原', 'settings.full': '家庭成員已滿：除你之外最多 {n} 人。',
-  'settings.showFor': '顯示結果物件', 'settings.showForHelp': '掃描時預設檢查的人。可以選擇任何一人或任意組合，也可以在任何結果中更改。', 'settings.keepOne': '請至少保留一人。',
+  'settings.showFor': '顯示結果物件', 'settings.showForHelp': '掃描時預設檢查的人。可以選擇任何一人或任意組合，也可以在任何結果中更改。', 'settings.keepOne': '請至少保留一人。', 'settings.keepAllergic': '請至少保留一位已儲存過敏原的人。',
   'settings.defaultLabel': '預設：{label}', 'settings.addToChoose': '新增一位成員後即可選擇「{everyone}」。',
   'settings.defaultFailed': '無法儲存預設設定。你之前的選擇仍然有效。',
   'toast.defaultEveryone': '結果現在預設顯示所有人', 'toast.defaultPerson': '結果現在預設顯示 {name}',

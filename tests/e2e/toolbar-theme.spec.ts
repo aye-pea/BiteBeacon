@@ -36,7 +36,7 @@ test('desktop always keeps Home in the sidebar and has no Toolbar setting', asyn
   await expect(page.getByTestId('toolbar-settings')).toHaveCount(0);
 });
 
-test('the Presentation theme uses the pitch deck colours and the footer shows version 1.01', async ({ page }) => {
+test('the Presentation theme uses the pitch deck colours and the footer shows version 1.1', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true'));
@@ -45,7 +45,7 @@ test('the Presentation theme uses the pitch deck colours and the footer shows ve
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' }).click();
   await expect(page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Presentation' })).toBeChecked();
-  await expect(page.getByText('BiteBeacon · Version 1.01')).toBeVisible();
+  await expect(page.getByText('BiteBeacon · Version 1.1')).toBeVisible();
   await page.screenshot({ path: 'artifacts/presentation-settings.png' });
   await page.getByRole('button', { name: 'Overview', exact: true }).click();
   await page.screenshot({ path: 'artifacts/presentation-home.png' });
@@ -102,7 +102,8 @@ test('the account holder can save their own list with no allergies and still che
   await page.getByRole('button', { name: 'Overview', exact: true }).click();
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   await expect(page.getByTestId('product-result')).toBeVisible();
-  await expect(page.getByTestId('product-result').getByText('Alex', { exact: true })).toHaveCount(0);
+  // Alex is still listed under Everyone, honestly marked as having no allergies saved.
+  await expect(page.getByTestId('product-result').getByText('Alex', { exact: true }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 

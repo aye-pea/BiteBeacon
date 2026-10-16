@@ -141,7 +141,7 @@ export const hi: Messages = {
   'toast.nameSaved': 'नाम सेव हो गया · नतीजों में “{name}” दिखेगा', 'toast.nameCleared': 'नाम हटा दिया गया · नतीजों में “{you}” दिखेगा',
   'settings.household': 'परिवार', 'settings.count': '{max} में से {n} लोग', 'settings.youTag': '(आप)', 'settings.noAllergies': 'अभी तक कोई एलर्जी सेव नहीं की गई',
   'settings.editYours': 'अपनी एलर्जी बदलें', 'settings.full': 'परिवार भर गया है: आपके अलावा ज़्यादा से ज़्यादा {n} लोग।',
-  'settings.showFor': 'किसके नतीजे दिखाएं', 'settings.showForHelp': 'स्कैन डिफ़ॉल्ट रूप से किसकी जांच करे। किसी एक को या किसी भी मेल को चुनें। आप किसी भी नतीजे पर भी इसे बदल सकते हैं।', 'settings.keepOne': 'कम से कम एक व्यक्ति चुना हुआ रखें।',
+  'settings.showFor': 'किसके नतीजे दिखाएं', 'settings.showForHelp': 'स्कैन डिफ़ॉल्ट रूप से किसकी जांच करे। किसी एक को या किसी भी मेल को चुनें। आप किसी भी नतीजे पर भी इसे बदल सकते हैं।', 'settings.keepOne': 'कम से कम एक व्यक्ति चुना हुआ रखें।', 'settings.keepAllergic': 'कम से कम एक ऐसे व्यक्ति को चुना रखें जिसकी एलर्जी सहेजी गई हो।',
   'settings.defaultLabel': 'डिफ़ॉल्ट: {label}', 'settings.addToChoose': '“{everyone}” चुनने के लिए किसी व्यक्ति को जोड़ें।',
   'settings.defaultFailed': 'डिफ़ॉल्ट सेव नहीं हो सका। आपका पिछला चुनाव अब भी लागू है।',
   'toast.defaultEveryone': 'अब नतीजे डिफ़ॉल्ट रूप से सभी के लिए दिखेंगे', 'toast.defaultPerson': 'अब नतीजे डिफ़ॉल्ट रूप से {name} के लिए दिखेंगे',

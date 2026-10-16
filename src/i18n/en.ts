@@ -141,7 +141,7 @@ export const en = {
   'toast.nameSaved': 'Name saved · results show “{name}”', 'toast.nameCleared': 'Name cleared · results show “{you}”',
   'settings.household': 'Household', 'settings.count': '{n} of {max} people', 'settings.youTag': '(you)', 'settings.noAllergies': 'No allergies saved yet',
   'settings.editYours': 'Edit your allergies', 'settings.full': 'Household is full: up to {n} people besides you.',
-  'settings.showFor': 'Show results for', 'settings.showForHelp': 'Who a scan checks by default. Tick anyone, or any combination. You can also change it on any result.', 'settings.keepOne': 'Keep at least one person selected.',
+  'settings.showFor': 'Show results for', 'settings.showForHelp': 'Who a scan checks by default. Tick anyone, or any combination. You can also change it on any result.', 'settings.keepOne': 'Keep at least one person selected.', 'settings.keepAllergic': 'Keep at least one person with allergies saved selected.',
   'settings.defaultLabel': 'Default: {label}', 'settings.addToChoose': 'Add a person to choose “{everyone}”.',
   'settings.defaultFailed': 'Default could not be saved. Your previous choice is still active.',
   'toast.defaultEveryone': 'Results now show everyone by default', 'toast.defaultPerson': 'Results now show {name} by default',
