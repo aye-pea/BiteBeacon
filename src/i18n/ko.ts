@@ -7,7 +7,7 @@ export const ko: Messages = {
   'nav.allergies': '알레르기', 'nav.allergies.short': '알레르기',
   'nav.history': '최근 스캔', 'nav.history.short': '기록',
   'nav.settings': '설정', 'nav.settings.short': '설정',
-  'nav.about': '앱 정보', 'nav.about.short': '정보',
+  'nav.about': '정보 및 개인정보', 'nav.about.short': '정보',
 
   'allergen.milk': '우유', 'allergen.eggs': '달걀', 'allergen.peanuts': '땅콩', 'allergen.tree-nuts': '견과류(트리너트)', 'allergen.soy': '대두',
   'allergen.wheat': '밀', 'allergen.fish': '생선', 'allergen.shellfish': '갑각류', 'allergen.sesame': '참깨',
@@ -145,7 +145,7 @@ export const ko: Messages = {
   'settings.defaultLabel': '기본값: {label}', 'settings.addToChoose': '“{everyone}”을(를) 선택하려면 사람을 추가하세요.',
   'settings.defaultFailed': '기본값을 저장할 수 없어요. 이전 선택이 계속 적용 중이에요.',
   'toast.defaultEveryone': '이제 기본적으로 모두의 결과를 표시해요', 'toast.defaultPerson': '이제 기본적으로 {name}님의 결과를 표시해요',
-  'settings.appDetails': '앱 정보', 'settings.appDetailsBody': '데이터 출처, 개인정보, 로그아웃 및 계정 삭제',
+  'settings.appDetails': '정보 및 개인정보', 'settings.appDetailsBody': '데이터 출처, 개인정보, 로그아웃 및 계정 삭제',
   'settings.account': '계정', 'settings.accountBody': '이름, 로그인 및 비밀번호', 'settings.app': '앱', 'settings.appBody': '언어 및 화면 스타일', 'settings.back': '설정으로 돌아가기',
   'settings.language': '언어',
   'settings.languageHelp': '앱의 텍스트를 바꿔요. 제품명과 원재료 목록은 정보 제공처가 제공한 그대로 표시되며, 원재료 비교는 영어로 이루어져요.',

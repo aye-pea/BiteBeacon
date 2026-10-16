@@ -258,3 +258,4 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Five new strings (`settings.account`, `settings.accountBody`, `settings.app`, `settings.appBody`, `settings.back`) in all 11 dictionaries.
 - Validation: TypeScript, 159 unit tests; Playwright `settings-menus.spec.ts` plus updated appearance, apple-partiful, household, language, toolbar-theme and username specs pass. web-camera spec can't launch in the cloud sandbox (fails without the change too).
 
+- "App details" renamed **About & Privacy** (Alex, 2026-10-16): `nav.about`, `nav.about.short` ("About") and `settings.appDetails` in all 11 languages.

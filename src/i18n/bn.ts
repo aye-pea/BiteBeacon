@@ -7,7 +7,7 @@ export const bn: Messages = {
   'nav.allergies': 'অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
   'nav.history': 'সাম্প্রতিক স্ক্যান', 'nav.history.short': 'ইতিহাস',
   'nav.settings': 'সেটিংস', 'nav.settings.short': 'সেটিংস',
-  'nav.about': 'অ্যাপের বিবরণ', 'nav.about.short': 'বিবরণ',
+  'nav.about': 'পরিচিতি ও গোপনীয়তা', 'nav.about.short': 'পরিচিতি',
 
   'allergen.milk': 'দুধ', 'allergen.eggs': 'ডিম', 'allergen.peanuts': 'চিনাবাদাম', 'allergen.tree-nuts': 'গাছের বাদাম', 'allergen.soy': 'সয়া',
   'allergen.wheat': 'গম', 'allergen.fish': 'মাছ', 'allergen.shellfish': 'খোলসযুক্ত প্রাণী (চিংড়ি, কাঁকড়া, লবস্টার)', 'allergen.sesame': 'তিল',
@@ -145,7 +145,7 @@ export const bn: Messages = {
   'settings.defaultLabel': 'ডিফল্ট: {label}', 'settings.addToChoose': '“{everyone}” বেছে নিতে একজন ব্যক্তি যোগ করুন।',
   'settings.defaultFailed': 'ডিফল্ট সংরক্ষণ করা যায়নি। আপনার আগের পছন্দই এখনো চালু আছে।',
   'toast.defaultEveryone': 'ফলাফলে এখন ডিফল্টভাবে সবাইকে দেখাবে', 'toast.defaultPerson': 'ফলাফলে এখন ডিফল্টভাবে {name}-কে দেখাবে',
-  'settings.appDetails': 'অ্যাপের বিবরণ', 'settings.appDetailsBody': 'তথ্যের উৎস, গোপনীয়তা, সাইন আউট ও অ্যাকাউন্ট মুছে ফেলা',
+  'settings.appDetails': 'পরিচিতি ও গোপনীয়তা', 'settings.appDetailsBody': 'তথ্যের উৎস, গোপনীয়তা, সাইন আউট ও অ্যাকাউন্ট মুছে ফেলা',
   'settings.account': 'অ্যাকাউন্ট', 'settings.accountBody': 'আপনার নাম, সাইন-ইন ও পাসওয়ার্ড', 'settings.app': 'অ্যাপ', 'settings.appBody': 'ভাষা ও চেহারা', 'settings.back': 'সেটিংসে ফিরে যান',
   'settings.language': 'ভাষা',
   'settings.languageHelp': 'অ্যাপের লেখা বদলায়। পণ্যের নাম ও উপাদানের তালিকা উৎস যেভাবে দেয় সেভাবেই থাকে, এবং উপাদান মেলানো হয় ইংরেজিতে।',

@@ -680,7 +680,7 @@ function AppContent() {
   }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
-  // A Settings row that opens another page (Account, App, App details, Admin Dashboard).
+  // A Settings row that opens another page (Account, App, About & Privacy, Admin Dashboard).
   const menuRow = (testID: string | undefined, icon: React.ReactNode, title: string, body: string, onPress: () => void) => <Tap testID={testID} accessibilityRole="button" haptic="select" onPress={onPress} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>{icon}<View style={{ flex: 1 }}><Text style={s.cardTitle}>{title}</Text><Text style={s.footnote}>{body}</Text></View><ChevronRight size={20} color={C.green} /></Tap>;
   const openSettings = (view: 'account' | 'app') => { setFeedback(''); setLangOpen(false); setEditing(null); setRemoving(null); setNameDraft(myName); setSettingsView(view); };
   // Pages opened from Settings get a floating button back to the Settings menu (Admin Dashboard only on phones; desktop has it in the sidebar).
@@ -742,9 +742,9 @@ function AppContent() {
   </ScrollView></SafeAreaView>;
 
   const navItems: { page: Page; label: string; short: string }[] = (['scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
-  // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
+  // Five tabs fit a 320px phone; history opens from Pantry and About & Privacy from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
-  // App details lives in Settings on every screen size.
+  // About & Privacy lives in Settings on every screen size.
   const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;

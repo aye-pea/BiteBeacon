@@ -7,7 +7,7 @@ export const vi: Messages = {
   'nav.allergies': 'Dị ứng', 'nav.allergies.short': 'Dị ứng',
   'nav.history': 'Lượt quét gần đây', 'nav.history.short': 'Lịch sử',
   'nav.settings': 'Cài đặt', 'nav.settings.short': 'Cài đặt',
-  'nav.about': 'Thông tin ứng dụng', 'nav.about.short': 'Chi tiết',
+  'nav.about': 'Giới thiệu & quyền riêng tư', 'nav.about.short': 'Giới thiệu',
 
   'allergen.milk': 'Sữa', 'allergen.eggs': 'Trứng', 'allergen.peanuts': 'Đậu phộng (lạc)', 'allergen.tree-nuts': 'Các loại hạt cây', 'allergen.soy': 'Đậu nành',
   'allergen.wheat': 'Lúa mì', 'allergen.fish': 'Cá', 'allergen.shellfish': 'Động vật giáp xác (tôm, cua…)', 'allergen.sesame': 'Mè (vừng)',
@@ -145,7 +145,7 @@ export const vi: Messages = {
   'settings.defaultLabel': 'Mặc định: {label}', 'settings.addToChoose': 'Thêm một người để chọn “{everyone}”.',
   'settings.defaultFailed': 'Không thể lưu mặc định. Lựa chọn trước đó của bạn vẫn đang có hiệu lực.',
   'toast.defaultEveryone': 'Kết quả giờ mặc định hiển thị cho mọi người', 'toast.defaultPerson': 'Kết quả giờ mặc định hiển thị cho {name}',
-  'settings.appDetails': 'Thông tin ứng dụng', 'settings.appDetailsBody': 'Nguồn dữ liệu, quyền riêng tư, đăng xuất và xóa tài khoản',
+  'settings.appDetails': 'Giới thiệu & quyền riêng tư', 'settings.appDetailsBody': 'Nguồn dữ liệu, quyền riêng tư, đăng xuất và xóa tài khoản',
   'settings.account': 'Tài khoản', 'settings.accountBody': 'Tên, đăng nhập và mật khẩu', 'settings.app': 'Ứng dụng', 'settings.appBody': 'Ngôn ngữ và giao diện', 'settings.back': 'Quay lại Cài đặt',
   'settings.language': 'Ngôn ngữ',
   'settings.languageHelp': 'Thay đổi văn bản của ứng dụng. Tên sản phẩm và danh sách thành phần được giữ nguyên như nguồn cung cấp, và việc đối chiếu thành phần được thực hiện bằng tiếng Anh.',

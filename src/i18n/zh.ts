@@ -7,7 +7,7 @@ export const zh: Messages = {
   'nav.allergies': '过敏原', 'nav.allergies.short': '过敏原',
   'nav.history': '最近扫描', 'nav.history.short': '记录',
   'nav.settings': '设置', 'nav.settings.short': '设置',
-  'nav.about': '应用详情', 'nav.about.short': '详情',
+  'nav.about': '关于与隐私', 'nav.about.short': '关于',
 
   'allergen.milk': '牛奶', 'allergen.eggs': '鸡蛋', 'allergen.peanuts': '花生', 'allergen.tree-nuts': '树坚果', 'allergen.soy': '大豆',
   'allergen.wheat': '小麦', 'allergen.fish': '鱼类', 'allergen.shellfish': '甲壳类水产', 'allergen.sesame': '芝麻',
@@ -145,7 +145,7 @@ export const zh: Messages = {
   'settings.defaultLabel': '默认：{label}', 'settings.addToChoose': '添加一位成员后即可选择“{everyone}”。',
   'settings.defaultFailed': '无法保存默认设置。你之前的选择仍然有效。',
   'toast.defaultEveryone': '结果现在默认显示所有人', 'toast.defaultPerson': '结果现在默认显示 {name}',
-  'settings.appDetails': '应用详情', 'settings.appDetailsBody': '数据来源、隐私、退出登录和删除账户',
+  'settings.appDetails': '关于与隐私', 'settings.appDetailsBody': '数据来源、隐私、退出登录和删除账户',
   'settings.account': '账户', 'settings.accountBody': '你的名字、登录和密码', 'settings.app': '应用', 'settings.appBody': '语言和外观', 'settings.back': '返回设置',
   'settings.language': '语言',
   'settings.languageHelp': '更改应用中的文字。商品名称和配料表将保持数据源提供的原样，配料比对使用英文进行。',

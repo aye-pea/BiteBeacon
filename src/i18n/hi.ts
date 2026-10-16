@@ -7,7 +7,7 @@ export const hi: Messages = {
   'nav.allergies': 'एलर्जी', 'nav.allergies.short': 'एलर्जी',
   'nav.history': 'हाल के स्कैन', 'nav.history.short': 'इतिहास',
   'nav.settings': 'सेटिंग्स', 'nav.settings.short': 'सेटिंग्स',
-  'nav.about': 'ऐप की जानकारी', 'nav.about.short': 'जानकारी',
+  'nav.about': 'परिचय और निजता', 'nav.about.short': 'परिचय',
 
   'allergen.milk': 'दूध', 'allergen.eggs': 'अंडे', 'allergen.peanuts': 'मूंगफली', 'allergen.tree-nuts': 'ट्री नट्स (पेड़ पर उगने वाले मेवे)', 'allergen.soy': 'सोया',
   'allergen.wheat': 'गेहूं', 'allergen.fish': 'मछली', 'allergen.shellfish': 'क्रस्टेशियन शेलफ़िश (झींगा, केकड़ा, लॉबस्टर)', 'allergen.sesame': 'तिल',
@@ -145,7 +145,7 @@ export const hi: Messages = {
   'settings.defaultLabel': 'डिफ़ॉल्ट: {label}', 'settings.addToChoose': '“{everyone}” चुनने के लिए किसी व्यक्ति को जोड़ें।',
   'settings.defaultFailed': 'डिफ़ॉल्ट सेव नहीं हो सका। आपका पिछला चुनाव अब भी लागू है।',
   'toast.defaultEveryone': 'अब नतीजे डिफ़ॉल्ट रूप से सभी के लिए दिखेंगे', 'toast.defaultPerson': 'अब नतीजे डिफ़ॉल्ट रूप से {name} के लिए दिखेंगे',
-  'settings.appDetails': 'ऐप की जानकारी', 'settings.appDetailsBody': 'डेटा स्रोत, निजता, साइन आउट और अकाउंट डिलीट करना',
+  'settings.appDetails': 'परिचय और निजता', 'settings.appDetailsBody': 'डेटा स्रोत, निजता, साइन आउट और अकाउंट डिलीट करना',
   'settings.account': 'खाता', 'settings.accountBody': 'आपका नाम, साइन-इन और पासवर्ड', 'settings.app': 'ऐप', 'settings.appBody': 'भाषा और रूप', 'settings.back': 'सेटिंग्स पर वापस जाएं',
   'settings.language': 'भाषा',
   'settings.languageHelp': 'ऐप का टेक्स्ट बदलता है। प्रोडक्ट के नाम और सामग्री सूचियां वैसी ही रहती हैं जैसी स्रोत देता है, और सामग्री का मिलान अंग्रेज़ी में होता है।',

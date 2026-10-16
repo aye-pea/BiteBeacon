@@ -94,7 +94,7 @@ test('the dashboard is hidden from other accounts and from the demo; demo lookup
   await expect(page.getByTestId('open-admin')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: /App details/ }).click();
+  await page.getByRole('button', { name: /About & Privacy/ }).click();
   await page.getByRole('button', { name: 'Sign out & clear session' }).click();
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Scan a Product', exact: true }).click();

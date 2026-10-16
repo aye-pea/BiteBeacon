@@ -7,7 +7,7 @@ export const ru: Messages = {
   'nav.allergies': 'Аллергии', 'nav.allergies.short': 'Аллергии',
   'nav.history': 'Недавние сканы', 'nav.history.short': 'История',
   'nav.settings': 'Настройки', 'nav.settings.short': 'Настройки',
-  'nav.about': 'О приложении', 'nav.about.short': 'О приложении',
+  'nav.about': 'О приложении и конфиденциальность', 'nav.about.short': 'О приложении',
 
   'allergen.milk': 'Молоко', 'allergen.eggs': 'Яйца', 'allergen.peanuts': 'Арахис', 'allergen.tree-nuts': 'Древесные орехи', 'allergen.soy': 'Соя',
   'allergen.wheat': 'Пшеница', 'allergen.fish': 'Рыба', 'allergen.shellfish': 'Ракообразные', 'allergen.sesame': 'Кунжут',
@@ -145,7 +145,7 @@ export const ru: Messages = {
   'settings.defaultLabel': 'По умолчанию: {label}', 'settings.addToChoose': 'Добавьте человека, чтобы выбрать «{everyone}».',
   'settings.defaultFailed': 'Не удалось сохранить выбор по умолчанию. Прежний выбор по-прежнему действует.',
   'toast.defaultEveryone': 'Теперь по умолчанию показываются все', 'toast.defaultPerson': 'Теперь по умолчанию показывается: {name}',
-  'settings.appDetails': 'О приложении', 'settings.appDetailsBody': 'Источники данных, конфиденциальность, выход и удаление аккаунта',
+  'settings.appDetails': 'О приложении и конфиденциальность', 'settings.appDetailsBody': 'Источники данных, конфиденциальность, выход и удаление аккаунта',
   'settings.account': 'Аккаунт', 'settings.accountBody': 'Ваше имя, вход и пароль', 'settings.app': 'Приложение', 'settings.appBody': 'Язык и оформление', 'settings.back': 'Назад в настройки',
   'settings.language': 'Язык',
   'settings.languageHelp': 'Меняет язык интерфейса. Названия продуктов и составы остаются такими, как их предоставляет источник, а сверка ингредиентов выполняется на английском.',

@@ -7,7 +7,7 @@ export const en = {
   'nav.allergies': 'Allergies', 'nav.allergies.short': 'Allergies',
   'nav.history': 'Recent Scans', 'nav.history.short': 'History',
   'nav.settings': 'Settings', 'nav.settings.short': 'Settings',
-  'nav.about': 'App details', 'nav.about.short': 'Details',
+  'nav.about': 'About & Privacy', 'nav.about.short': 'About',
 
   'allergen.milk': 'Milk', 'allergen.eggs': 'Eggs', 'allergen.peanuts': 'Peanuts', 'allergen.tree-nuts': 'Tree nuts', 'allergen.soy': 'Soy',
   'allergen.wheat': 'Wheat', 'allergen.fish': 'Fish', 'allergen.shellfish': 'Crustacean shellfish', 'allergen.sesame': 'Sesame',
@@ -145,7 +145,7 @@ export const en = {
   'settings.defaultLabel': 'Default: {label}', 'settings.addToChoose': 'Add a person to choose “{everyone}”.',
   'settings.defaultFailed': 'Default could not be saved. Your previous choice is still active.',
   'toast.defaultEveryone': 'Results now show everyone by default', 'toast.defaultPerson': 'Results now show {name} by default',
-  'settings.appDetails': 'App details', 'settings.appDetailsBody': 'Data sources, privacy, sign out and account deletion',
+  'settings.appDetails': 'About & Privacy', 'settings.appDetailsBody': 'Data sources, privacy, sign out and account deletion',
   'settings.account': 'Account', 'settings.accountBody': 'Your name, sign-in and password', 'settings.app': 'App', 'settings.appBody': 'Language and appearance', 'settings.back': 'Back to Settings',
   'settings.language': 'Language',
   'settings.languageHelp': 'Changes the app’s text. Product names and ingredient lists stay as the source provides them, and ingredient matching is in English.',

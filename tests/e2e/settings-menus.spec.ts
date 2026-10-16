@@ -6,7 +6,7 @@ test('Settings groups name and sign-in under Account, language and appearance un
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  // The main menu: Account and App rows, the household, then App details.
+  // The main menu: Account and App rows, the household, then About & Privacy.
   await expect(page.getByTestId('open-account-settings')).toBeVisible();
   await expect(page.getByTestId('open-app-settings')).toBeVisible();
   await expect(page.getByTestId('appearance-settings')).toHaveCount(0);
@@ -31,8 +31,8 @@ test('Settings groups name and sign-in under Account, language and appearance un
   await page.getByTestId('settings-back').click();
   await expect(page.getByTestId('open-app-settings')).toBeVisible();
 
-  // App details gets the same way back.
-  await page.getByRole('button', { name: /App details/ }).click();
+  // About & Privacy gets the same way back.
+  await page.getByRole('button', { name: /About & Privacy/ }).click();
   await page.getByTestId('settings-back').click();
   await expect(page.getByTestId('open-account-settings')).toBeVisible();
 

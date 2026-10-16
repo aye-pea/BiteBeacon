@@ -37,7 +37,7 @@ test('stay signed in survives a reload; turning it off ends the session with the
 
   // Sign out clears the stored session.
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: /App details/ }).click();
+  await page.getByRole('button', { name: /About & Privacy/ }).click();
   await page.getByRole('button', { name: 'Sign out & clear session' }).click();
   await page.reload();
   await expect(page.getByLabel('Username', { exact: true })).toBeVisible();

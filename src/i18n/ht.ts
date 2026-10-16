@@ -7,7 +7,7 @@ export const ht: Messages = {
   'nav.allergies': 'Alèji', 'nav.allergies.short': 'Alèji',
   'nav.history': 'Dènye eskanè yo', 'nav.history.short': 'Istorik',
   'nav.settings': 'Paramèt', 'nav.settings.short': 'Paramèt',
-  'nav.about': 'Detay aplikasyon an', 'nav.about.short': 'Detay',
+  'nav.about': 'Konsènan ak vi prive', 'nav.about.short': 'Konsènan',
 
   'allergen.milk': 'Lèt', 'allergen.eggs': 'Ze', 'allergen.peanuts': 'Pistach', 'allergen.tree-nuts': 'Nwa pyebwa (zanmann, nwa, elatriye)', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Ble', 'allergen.fish': 'Pwason', 'allergen.shellfish': 'Kristase (kribich, krab, woma)', 'allergen.sesame': 'Wowoli (sezam)',
@@ -145,7 +145,7 @@ export const ht: Messages = {
   'settings.defaultLabel': 'Pa defo: {label}', 'settings.addToChoose': 'Ajoute yon moun pou ou ka chwazi “{everyone}”.',
   'settings.defaultFailed': 'Nou pa t kapab sere chwa pa defo a. Ansyen chwa ou a toujou aktif.',
   'toast.defaultEveryone': 'Rezilta yo kounye a montre tout moun pa defo', 'toast.defaultPerson': 'Rezilta yo kounye a montre {name} pa defo',
-  'settings.appDetails': 'Detay aplikasyon an', 'settings.appDetailsBody': 'Sous done, konfidansyalite, dekoneksyon ak efase kont',
+  'settings.appDetails': 'Konsènan ak vi prive', 'settings.appDetailsBody': 'Sous done, konfidansyalite, dekoneksyon ak efase kont',
   'settings.account': 'Kont', 'settings.accountBody': 'Non ou, koneksyon ak modpas', 'settings.app': 'Aplikasyon', 'settings.appBody': 'Lang ak aparans', 'settings.back': 'Retounen nan Paramèt',
   'settings.language': 'Lang',
   'settings.languageHelp': 'Sa chanje tèks aplikasyon an. Non pwodui ak lis engredyan yo rete jan sous la bay yo, epi konparezon engredyan yo fèt an angle.',

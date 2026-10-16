@@ -7,7 +7,7 @@ export const es: Messages = {
   'nav.allergies': 'Alergias', 'nav.allergies.short': 'Alergias',
   'nav.history': 'Escaneos recientes', 'nav.history.short': 'Historial',
   'nav.settings': 'Ajustes', 'nav.settings.short': 'Ajustes',
-  'nav.about': 'Detalles de la app', 'nav.about.short': 'Detalles',
+  'nav.about': 'Acerca de y privacidad', 'nav.about.short': 'Acerca de',
 
   'allergen.milk': 'Leche', 'allergen.eggs': 'Huevo', 'allergen.peanuts': 'Cacahuate (maní)', 'allergen.tree-nuts': 'Nueces de árbol', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Trigo', 'allergen.fish': 'Pescado', 'allergen.shellfish': 'Mariscos crustáceos', 'allergen.sesame': 'Ajonjolí (sésamo)',
@@ -145,7 +145,7 @@ export const es: Messages = {
   'settings.defaultLabel': 'Predeterminado: {label}', 'settings.addToChoose': 'Agrega a una persona para elegir “{everyone}”.',
   'settings.defaultFailed': 'No se pudo guardar la opción predeterminada. Tu elección anterior sigue activa.',
   'toast.defaultEveryone': 'Ahora los resultados muestran a todos de forma predeterminada', 'toast.defaultPerson': 'Ahora los resultados muestran a {name} de forma predeterminada',
-  'settings.appDetails': 'Detalles de la app', 'settings.appDetailsBody': 'Fuentes de datos, privacidad, cierre de sesión y eliminación de cuenta',
+  'settings.appDetails': 'Acerca de y privacidad', 'settings.appDetailsBody': 'Fuentes de datos, privacidad, cierre de sesión y eliminación de cuenta',
   'settings.account': 'Cuenta', 'settings.accountBody': 'Tu nombre, inicio de sesión y contraseña', 'settings.app': 'App', 'settings.appBody': 'Idioma y apariencia', 'settings.back': 'Volver a Ajustes',
   'settings.language': 'Idioma',
   'settings.languageHelp': 'Cambia el texto de la app. Los nombres de productos y las listas de ingredientes se muestran como los proporciona la fuente, y la comparación de ingredientes se hace en inglés.',
