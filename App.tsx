@@ -65,8 +65,8 @@ function words({ t, tp, list, day }: I18n) {
   const allergyLabel = (id: AllergenId) => t(`allergen.${id}` as MessageKey);
   const labelOf = (english: string) => { const a = ALLERGENS.find(x => x.label === english); return a ? allergyLabel(a.id) : english; };
   const evidenceText = (e: Evidence) => t(`evidence.${e.via}` as MessageKey, { term: e.term, allergen: labelOf(e.allergen).toLowerCase() });
-  const kindTitle = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.title') : t(`${KIND_KEY[a.kind]}.title` as MessageKey);
-  const kindDetail = (a: Assessment) => a.reason === 'no-profile' ? t('kind.noProfile.detail') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
+  const kindTitle = (a: Assessment) => t(`${KIND_KEY[a.kind]}.title` as MessageKey);
+  const kindDetail = (a: Assessment) => a.reason === 'no-allergies' ? t('kind.noMatch.noAllergies') : a.reason === 'gluten' ? t('kind.unknown.gluten') : t(`${KIND_KEY[a.kind]}.detail` as MessageKey);
   const summaryTitle = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'contains' ? tp('summary.contains', sm.count, { c: sm.count, n: sm.total })
     : sm.kind === 'traces' ? t('summary.traces', { c: sm.count, n: sm.total }) : sm.kind === 'unknown' ? t('summary.unknown', { c: sm.count, n: sm.total }) : t('summary.noMatch', { n: sm.total });
   const summaryDetail = (sm: ReturnType<typeof householdSummary>) => sm.kind === 'no-match' ? t('summary.noMatchDetail') : sm.kind === 'unknown' ? `${t('summary.missing')} ${t('summary.caution')}` : t('summary.caution');
@@ -563,7 +563,7 @@ function AppContent() {
   const multi = checkPeople.length > 1;
   const firstPick: ViewPick = [checkPeople[0]?.id ?? ME];
   const activeView: ViewPick = multi && picked(view, checkPeople).length ? view : firstPick;
-  // Nobody has allergies yet: lists render against the account holder, whose empty list gives "not checked" results.
+  // Nobody has allergies yet: lists render against the account holder, whose empty list flags nothing.
   const viewPeople = checkPeople.length ? picked(activeView, checkPeople) : [people[0]];
   const defaultPeople = picked(defaultView, checkPeople);
   const viewOptions = [{ id: EVERYONE, label: t('view.everyone', { n: checkPeople.length }) }, ...checkPeople.map(p => ({ id: p.id, label: p.name }))];
@@ -573,7 +573,7 @@ function AppContent() {
   const assessment = single?.assessment ?? null;
   const evidence = single?.evidence ?? [];
   const focusAllergies = unionAllergies(viewPeople);
-  // Scanning works with no allergies saved: the result then says the product wasn't checked (assess 'no-profile').
+  // Scanning works with no allergies saved: a normal "No selected allergens found" result (assess 'no-allergies').
   const canScan = profileReady;
   const allergyOwner = allergyPerson === ME ? null : members.find(m => m.id === allergyPerson) ?? null;
   const savedDraft = allergyOwner ? allergyOwner.allergies : allergies;

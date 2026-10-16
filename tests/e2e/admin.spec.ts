@@ -110,7 +110,7 @@ test('the dashboard is hidden from other accounts and from the demo; demo lookup
   expect(calls.stats).toBe(0);
 });
 
-test('someone with no allergies saved can still scan; the result says it was not checked', async ({ page }) => {
+test('someone with no allergies saved can scan and gets a normal result with nothing flagged', async ({ page }) => {
   const calls = await fakeSupabase(page, false, {}, []);
   await page.route('**/fdc/v1/**', route => route.fulfill({ json: { foods: [{ gtinUpc: '3017620422003', description: 'HAZELNUT SPREAD', brandOwner: 'Test', ingredients: 'SUGAR, PALM OIL, HAZELNUTS, MILK', dataType: 'Branded' }] } }));
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -120,6 +120,7 @@ test('someone with no allergies saved can still scan; the result says it was not
   await expect(page.getByRole('button', { name: 'Choose your allergies' })).toHaveCount(0);
   await page.getByLabel('Barcode number').fill('3017620422003');
   await page.getByRole('button', { name: 'Look up product' }).click();
-  await expect(page.getByText('Choose your allergies first').first()).toBeVisible();
+  await expect(page.getByText('No selected allergens found').first()).toBeVisible();
+  await expect(page.getByText(/No allergies are saved for this person/).first()).toBeVisible();
   await expect.poll(() => calls.scans).toBe(1);
 });

@@ -6,7 +6,13 @@ describe('allergy decisions', () => {
   it('separates all four demo outcomes', () => {
     expect(SAMPLES.map(p => assess(p, ['milk', 'peanuts']).kind)).toEqual(['contains', 'traces', 'no-match', 'unknown']);
   });
-  it('requires an active profile', () => { expect(assess(SAMPLES[0], []).kind).toBe('unknown'); });
+  it('flags nothing for someone with no allergies saved, without calling it safe', () => {
+    const a = assess(SAMPLES[0], []);
+    expect(a.kind).toBe('no-match');
+    expect(a.reason).toBe('no-allergies');
+    expect(a.matches).toEqual([]);
+    expect(a.detail).toContain('not a safe-to-eat guarantee');
+  });
   it('keeps positive tags even when ingredients missing', () => { expect(assess({ ...SAMPLES[0], ingredients: '' }, ['peanuts']).kind).toBe('contains'); });
   it('never clears an incomplete product', () => {
     expect(assess({ ...SAMPLES[2], ingredients: '' }, ['milk']).kind).toBe('unknown');

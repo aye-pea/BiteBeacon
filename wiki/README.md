@@ -237,4 +237,4 @@ Latest final results recorded after implementation below. See `tests/` for repea
 - Limited admins no longer get the recent sign-ins list (`202610160001_limited_admins_no_sign_ins.sql` strips `recent_sign_ins`; the card renders only when `stats.full`).
 - Settings shows the Admin dashboard row only without the sidebar (`!wide`); on desktop the sidebar item is the way in.
 - App details no longer has the "Next chapter: label recognition" card (strings removed from all dictionaries).
-- `canScan` is just `profileReady`: an account with no allergies saved can scan; results use assess()'s `no-profile` outcome ("Choose your allergies first… not checked for you"), never a no-match.
+- `canScan` is just `profileReady`: an account with no allergies saved can scan; results are a normal `no-match` ("No selected allergens found") with reason `no-allergies` and its own detail text ("No allergies are saved for this person, so nothing was flagged… not a safe-to-eat guarantee"). Alex asked for this for parents without allergies whose children have them.
