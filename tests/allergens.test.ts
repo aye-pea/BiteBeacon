@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALLERGENS, AllergenId, assess, assessPeople, cleanName, explain, highlightIngredients, householdSummary, Person, unionAllergies, validBarcode, validName, worstKind } from '../src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, assessPeople, cleanName, explain, highlightIngredients, householdSummary, Person, unionAllergies, barcodeCandidates, expandUpcE, validBarcode, validName, worstKind } from '../src/domain/allergens';
 import { parseProduct, SAMPLES } from '../src/data/products';
 
 describe('allergy decisions', () => {
@@ -154,5 +154,34 @@ describe('household results', () => {
   it('accepts names of 1 to 40 characters after trimming', () => {
     expect(cleanName('  Kha   Le ')).toBe('Kha Le');
     expect([validName('DFK'), validName('   '), validName('x'.repeat(40)), validName('x'.repeat(41))]).toEqual([true, false, true, false]);
+  });
+});
+
+describe('UPC-E', () => {
+  it.each([
+    ['04252614', '042100005264'], // last digit 0-2: manufacturer keeps that digit
+    ['04904403', '049000000443'], // Coca-Cola 12 oz can
+    ['01234531', '012300000451'], // last digit 3
+    ['01234543', '012340000053'], // last digit 4
+    ['01234565', '012345000065'], // last digit 5-9
+    ['11234562', '112345000062'], // number system 1
+  ])('expands %s to UPC-A %s', (upcE, upcA) => {
+    expect(expandUpcE(upcE)).toBe(upcA);
+    expect(validBarcode(upcA)).toBe(true);
+  });
+  it.each(['04252615', '24252614', '96385074', '042100005264', 'abcdefgh'])('rejects non-UPC-E %s', code => expect(expandUpcE(code)).toBeNull());
+  it('tries UPC-E before EAN-8 when an 8-digit code could be either', () => {
+    expect(barcodeCandidates('04252641')).toEqual(['042520000061', '04252641']);
+    expect(barcodeCandidates('04252614')).toEqual(['042100005264']);
+    expect(barcodeCandidates('96385074')).toEqual(['96385074']);
+    expect(barcodeCandidates('012345678905')).toEqual(['012345678905']);
+  });
+  it('trusts the camera when it reads UPC-E', () => {
+    expect(barcodeCandidates('04252641', true)).toEqual(['042520000061']);
+    expect(barcodeCandidates('96385074', true)).toEqual([]);
+    // The web camera decoder reports UPC-E already expanded (this is the 0 275415 4 water bottle).
+    expect(barcodeCandidates('0027541000054', true)).toEqual(['0027541000054']);
+    expect(barcodeCandidates('027541000054', true)).toEqual(['027541000054']);
+    expect(expandUpcE('02754154')).toBe('027541000054');
   });
 });

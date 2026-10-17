@@ -1,13 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, View, ViewStyle, useWindowDimensions } from 'react-native';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Animated, AppState, Easing, Linking, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, ViewStyle, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ArrowUpRight, BookOpen, Eye, EyeOff, House, PanelsTopLeft, ChartColumn, ChevronDown, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
+import { ArrowUpRight, BookOpen, Eye, EyeOff, House, ChartColumn, ChevronDown, ChevronLeft, CalendarClock, Camera, Check, Languages, PackagePlus, Refrigerator, Undo2, ChevronRight, CircleAlert, CircleQuestionMark, Clock3, Info, KeyRound, Leaf, LockKeyhole, LogOut, Pencil, Plus, RotateCcw, ScanBarcode, Search, Settings, ShieldCheck, SunMoon, SlidersHorizontal, Sparkles, Trash2, TriangleAlert, UserRound, X } from 'lucide-react-native';
 import type { Session } from '@supabase/supabase-js';
-import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validBarcode, validName, worstKind } from './src/domain/allergens';
+import { ALLERGENS, AllergenId, assess, Assessment, assessPeople, barcodeCandidates, cleanName, Evidence, highlightIngredients, householdSummary, MAX_MEMBERS, Person, PersonResult, Product, unionAllergies, validName, worstKind } from './src/domain/allergens';
 import { LookupError, lookupProduct, SAMPLES } from './src/data/products';
+import { DEMO_FIXED_KEY, demoLineup } from './src/data/demo';
 import { titleCase } from './src/domain/names';
+import { avatarColorSlots, avatarLabels } from './src/domain/initials';
 import { activePantry, addDays, closedPantry, dayOf, daysUntil, expiryState, ExpiryState, MAX_PANTRY, PantryItem, pantryAlerts, PantryStatus, SOON_DAYS, validDay } from './src/domain/pantry';
 import { detectLanguage, I18n, isLang, Lang, languageName, LANGUAGES, localeOf, makeI18n, MessageKey, translate } from './src/i18n';
 import type { AdminStats } from './src/domain/stats';
@@ -16,11 +18,10 @@ import { loadUsername, signInAddress, usernameTaken } from './src/lib/account';
 import { cleanUsername, isUsername, looksLikeEmail, usernameEmail, usernameFromEmail } from './src/domain/usernames';
 import { cameraAvailable } from './src/lib/webScanner';
 import { checkAdmin, loadAdminStats, recordScan } from './src/lib/stats';
-import { APPEARANCES, bothSchemes, C, Palette, setAppearance, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
+import { APPEARANCES, bothSchemes, C, gradientFill, Palette, profileAvatarFill, profileHues, setAppearance, shadowOf, themes, Tone, type, useAppearance, useScheme } from './src/ui/theme';
 import { haptic } from './src/ui/haptics';
 import { Button, CheckMark, Notice, Reveal, Skeleton, SwipeRow, Tap, ToastProvider, useToast } from './src/ui/controls';
-import { BrandLogo, CartLogo } from './src/ui/logo';
-import { setShowHome, useShowHome } from './src/ui/prefs';
+import { BrandLogo, CartLogo, SelectorBracket } from './src/ui/logo';
 import { APP_VERSION } from './src/version';
 import { IS_BETA } from './src/lib/beta';
 
@@ -40,11 +41,12 @@ const togglePick = (pick: ViewPick, id: string, people: Person[]): ViewPick | nu
   const next = people.map(p => p.id).filter(x => x === id ? !ids.includes(x) : ids.includes(x));
   return !next.length ? null : next.length === people.length ? [EVERYONE] : next;
 };
-const DEMO_HOUSEHOLD: Person[] = [{ id: 'demo-kha', name: 'Kha', allergies: ['milk', 'eggs'] }, { id: 'demo-dfk', name: 'DFK', allergies: ['sesame'] }, { id: 'demo-jonathan', name: 'Jonathan', allergies: ['tree-nuts', 'soy'] }, { id: 'demo-nafis', name: 'Nafis', allergies: ['gluten', 'mustard'] }, { id: 'demo-banjo', name: 'Banjo', allergies: ['eggs', 'shellfish', 'mollusks'] }, { id: 'demo-bitebeacon', name: 'BiteBeacon', allergies: ['peanuts', 'sesame'] }, { id: 'demo-capstone', name: 'Capstone', allergies: ['fish', 'celery', 'sulfites'] }];
 type Entry = { product: Product; at: string };
 // Fictional demo pantry, dated relative to today so the expiry alerts always show.
 const demoPantry = (today: string): PantryItem[] => [[SAMPLES[2], -2], [SAMPLES[0], 1], [SAMPLES[1], 20]].map(([product, days], i) =>
   ({ id: `demo-pantry-${i}`, product: product as Product, expiresOn: addDays(today, days as number), status: 'active', addedAt: new Date(Date.now() - i * 60000).toISOString(), closedAt: null }));
+// End-to-end tests pin the demo to its listed order (Alex signed in) via localStorage.
+const demoFixedOrder = () => { try { return Platform.OS === 'web' && localStorage.getItem(DEMO_FIXED_KEY) === '1'; } catch { return false; } };
 const EXPIRY_TONE: Record<ExpiryState, Tone | null> = { expired: 'danger', today: 'warning', soon: 'warning', later: null, none: null };
 const Icon = ({ name, size = 21, color = C.muted }: { name: Page; size?: number; color?: string }) => {
   const Component = { overview: House, scan: ScanBarcode, pantry: Refrigerator, allergies: SlidersHorizontal, history: Clock3, settings: Settings, about: BookOpen, admin: ChartColumn }[name];
@@ -57,6 +59,10 @@ const RESULT: Record<Assessment['kind'], { tone: Tone; Icon: typeof Info; haptic
 };
 // The hero keeps its deep green in both appearances, so its lime button keeps dark ink.
 const HERO_INK = '#17332B';
+// Apple and Partiful swap in Jonathan's pastel sample packs and dark hero ink.
+const PASTEL_SAMPLE_ART = [{ bg: C.sampleIce, pack: C.sampleBlue, word: 'CRUNCH' }, { bg: C.sampleLavender, pack: C.samplePurple, word: 'COCOA' }, { bg: C.sampleYellow, pack: C.samplePink, word: 'OATS' }, { bg: C.samplePinkSoft, pack: C.sampleCoral, word: '?' }];
+const sampleArtFor = (P: Palette) => (P.pastel ? PASTEL_SAMPLE_ART : SAMPLE_ART);
+const heroInkFor = (P: Palette) => (P.pastel ? P.heroInk : HERO_INK);
 const SAMPLE_ART = [{ bg: '#EDE5D2', pack: '#B38B58', word: 'CRUNCH' }, { bg: '#ECE0DA', pack: '#6E4F43', word: 'COCOA' }, { bg: '#E4EBCD', pack: '#84965A', word: 'OATS' }, { bg: '#E7E9E3', pack: '#9DA597', word: '?' }];
 const reportedTags = (tags: string[]) => tags.map(tag => tag.trim().replace(/^[a-z]{2}:/i, '').replace(/-/g, ' ').toUpperCase()).join(', ');
 const KIND_KEY = { contains: 'kind.contains', traces: 'kind.traces', unknown: 'kind.unknown', 'no-match': 'kind.noMatch' } as const;
@@ -103,7 +109,7 @@ function barcodeHint(value: string, { t }: I18n): { text: string; ok: boolean } 
   if (!digits) return { text: t('hint.empty'), ok: false };
   if (!/^\d+$/.test(digits)) return { text: t('hint.digitsOnly'), ok: false };
   if (![8, 12, 13, 14].includes(digits.length)) return { text: t('hint.count', { n: digits.length }), ok: false };
-  return validBarcode(digits) ? { text: t('hint.ok', { n: digits.length }), ok: true } : { text: t('hint.bad', { n: digits.length }), ok: false };
+  return barcodeCandidates(digits).length ? { text: t('hint.ok', { n: digits.length }), ok: true } : { text: t('hint.bad', { n: digits.length }), ok: false };
 }
 
 type LegalPage = 'disclaimer' | 'privacy' | 'terms';
@@ -121,11 +127,39 @@ function AppContent() {
   const wide = width >= 980 && fontScale < 1.5;
   const singleColumn = width < 600 || fontScale >= 1.5;
   const insets = useSafeAreaInsets();
-  const homeChoice = useShowHome(wide);
-  const showHome = wide || homeChoice; // the setting lives on phones only, so desktop always keeps Home
+  // Home has no tab: the BiteBeacon logo at the top opens it. Phones open on Scan, desktop on Home.
+  const landing: Page = wide ? 'overview' : 'scan';
   const [page, setPage] = useState<Page>('overview');
+  // Settings opens on a short menu; Account and App are its two submenus.
+  const [settingsView, setSettingsView] = useState<'main' | 'account' | 'app'>('main');
+  // Phones slide Settings pages sideways: a submenu comes in from the right (1), going back brings the menu in from the left (-1).
+  const slideDir = useRef<0 | 1 | -1>(0);
+  const slideX = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useRef(false);
+  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled?.().then(on => { reduceMotion.current = on; }).catch(() => {}); }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+  // When the browser window becomes active again (for example swiping back to a full-screen browser on a Mac), it hands focus back
+  // to the sidebar row that was clicked last and may report a mouseenter without the mouse moving. Neither should open the sidebar:
+  // until a real key press or mouse movement, the rail only opens for a Tab focus ring or an actual hover.
+  const railReturning = useRef(false);
+  const [railHover, setRailHover] = useState<Page | null>(null);
+  const railHovered = useRef(false);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const away = () => { railReturning.current = true; };
+    const back = () => { railReturning.current = false; };
+    window.addEventListener('blur', away);
+    for (const name of ['keydown', 'pointerdown', 'mousemove']) window.addEventListener(name, back, true);
+    return () => { window.removeEventListener('blur', away); for (const name of ['keydown', 'pointerdown', 'mousemove']) window.removeEventListener(name, back, true); };
+  }, []);
+  const railEvents = {
+    onMouseEnter: () => { railHovered.current = true; if (!railReturning.current) setRailOpen(true); },
+    onMouseMove: () => { railHovered.current = true; setRailOpen(true); },
+    onMouseLeave: () => { railHovered.current = false; setRailOpen(false); },
+    onFocus: (e: { target: { matches?: (q: string) => boolean } }) => { if (!railReturning.current && e.target.matches?.(':focus-visible')) setRailOpen(true); },
+    onBlur: (e: { currentTarget: { contains: (n: unknown) => boolean }; relatedTarget: unknown }) => { if (!railHovered.current && !e.currentTarget.contains(e.relatedTarget)) setRailOpen(false); },
+  };
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [demo, setDemo] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -146,6 +180,7 @@ function AppContent() {
   const [cameraAsking, setCameraAsking] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const scanLock = useRef(false);
+  const lastUpcE = useRef('');
   const generation = useRef(0);
   const scrollRef = useRef<ScrollView>(null);
   const pendingScroll = useRef(false);
@@ -243,21 +278,23 @@ function AppContent() {
       if (isLang(data?.language)) setLang(data.language);
       setMyName(name); setNameDraft(name); setMembers(loaded); setDefaultView(preferred); setView(preferred);
       // Only a first visit (no profile saved yet) opens on Allergies; a list saved with nothing selected is a real choice.
-      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? 'overview' : 'allergies');
+      setAllergies(selected); setDraft(selected); setProfileReady(true); setPage(data ? landing : 'allergies');
       toast(data ? t('toast.signedInLoaded') : t('toast.signedInChoose'));
     });
   }, [session?.user.id]);
 
   const enterDemo = () => {
-    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(['peanuts', 'tree-nuts']); setDraft(['peanuts', 'tree-nuts']);
-    resetHousehold(); setMyName('Alex'); setNameDraft('Alex'); setMembers(DEMO_HOUSEHOLD); setDefaultView([EVERYONE]); setView([EVERYONE]);
-    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage('overview');
-    haptic.success(); toast(t('toast.demoReady', { n: 1 + DEMO_HOUSEHOLD.length, names: i18n.list(['Alex', ...DEMO_HOUSEHOLD.map(p => p.name)]) }));
+    // Each demo start signs in as a random one of the five demo people, with the other four shuffled.
+    const { me, household } = demoLineup(demoFixedOrder() ? null : Math.random);
+    ++generation.current; setDemo(true); setIsAdmin(false); setAllergies(me.allergies); setDraft(me.allergies);
+    resetHousehold(); setMyName(me.name); setNameDraft(me.name); setMembers(household); setDefaultView([EVERYONE]); setView([EVERYONE]);
+    setProfileReady(true); setHistory([]); setPantry(demoPantry(dayOf(new Date()))); setProduct(null); setFeedback(''); setLogin(''); setPassword(''); setPage(landing);
+    haptic.success(); toast(t('toast.demoReady', { n: 1 + household.length, names: i18n.list([me.name, ...household.map(p => p.name)]) }));
   };
   const navigate = (next: Page) => {
     // The Allergies page always opens on your own list; a member's unsaved picks are dropped.
     if (allergyPerson !== ME) { setAllergyPerson(ME); setDraft([...allergies]); }
-    setLangOpen(false); setCamera(false); setPage(next); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
+    setLangOpen(false); setCamera(false); setPage(next); setSettingsView('main'); setProfileSaved(false); setFeedback(''); setDeleteConfirm(false); setEditing(null); setRemoving(null); if (next === 'settings') setNameDraft(myName); };
   const auth = async () => {
     if (!supabase) return;
     const typed = authMode === 'signup' ? cleanUsername(login) : login.trim();
@@ -398,14 +435,14 @@ function AppContent() {
     setProduct(next); setHistory(prev => [{ product: next, at: new Date().toISOString() }, ...prev].slice(0, 30)); setPage('scan'); setFeedback(''); setCamera(false);
     toast(viewPeople.length > 1 ? t('toast.checkedPeople', { n: viewPeople.length }) : viewPeople[0].id === ME ? tp('toast.checkedMine', allergies.length) : t('toast.checkedFor', { name: viewPeople[0].name }), 'info');
   };
-  const scan = async (code: string, fromCamera = false) => {
+  const scan = async (code: string, fromCamera = false, upcE = false) => {
     if (scanLock.current || !canScan) return;
     scanLock.current = true; if (fromCamera) haptic.firm();
     pendingScroll.current = true;
     setBusy(true); setCamera(false); setProduct(null); setFeedback(''); setBarcode(code.trim());
     const current = generation.current;
     try {
-      const found = await lookupProduct(code.trim(), Platform.OS !== 'web');
+      const found = await lookupProduct(code.trim(), Platform.OS !== 'web', upcE);
       // One more for the app-wide total, for signed-in accounts only (demo lookups don't count).
       // Only the count goes up, nothing about the barcode or person.
       if (!demo) recordScan();
@@ -413,6 +450,14 @@ function AppContent() {
       if (found) showProduct(found); else { haptic.warning(); say(t('scan.notFound')); }
     } catch (e) { if (generation.current === current) { haptic.error(); say(e instanceof LookupError ? t(`lookup.${e.code}` as MessageKey) : lang === 'en' && e instanceof Error ? e.message : t('scan.lookupFailed'), 'danger'); } }
     finally { scanLock.current = false; setBusy(false); }
+  };
+  // UPC-E has no separate check against misreads (a tilted or partly hidden code can decode as a different valid one),
+  // so the camera must read the same UPC-E twice in a row before it is looked up.
+  const onCameraRead = (event: { type: string; data: string }) => {
+    if (event.type !== 'upc_e') { lastUpcE.current = ''; void scan(event.data, true); return; }
+    if (lastUpcE.current !== event.data) { lastUpcE.current = event.data; return; }
+    lastUpcE.current = '';
+    void scan(event.data, true, true);
   };
   const openCamera = async () => {
     setCameraAsking(true);
@@ -576,9 +621,12 @@ function AppContent() {
   const openSaved = (item: Product) => { navigate('scan'); pendingScroll.current = true; setPantryDraft({ date: '', none: false, error: false }); setProduct(item); };
   const memberForm = editing && <Reveal testID="member-form" style={s.memberForm}><Text style={s.cardTitle}>{editing.id ? t('member.edit', { name: members.find(m => m.id === editing.id)?.name ?? t('member.thisPerson') }) : t('member.add')}</Text>
               <Text style={s.label}>{t('member.name')}</Text><TextInput accessibilityLabel={t('member.nameLabel')} style={s.input} value={editing.name} onChangeText={name => setEditing({ ...editing, name })} placeholder={t('member.namePlaceholder')} placeholderTextColor={C.faint} maxLength={40} editable={!settingsBusy} />
-              <Text style={s.label}>{t('member.allergies')}</Text><View style={s.chips}>{ALLERGENS.map(a => { const on = editing.allergies.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('member.allergyFor', { allergen: allergyLabel(a.id) })} haptic="select" scaleTo={.96} disabled={settingsBusy} onPress={() => setEditing({ ...editing, allergies: on ? editing.allergies.filter(id => id !== a.id) : [...editing.allergies, a.id] })} style={[s.viewChip, on && s.viewChipOn]}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{allergyLabel(a.id)}</Text></Tap>; })}</View>
+              <Text style={s.label}>{t('member.allergies')}</Text><View style={s.chips}>{ALLERGENS.map(a => { const on = editing.allergies.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('member.allergyFor', { allergen: allergyLabel(a.id) })} haptic="select" scaleTo={.96} disabled={settingsBusy} onPress={() => setEditing({ ...editing, allergies: on ? editing.allergies.filter(id => id !== a.id) : [...editing.allergies, a.id] })} style={[s.viewChip, on && s.viewChipOn]}><Text style={[s.viewChipText, on && { color: C.onPrimary }]}>{allergyLabel(a.id)}</Text></Tap>; })}</View>
               <View style={s.actionRow}><View style={{ flex: 1 }}><Button loading={settingsBusy} hapticKind="firm" onPress={saveMember}>{editing.id ? t('member.saveChanges') : t('member.addToHousehold')}</Button></View><Button secondary disabled={settingsBusy} onPress={() => { setEditing(null); setFeedback(''); }}>{t('common.cancel')}</Button></View></Reveal>;
   const people: Person[] = [{ id: ME, name: myName || t('common.you'), allergies }, ...members];
+  const avatarText = avatarLabels(people.map(p => p.name));
+  const avatarSlots = avatarColorSlots(avatarText, profileHues);
+  const avatarOf = (id: string) => { const i = Math.max(0, people.findIndex(p => p.id === id)); return { label: avatarText[i], slot: avatarSlots[i] }; };
   const household = members.length > 0;
   // The account holder is always listed once there is family, even with no allergies saved (parents whose kids have them).
   const checkPeople = household || allergies.length ? people : members;
@@ -620,10 +668,10 @@ function AppContent() {
     const et = EXPIRY_TONE[expiryState(item, today)];
     const name = item.product.name;
     return <SwipeRow key={item.id} testID={`pantry-item-${name}`} onRight={() => void setPantryStatus(item.id, 'consumed')} onLeft={() => void setPantryStatus(item.id, 'discarded')}
-      rightLabel={t('pantry.used')} leftLabel={t('pantry.toss')} rightIcon={<Check accessible={false} size={20} color={C.onAccent} />} leftIcon={<Trash2 accessible={false} size={20} color={C.onAccent} />}>
-      {guard => <View style={[s.card, s.pantryCard]}>
+      rightLabel={t('pantry.used')} leftLabel={t('pantry.toss')} rightIcon={<Check accessible={false} size={20} color={C.onPrimary} />} leftIcon={<Trash2 accessible={false} size={20} color={C.trashIcon} />}>
+      {guard => <View testID={`pantry-card-${item.id}`} style={[s.card, s.pantryCard]}>
         <Tap accessibilityRole="button" accessibilityLabel={t('pantry.openLabel', { name })} haptic="select" scaleTo={.98} onPress={guard(() => openSaved(item.product))} style={s.pantryMain}>
-          <View style={[s.resultIcon, { backgroundColor: tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
+          <View style={[s.resultIcon, { backgroundColor: C.pastel ? 'transparent' : tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={s.cardTitle}>{name}</Text>
             {item.product.source === 'sample' && <Text style={[s.sourceBadge, s.pantryBadge]}>{t('result.fictional')}</Text>}
@@ -633,8 +681,8 @@ function AppContent() {
           <ChevronRight size={20} color={C.green} />
         </Tap>
         <View style={s.actionRow}>
-          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.usedLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'consumed'))} style={[s.pantryAction, { backgroundColor: C.greenSoft }]} pressedStyle={{ backgroundColor: C.greenSoftPressed }}><Check accessible={false} size={17} color={C.green} /><Text style={[s.pantryActionText, { color: C.green }]}>{t('pantry.used')}</Text></Tap>
-          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.tossLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'discarded'))} style={[s.pantryAction, { backgroundColor: C.redSoft }]} pressedStyle={{ opacity: .8 }}><Trash2 accessible={false} size={17} color={C.red} /><Text style={[s.pantryActionText, { color: C.red }]}>{t('pantry.toss')}</Text></Tap>
+          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.usedLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'consumed'))} style={[s.pantryAction, C.pastel ? gradientFill(C.primaryFrom, C.primaryTo) : { backgroundColor: C.greenSoft }]} pressedStyle={C.pastel ? gradientFill(C.primaryTo, C.primaryFrom) : { backgroundColor: C.greenSoftPressed }}><Check accessible={false} size={17} color={C.pastel ? C.primaryInk : C.green} /><Text style={[s.pantryActionText, { color: C.pastel ? C.primaryInk : C.green }]}>{t('pantry.used')}</Text></Tap>
+          <Tap accessibilityRole="button" accessibilityLabel={t('pantry.tossLabel', { name })} haptic={null} onPress={guard(() => void setPantryStatus(item.id, 'discarded'))} style={[s.pantryAction, C.pastel ? gradientFill(C.discardFrom, C.discardTo) : { backgroundColor: C.redSoft }]} pressedStyle={{ opacity: .8 }}><Trash2 accessible={false} size={17} color={C.red} /><Text style={[s.pantryActionText, { color: C.red }]}>{t('pantry.toss')}</Text></Tap>
         </View>
       </View>}
     </SwipeRow>;
@@ -650,9 +698,7 @@ function AppContent() {
     document.head.appendChild(el);
     return () => el.remove();
   }, [docScroll, C.bg, C.canvasImage]);
-  useEffect(() => { if (docScroll) window.scrollTo(0, 0); }, [page, docScroll]);
-  // With Home hidden from the toolbar, Scan is the first page instead.
-  useEffect(() => { if (!showHome && page === 'overview') setPage('scan'); }, [showHome, page]);
+  useEffect(() => { if (docScroll) window.scrollTo(0, 0); else scrollRef.current?.scrollTo({ y: 0, animated: false }); }, [page, settingsView, docScroll]);
   // The dashboard refreshes itself every 10 seconds while it is open, so the scan total ticks up live.
   const refreshStats = async () => {
     const current = generation.current;
@@ -669,6 +715,19 @@ function AppContent() {
   }, [page, isAdmin]);
   const scrollToY = (y: number) => docScroll ? window.scrollTo({ top: y, behavior: 'smooth' }) : scrollRef.current?.scrollTo({ y, animated: true });
   const Scroller = docScroll ? View : ScrollView;
+  // A Settings row that opens another page (Account, App, About & Privacy, Admin Dashboard).
+  const menuRow = (testID: string | undefined, icon: React.ReactNode, title: string, body: string, onPress: () => void) => <Tap testID={testID} accessibilityRole="button" haptic="select" onPress={onPress} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>{icon}<View style={{ flex: 1 }}><Text style={s.cardTitle}>{title}</Text><Text style={s.footnote}>{body}</Text></View><ChevronRight size={20} color={C.green} /></Tap>;
+  const openSettings = (view: 'account' | 'app') => { slideDir.current = 1; setFeedback(''); setLangOpen(false); setEditing(null); setRemoving(null); setNameDraft(myName); setSettingsView(view); };
+  // Pages opened from Settings get a floating button back to the Settings menu (Admin Dashboard only on phones; desktop has it in the sidebar).
+  // Runs before paint so the new page starts off-screen instead of flashing in place.
+  useLayoutEffect(() => {
+    const dir = slideDir.current; slideDir.current = 0;
+    if (!dir || wide || reduceMotion.current) { slideX.setValue(0); return; }
+    slideX.setValue(dir * width);
+    Animated.timing(slideX, { toValue: 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [page, settingsView]);
+  const showBack = (page === 'settings' && settingsView !== 'main') || page === 'about' || (page === 'admin' && !wide);
+  const backButton = <Tap testID="settings-back" accessibilityRole="button" accessibilityLabel={t('settings.back')} haptic="select" scaleTo={.95} onPress={() => { slideDir.current = -1; navigate('settings'); }} style={s.backButton} pressedStyle={{ opacity: .75 }}><ChevronLeft accessible={false} size={20} color={C.green} /><Text style={s.backText}>{t('nav.settings')}</Text></Tap>;
   // Password box with an eye button that shows or hides what was typed.
   const passwordField = (input: React.ReactElement, shown = showPassword, setShown = setShowPassword, testID = 'toggle-password') => <View style={s.passwordBox}>{input}
     <Tap testID={testID} accessibilityRole="button" accessibilityLabel={shown ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShown(!shown)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
@@ -677,7 +736,7 @@ function AppContent() {
   if (IS_BETA && session && !(adminChecked && isAdmin)) return <View style={s.loading}><CartLogo size={56} color={C.green} /><ActivityIndicator color={C.green} /><Text style={s.body}>{t('app.opening')}</Text></View>;
   if (!demo && session && recovering) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View testID="new-password" style={[s.authCard, wide && { width: '39%' }]}>
-      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       <Text style={s.sectionTitle}>{t('auth.newPasswordTitle')}</Text>
       <Text style={s.body}>{t('auth.newPasswordBody')}</Text>
       <Text style={s.label}>{t('auth.password')}</Text>{passwordField(<TextInput accessibilityLabel={t('auth.password')} style={s.passwordInput} value={password} onChangeText={setPassword} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" onSubmitEditing={() => void saveNewPassword()} />)}
@@ -687,7 +746,7 @@ function AppContent() {
   </ScrollView></SafeAreaView>;
   if (!demo && !session) return <SafeAreaView style={s.root}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><ScrollView contentContainerStyle={s.welcome} keyboardShouldPersistTaps="handled">
     <View style={[s.welcomeBrand, wide && { width: '48%' }]}>
-      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation'} /><Text style={s.brandText}>BiteBeacon</Text></View>
+      <View style={s.brand}><BrandLogo size={42} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={s.brandText}>BiteBeacon</Text></View>
       
       <Text style={[s.welcomeTitle, { fontSize: wide ? 58 : 40, lineHeight: wide ? 64 : 46 }]}>{t('welcome.title')}</Text>
       <Text style={[s.body, { maxWidth: 430 }]}>{t('welcome.body')}</Text>
@@ -724,10 +783,10 @@ function AppContent() {
     </View>
   </ScrollView></SafeAreaView>;
 
-  const navItems: { page: Page; label: string; short: string }[] = ([...(showHome ? ['overview'] as const : []), 'scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
-  // Five tabs fit a 320px phone; history opens from Pantry and App details from Settings there.
+  const navItems: { page: Page; label: string; short: string }[] = (['scan', 'pantry', 'allergies', 'history', 'settings', 'about', ...(isAdmin ? ['admin'] as const : [])] as const).map(page => ({ page, label: t(`nav.${page}` as MessageKey), short: t(`nav.${page}.short` as MessageKey) }));
+  // Five tabs fit a 320px phone; history opens from Pantry and About & Privacy from Settings there.
   const mobileNavItems = navItems.filter(item => item.page !== 'about' && item.page !== 'history' && item.page !== 'admin');
-  // App details lives in Settings on every screen size.
+  // About & Privacy lives in Settings on every screen size.
   const sidebarNavItems = navItems.filter(item => item.page !== 'about');
   const overallKind = summary?.kind ?? assessment?.kind;
   const result = product && overallKind ? RESULT[overallKind] : null;
@@ -776,21 +835,25 @@ function AppContent() {
   return <SafeAreaView style={s.root} edges={docScroll ? ['top', 'left', 'right'] : undefined}><StatusBar style={scheme === 'dark' ? 'light' : 'dark'} /><View style={s.appFrame}>
     {/* Desktop sidebar: a rail of icons that slides open over the page while the mouse (or keyboard focus) is on it. */}
     {wide && <View style={s.sidebarRail}><View testID="sidebar" style={[s.sidebar, railOpen ? s.sidebarOpen : s.sidebarClosed]}
-      {...({ onMouseEnter: () => setRailOpen(true), onMouseLeave: () => setRailOpen(false), onFocus: () => setRailOpen(true), onBlur: () => setRailOpen(false) } as object)}>
-      <View style={s.brand}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></View>
+      {...(railEvents as object)}>
+      <Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.98} onPress={() => navigate('overview')} style={[s.brand, s.brandTap]} hoverStyle={{ backgroundColor: C.pale }} pressedStyle={{ opacity: .7 }}><View style={{ flexShrink: 0 }}><BrandLogo size={40} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /></View><Text numberOfLines={1} style={[s.brandText, s.railFade, !railOpen && s.railHidden]}>BiteBeacon</Text></Tap>
       <View style={{ height: 32 }} />
-      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} style={[s.navItem, active && s.navActive]} hoverStyle={active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
-        <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.green, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
+      {sidebarNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.98} onPress={() => navigate(item.page)} onHoverIn={() => setRailHover(item.page)} onHoverOut={() => setRailHover(h => (h === item.page ? null : h))} style={[s.navItem, active && s.navActive]} hoverStyle={scheme === 'partiful' ? !active && { backgroundColor: C.pale } : active ? s.navActiveHover : s.navHover} pressedStyle={!active && { backgroundColor: C.pale }}>
+        {scheme === 'partiful' && railHover === item.page && <View testID="selector-bracket" style={s.selectorBracket}><SelectorBracket /></View>}
+        <View style={{ flexShrink: 0 }}><Icon name={item.page} color={active ? C.green : C.muted} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><Text numberOfLines={1} style={[s.navText, { flexShrink: 1 }, active && { color: C.navActiveText, fontWeight: '700' }]}>{item.label}</Text>{item.page === 'pantry' && alertCount > 0 && <Text style={s.navCount}>{alertCount}</Text>}{active && <View style={s.navDot} />}</View>{!railOpen && item.page === 'pantry' && alertCount > 0 && <View style={s.railBadge} />}
       </Tap>; })}
       <View style={{ flex: 1 }} />
+      <View style={s.railDivider} />
       <Tap accessibilityRole="button" accessibilityLabel={demo ? t('account.demo') : t('account.yours')} disabled={busy || saving} onPress={leave} style={s.account} hoverStyle={s.accountHover} pressedStyle={{ opacity: .7 }}><View style={[s.avatar, { flexShrink: 0 }]}><UserRound size={19} color={C.green} /></View><View style={[s.railLabel, s.railFade, !railOpen && s.railHidden]}><View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={1} style={s.navText}>{demo ? t('account.demo') : t('account.yours')}</Text>{demo && <Text numberOfLines={1} style={s.footnote}>{t('account.demoSub')}</Text>}</View><LogOut size={18} color={C.muted} /></View></Tap>
     </View></View>}
-    <View style={s.main}>
+    <View style={[s.main, C.pastel && page === 'pantry' && alerts.expired > 0 && s.pantryCanvas]}>
       {wide && <View style={s.topbar}>
-        <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{navItems.find(n => n.page === page)?.label}</Text></Text></View>
+        <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{page === 'overview' ? t('nav.overview') : navItems.find(n => n.page === page)?.label}</Text></Text></View>
         <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : IS_BETA ? t('mode.beta') : t('mode.connected')}</Text></View>
       </View>}
+      <View style={[s.slideClip, !docScroll && s.pageScroll]}><Animated.View testID="page-slide" style={[!docScroll && s.pageScroll, { transform: [{ translateX: slideX }] }]}>
       <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
+        {!wide && <View style={s.mobileBrandRow}><Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.96} onPress={() => navigate('overview')} style={[s.brand, s.mobileBrand]} pressedStyle={{ opacity: .6 }}><BrandLogo size={30} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={[s.brandText, { fontSize: 20 }]}>BiteBeacon</Text></Tap></View>}
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}
         {feedback && page !== 'allergies' && page !== 'settings' && !inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
         {!profileReady && !demo && <Notice>{t('profile.locked')}</Notice>}
@@ -798,9 +861,9 @@ function AppContent() {
           <View style={s.titleRow}><View style={{ flex: 1 }}><Text accessibilityRole="header" style={s.pageTitle}>{t('overview.title')}</Text><Text style={s.body}>{t('overview.subtitle')}</Text></View>{wide && <View style={s.roundLeaf}><CartLogo size={28} color={C.green} /></View>}</View>
           {alertCount > 0 && <Tap testID="pantry-alert" accessibilityRole="button" accessibilityHint={t('pantry.open')} haptic="select" scaleTo={.98} onPress={() => navigate('pantry')} style={[s.card, s.historyRow, { backgroundColor: tone[alerts.expired ? 'danger' : 'warning'].bg }]}>
             <CalendarClock size={24} color={tone[alerts.expired ? 'danger' : 'warning'].fg} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('pantry.alertTitle')}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{alertText}</Text></View><Text style={s.textLink}>{t('pantry.open')}</Text></Tap>}
-          <View style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
-            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={{ backgroundColor: C.limePressed }}><ScanBarcode size={20} color={HERO_INK} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={HERO_INK} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
-            <View style={[s.heroArt, !wide && { display: 'none' }]}><View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View></View>
+          <View testID="home-hero" style={[s.hero, !wide && { flexDirection: 'column' }]}><View style={[s.heroCopy, !wide && { padding: 24 }]}><Text style={[s.heroTitle, !wide && { fontSize: 29, lineHeight: 35 }]}>{t('hero.title')}</Text><Text style={s.heroBody}>{t('hero.body')}</Text>
+            <View style={{ alignSelf: 'flex-start' }}><Tap accessibilityRole="button" haptic="firm" onPress={() => navigate(canScan ? 'scan' : 'allergies')} style={s.limeButton} pressedStyle={C.pastel ? gradientFill(C.primaryTo, C.primaryFrom) : { backgroundColor: C.limePressed }}><ScanBarcode size={20} color={heroInkFor(C)} /><Text style={s.limeButtonText}>{canScan ? t('hero.scan') : t('hero.setup')}</Text><ArrowUpRight size={18} color={heroInkFor(C)} /></Tap></View><Text style={s.heroCaption}>{t('hero.caption')}</Text></View>
+            <View style={[s.heroArt, !wide && { display: 'none' }]}>{C.pastel ? <Image testID="home-brand-logo" source={scheme === 'partiful' ? require('./assets/home-glass-cart-partiful.png') : require('./assets/home-glass-cart.png')} accessibilityLabel="BiteBeacon logo" resizeMode="contain" style={s.heroLogo} /> : <View style={s.scanIllustration}><View style={s.inline}><CartLogo size={24} color={C.green} /><Text style={s.labelMini}>BITEBEACON</Text></View><View style={s.packageIllustration}><Text style={s.packageBrand}>everyday</Text><Text style={s.packageName}>OAT{'\n'}CRACKERS</Text><Leaf size={42} color="#778749" strokeWidth={1} /><Text style={s.packageBottom}>{t('illus.fictional')}</Text></View><View style={s.illustrationBarcode}><ScanBarcode size={60} color={C.ink} /><Text style={s.footnote}>{t('illus.caption')}</Text></View></View>}</View>
           </View>
           <View style={[s.columns, !wide && { flexDirection: 'column' }]}>
             <View style={[s.card, wide && { flex: 1.2 }]}><View style={s.between}><Text style={s.cardTitle}>{t('profileCard.title')}</Text><Tap accessibilityRole="button" haptic="select" onPress={() => navigate('allergies')} style={s.pillLink} pressedStyle={{ backgroundColor: C.greenSoft }}><Text style={s.textLink}>{t('profileCard.edit')}</Text></Tap></View><Text style={s.bodySmall}>{t('profileCard.personal')}</Text><View style={s.chips}>{allergies.map(id => <View key={id} style={s.allergyChip}><View style={s.chipDot} /><Text style={s.chipText}>{allergyLabel(id)}</Text></View>)}</View><View style={s.divider} /><View style={s.inline}><ShieldCheck size={16} color={C.green} /><Text style={s.bodySmall}>{t('profileCard.selected', { n: allergies.length })} · {demo ? t('profileCard.local') : t('profileCard.private')}</Text></View>{household && <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('settings')} style={s.inline}><UserRound size={16} color={C.green} /><Text style={[s.bodySmall, { flex: 1 }]}>{t('profileCard.household', { names: i18n.list(members.map(m => m.name)) })}</Text><Text style={s.textLink}>{t('profileCard.manage')}</Text></Tap>}</View>
@@ -808,46 +871,46 @@ function AppContent() {
           </View>
           {demo && <><View style={s.between}><View><Text style={s.sectionTitle}>{t('samples.title')}</Text><Text style={s.bodySmall}>{t('samples.body')}</Text></View><Text style={s.sampleLabel}>{t('samples.label')}</Text></View>
           <View style={[s.sampleGrid, !wide && { flexDirection: 'column' }]}>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={t('samples.try', { name: item.name })} disabled={!canScan} key={item.barcode} haptic={null} onPress={() => showProduct(item)} style={[s.sampleCard, wide && { flex: 1 }, !canScan && { opacity: .5 }]} pressedStyle={{ borderColor: C.green }}>
-            <View style={[s.sampleArt, { backgroundColor: SAMPLE_ART[i].bg }]}><View /><View style={[s.miniPack, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={19} color="white" /><Text style={s.miniPackText}>{SAMPLE_ART[i].word}</Text></View><ArrowUpRight size={17} color={C.muted} /></View>
+            <View style={[s.sampleArt, { backgroundColor: SAMPLE_ART[i].bg }]}><View /><View style={[s.miniPack, { backgroundColor: sampleArtFor(C)[i].pack }]}><Leaf size={19} color="white" /><Text style={s.miniPackText}>{SAMPLE_ART[i].word}</Text></View><ArrowUpRight size={17} color={C.muted} /></View>
             <View style={s.sampleInfo}><Text style={s.sampleName}>{item.name}</Text><View style={s.between}><Text style={s.footnote}>{t('samples.fictional')}</Text><ChevronRight size={16} color={C.green} /></View></View>
           </Tap>)}</View></>}
         </>}
         {page === 'allergies' && <>
           <Text accessibilityRole="header" style={s.pageTitle}>{t('nav.allergies')}</Text>
-          {household && <View testID="allergy-person" accessibilityRole="radiogroup" accessibilityLabel={t('allergies.whose')} style={s.chips}>{people.map(p => { const on = p.id === allergyPerson; return <Tap key={p.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: saving }} accessibilityLabel={p.name} haptic="select" scaleTo={.96} disabled={saving} onPress={() => chooseAllergyPerson(p.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{p.name}</Text></Tap>; })}</View>}
+          {household && <View testID="allergy-person" accessibilityRole="radiogroup" accessibilityLabel={t('allergies.whose')} style={s.chips}>{people.map(p => { const on = p.id === allergyPerson; return <Tap key={p.id} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: saving }} accessibilityLabel={p.name} haptic="select" scaleTo={.96} disabled={saving} onPress={() => chooseAllergyPerson(p.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onPrimary }]}>{p.name}</Text></Tap>; })}</View>}
           <Text style={s.body}>{t('allergies.body')}</Text>
           <Notice kind="info">{t('allergies.notice')}</Notice>
           <View style={[s.allergyGrid, singleColumn && s.groupedList]}>{ALLERGENS.map((a, i) => { const on = draft.includes(a.id); return <Tap key={a.id} accessibilityRole="checkbox" aria-checked={on} aria-disabled={saving || !profileReady} accessibilityLabel={allergyLabel(a.id)} accessibilityHint={t('allergies.hint')} accessibilityState={{ checked: on, disabled: saving || !profileReady }} disabled={saving || !profileReady} haptic="select" scaleTo={.98}
             onPress={() => { setProfileSaved(false); setFeedback(''); setDraft(prev => prev.includes(a.id) ? prev.filter(id => id !== a.id) : [...prev, a.id]); }}
-            style={[s.allergyOption, singleColumn ? [s.groupedRow, i < ALLERGENS.length - 1 && s.groupedSeparator] : [{ width: '48.5%' }, on && s.allergySelected]]} pressedStyle={(singleColumn || !on) && { backgroundColor: C.pale }}>
-            <Text accessible={false} style={[s.allergenMark, on && { backgroundColor: C.green, color: C.onAccent }]}>{lang === 'en' ? a.mark : Array.from(allergyLabel(a.id))[0]}</Text><Text style={[s.cardTitle, { flex: 1 }, on && { color: C.greenDeep }]}>{allergyLabel(a.id)}</Text><CheckMark checked={on} />
+            style={[s.allergyOption, singleColumn ? [s.groupedRow, i < ALLERGENS.length - 1 && s.groupedSeparator] : [{ width: '48.5%' }, on && (C.pastel ? s.allergenSelected : s.allergySelected)]]} pressedStyle={(singleColumn || !on) && { backgroundColor: C.pale }}>
+            <Text accessible={false} style={[s.allergenMark, on && (C.pastel ? { ...gradientFill(C.allergenSelectedFrom, C.allergenSelectedTo), color: C.primaryInk } : { backgroundColor: C.green, color: C.onAccent })]}>{lang === 'en' ? a.mark : Array.from(allergyLabel(a.id))[0]}</Text><Text style={[s.cardTitle, { flex: 1 }, on && { color: C.pastel && !singleColumn ? C.primaryInk : C.greenDeep }]}>{allergyLabel(a.id)}</Text><CheckMark checked={on} />
           </Tap>; })}</View>
         </>}
         {page === 'scan' && <>
           <Text accessibilityRole="header" style={s.pageTitle}>{t('scan.title')}</Text><Text style={s.body}>{t('scan.body')}</Text>
           {!canScan ? <Button onPress={() => navigate('allergies')}>{t('scan.chooseAllergies')}</Button> : <View style={[s.columns, !wide && { flexDirection: 'column' }]}><View style={[s.card, wide && { flex: 1 }]}>
             <View style={s.inline}><View style={s.iconTile}><ScanBarcode size={19} color={C.green} /></View><Text style={s.cardTitle}>{t('scan.scanner')}</Text></View>
-            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={event => { if (event.type === 'upc_e') { setCamera(false); haptic.warning(); say(t('scan.upce')); } else void scan(event.data, true); }} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
-              : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onAccent} />}>{t('scan.openCamera')}</Button></View>}
+            {camera && permission?.granted ? <View style={{ gap: 12 }}><View style={s.cameraFrame}><CameraView style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }} onBarcodeScanned={onCameraRead} /><View pointerEvents="none" style={s.cameraGuide}><View style={s.cameraTarget} /><Text style={s.cameraGuideText}>{t('scan.center')}</Text></View></View><Button secondary onPress={() => setCamera(false)} icon={<X accessible={false} size={18} color={C.ink} />}>{t('scan.closeCamera')}</Button></View>
+              : <View style={s.scannerPlaceholder}><ScanBarcode size={60} color={C.green} strokeWidth={1.2} /><Text style={[s.bodySmall, { textAlign: 'center' }]}>{cameraAvailable() ? t('scan.pointCamera') : t('scan.webCamera')}</Text><Button disabled={busy || !cameraAvailable()} loading={cameraAsking} onPress={openCamera} icon={<Camera accessible={false} size={18} color={C.onPrimary} />}>{t('scan.openCamera')}</Button></View>}
             <Text style={s.label}>{t('scan.manual')}</Text>
             <TextInput accessibilityLabel={t('scan.barcodeLabel')} style={[s.input, barcodeFocused && s.inputFocused, hint.ok && { borderColor: C.green }]} value={barcode} onChangeText={value => { setBarcode(value); if (feedback) setFeedback(''); }} onFocus={() => setBarcodeFocused(true)} onBlur={() => setBarcodeFocused(false)} keyboardType="number-pad" maxLength={14} placeholder="e.g. 3017620422003" placeholderTextColor={C.faint} onSubmitEditing={() => void scan(barcode)} editable={!busy} />
             <Text style={[s.footnote, hint.ok && { color: C.green, fontWeight: '600' }]}>{hint.text}</Text>
-            <Button loading={busy} onPress={() => void scan(barcode)} icon={<Search accessible={false} size={18} color={C.onAccent} />}>{busy ? t('scan.checking') : t('scan.lookUp')}</Button>
+            <Button loading={busy} onPress={() => void scan(barcode)} icon={<Search accessible={false} size={18} color={C.onPrimary} />}>{busy ? t('scan.checking') : t('scan.lookUp')}</Button>
             {feedback && inlineScanFeedback ? <Reveal trigger={feedback}><View accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
             <Text style={s.footnote}>{t('scan.sources')}</Text>
             {!demo && <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View>}
           </View>{/* Fictional samples are for the demo only; signed-in people check real barcodes. */}{demo && <View style={[s.card, wide && { flex: 1 }]}><Text style={s.cardTitle}>{t('scan.trySample')}</Text><Text style={s.bodySmall}>{t('scan.sampleBody')}</Text>
-            <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color="white" /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
+            <View>{SAMPLES.map((item, i) => <Tap accessibilityRole="button" accessibilityLabel={item.name} disabled={busy} key={item.barcode} haptic={null} scaleTo={.98} onPress={() => showProduct(item)} style={s.sampleRow} pressedStyle={{ backgroundColor: C.pale }}><View style={[s.sampleSwatch, C.pastel ? gradientFill(C.logoBacking, sampleArtFor(C)[i].bg) : { backgroundColor: SAMPLE_ART[i].pack }]}><Leaf size={14} color={C.pastel ? C.avatarInk : 'white'} /></View><Text style={[s.navText, { flex: 1 }]}>{item.name}</Text><ChevronRight size={18} color={C.green} /></Tap>)}</View>
             <View style={s.inline}><LockKeyhole size={15} color={C.muted} /><Text style={[s.footnote, { flex: 1 }]}>{t('scan.privacy')}</Text></View></View>}</View>}
           {(busy || product) && <View onLayout={e => { if (pendingScroll.current) { pendingScroll.current = false; scrollToY(Math.max(0, e.nativeEvent.layout.y - 12)); } }}>
             {busy ? <Reveal style={s.card}><View accessibilityRole="progressbar" aria-busy accessibilityLabel={t('scan.checkingLabel')} style={s.inline}><ActivityIndicator color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('scan.checking')}</Text><Text style={s.bodySmall}>{t('scan.lookingUp', { barcode: barcode || t('scan.barcodeWord') })}</Text></View></View><Skeleton width="60%" height={22} /><Skeleton height={64} /><Skeleton width="85%" /><Skeleton width="70%" /></Reveal>
               : product && result && <Reveal trigger={product} style={[s.card, s.resultCard]}><View testID="product-result" style={{ gap: 13 }}>
                 <View style={s.between}><Text style={[s.sourceBadge, product.source === 'sample' ? { backgroundColor: C.amberSoft, color: C.amber } : { backgroundColor: C.blueSoft, color: C.blue }]}>{product.source === 'sample' ? t('result.fictional') : t('result.live')}</Text><Tap accessibilityRole="button" accessibilityLabel={t('result.close')} haptic="select" style={s.closeButton} pressedStyle={{ backgroundColor: C.border }} onPress={() => setProduct(null)}><X size={19} color={C.muted} /></Tap></View>
                 <Text style={s.sectionTitle}>{product.name}</Text><Text style={s.bodySmall}>{product.brand} · {product.barcode}</Text>
-                {multi && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{o.label}</Text></Tap>; })}</View></View>}
+                {multi && <View style={s.detailBlock}><Text style={s.label}>{t('result.checkingFor')}</Text><View style={s.chips}>{viewOptions.map(o => { const on = ticked(activeView, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('result.checkFor', { label: o.label })} haptic="select" scaleTo={.96} onPress={() => toggleView(o.id)} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onPrimary }]}>{o.label}</Text></Tap>; })}</View></View>}
                 {summary ? <>
                   <View testID="household-summary" style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{summaryTitle(summary)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{summaryDetail(summary)}</Text></View></View>
-                  {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={s.personInitial}>{r.person.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
+                  {results.map(r => { const tn = tone[RESULT[r.assessment.kind].tone]; return <View key={r.person.id} testID={`person-result-${r.person.name}`} style={[s.personCard, { borderColor: tn.fg, backgroundColor: tn.bg }]}><View style={[s.personAvatar, { backgroundColor: tn.fg }]}><Text accessible={false} style={[s.personInitial, avatarOf(r.person.id).label.length > 1 && s.personInitials]}>{avatarOf(r.person.id).label}</Text></View><View style={{ flex: 1, gap: 2 }}><Text style={s.cardTitle}>{r.person.name}</Text><Text style={s.footnote}>{allergyList(r.person.allergies, ' · ')}</Text><Text style={[s.personVerdict, { color: tn.fg }]}>{r.assessment.matches.length ? t('result.verdict', { title: kindTitle(r.assessment), matches: i18n.list(r.assessment.matches.map(labelOf)) }) : kindTitle(r.assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{personReason(r)}</Text></View></View>; })}
                 </> : assessment && <>
                 <View style={[s.resultBanner, { backgroundColor: tone[result.tone].bg, borderColor: tone[result.tone].fg }]}><View style={[s.resultIcon, { backgroundColor: tone[result.tone].fg }]}><result.Icon size={24} color={C.onAccent} /></View><View style={{ flex: 1, gap: 4 }}><Text style={[s.resultTitle, { color: tone[result.tone].fg }]}>{kindTitle(assessment)}</Text><Text style={[s.bodySmall, { color: C.ink }]}>{kindDetail(assessment)}</Text>{assessment.matches.length > 0 && <View style={s.chips}>{assessment.matches.map(m => <Text key={m} style={[s.matchChip, { color: tone[result.tone].fg, borderColor: tone[result.tone].fg }]}>{labelOf(m)}</Text>)}</View>}</View></View>
                 {evidence.length > 0 && <View testID="result-evidence" style={s.detailBlock}><Text style={s.label}>{t('result.why')}</Text>{evidence.map(e => <View key={`${e.allergen}-${e.via}-${e.term}`} style={s.evidenceRow}><Text style={[s.evidenceAllergen, { color: tone[e.via === 'trace' ? 'warning' : 'danger'].fg }]}>{labelOf(e.allergen)}</Text><Text style={[s.bodySmall, { flex: 1, color: C.ink }]}>{evidenceText(e)}</Text></View>)}</View>}
@@ -855,11 +918,11 @@ function AppContent() {
                 <View testID="pantry-add" style={s.pantryAdd}>
                   <View style={s.inline}><PackagePlus accessible={false} size={20} color={C.green} /><Text accessibilityRole="header" style={s.cardTitle}>{t('pantry.addTitle')}</Text></View>
                   <Text style={s.bodySmall}>{t('pantry.addBody')}</Text>
-                  <View accessibilityRole="radiogroup" style={s.chips}>{[...quickDates, { key: 'none', label: t('pantry.quick.none'), date: '' }].map(q => { const on = q.key === 'none' ? pantryDraft.none : !pantryDraft.none && pantryDraft.date === q.date; return <Tap key={q.key} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} haptic="select" scaleTo={.96} onPress={() => setPantryDraft({ date: q.date, none: q.key === 'none', error: false })} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onAccent }]}>{q.label}</Text></Tap>; })}</View>
+                  <View accessibilityRole="radiogroup" style={s.chips}>{[...quickDates, { key: 'none', label: t('pantry.quick.none'), date: '' }].map(q => { const on = q.key === 'none' ? pantryDraft.none : !pantryDraft.none && pantryDraft.date === q.date; return <Tap key={q.key} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} haptic="select" scaleTo={.96} onPress={() => setPantryDraft({ date: q.date, none: q.key === 'none', error: false })} style={[s.viewChip, on && s.viewChipOn]} pressedStyle={!on && { backgroundColor: C.pale }}><Text style={[s.viewChipText, on && { color: C.onPrimary }]}>{q.label}</Text></Tap>; })}</View>
                   <TextInput accessibilityLabel={t('pantry.dateLabel')} style={[s.input, pantryDraft.error && { borderColor: C.red }]} value={pantryDraft.none ? '' : pantryDraft.date} onChangeText={date => setPantryDraft({ date, none: false, error: false })} placeholder="YYYY-MM-DD" placeholderTextColor={C.faint} maxLength={10} keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'} onSubmitEditing={() => void addToPantry(product)} editable={!pantryBusy} />
                   {pantryDraft.error ? <Text accessibilityRole="alert" style={[s.footnote, { color: tone.danger.fg, fontWeight: '600' }]}>{t('pantry.dateInvalid')}</Text>
                     : !pantryDraft.none && validDay(pantryDraft.date) ? <Text style={[s.footnote, EXPIRY_TONE[expiryState({ expiresOn: pantryDraft.date }, today)] ? { color: tone[EXPIRY_TONE[expiryState({ expiresOn: pantryDraft.date }, today)]!].fg, fontWeight: '600' } : null]}>{expiryText({ expiresOn: pantryDraft.date }, today)}</Text> : null}
-                  <Button loading={pantryBusy} hapticKind="firm" onPress={() => void addToPantry(product)} icon={<PackagePlus accessible={false} size={18} color={C.onAccent} />}>{t('pantry.add')}</Button>
+                  <Button loading={pantryBusy} hapticKind="firm" onPress={() => void addToPantry(product)} icon={<PackagePlus accessible={false} size={18} color={C.onPrimary} />}>{t('pantry.add')}</Button>
                   {inPantry > 0 && <Text style={s.footnote}>{t('pantry.inPantry', { n: inPantry })}</Text>}
                 </View>
                 <View style={s.detailBlock}><Text style={s.label}>{t('result.ingredients')}</Text><Text testID="result-ingredients" style={s.body}>{product.ingredients ? highlightIngredients(product.ingredients, focusAllergies).map((seg, i) => !seg.allergen ? seg.text : seg.hidden
@@ -887,7 +950,7 @@ function AppContent() {
           <Text accessibilityRole="header" style={s.sectionTitle}>{t('history.scansTitle')}</Text><Text style={s.bodySmall}>{t('history.body')}</Text>
           {history.length === 0 ? <Reveal style={[s.card, s.empty]}><View style={[s.iconTile, { alignSelf: 'center', padding: 16, borderRadius: 40 }]}><Clock3 size={34} color={C.green} /></View><Text style={s.cardTitle}>{t('history.emptyTitle')}</Text><Text style={[s.bodySmall, { textAlign: 'center' }]}>{t('history.emptyBody')}</Text><Button onPress={() => navigate('scan')}>{t('history.check')}</Button></Reveal>
             : history.map((entry, index) => { const rs = assessPeople(entry.product, viewPeople); const sm = rs.length > 1 ? householdSummary(rs) : null; const r = RESULT[sm?.kind ?? rs[0].assessment.kind]; return <Tap accessibilityRole="button" key={`${entry.at}-${index}`} haptic="select" scaleTo={.98} onPress={() => { navigate('scan'); pendingScroll.current = true; setProduct(entry.product); }} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>
-              <View style={[s.resultIcon, { backgroundColor: tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
+              <View style={[s.resultIcon, { backgroundColor: C.pastel ? 'transparent' : tone[r.tone].bg }]}><r.Icon size={20} color={tone[r.tone].fg} /></View>
               <View style={{ flex: 1 }}><Text style={s.cardTitle}>{entry.product.name}</Text><Text style={[s.bodySmall, { color: tone[r.tone].fg, fontWeight: '600' }]}>{sm ? summaryTitle(sm) : kindTitle(rs[0].assessment)}</Text><Text style={s.footnote}>{sourceName(entry.product)} · {i18n.time(entry.at)}</Text></View><ChevronRight size={22} color={C.green} />
             </Tap>; })}
           <Text accessibilityRole="header" style={[s.sectionTitle, { marginTop: 8 }]}>{t('history.pantryTitle')}</Text><Text style={s.bodySmall}>{t('history.pantryBody')}</Text>
@@ -898,9 +961,11 @@ function AppContent() {
               <Tap accessibilityRole="button" accessibilityLabel={t('history.putBackLabel', { name })} haptic={null} onPress={() => void setPantryStatus(item.id, 'active')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Undo2 size={18} color={C.green} /></Tap>
               <Tap accessibilityRole="button" accessibilityLabel={t('history.deleteLabel', { name })} haptic={null} onPress={() => void deletePantryItem(item.id)} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><X size={18} color={C.red} /></Tap>
             </View>; })}</>}
-        {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('settings.title')}</Text><Text style={s.body}>{t('settings.body')}</Text>
+        {page === 'settings' && <><Text accessibilityRole="header" style={s.pageTitle}>{settingsView === 'account' ? t('settings.account') : settingsView === 'app' ? t('settings.app') : t('settings.title')}</Text>{settingsView === 'main' && <Text style={s.body}>{t('settings.body')}</Text>}
           {feedback ? <Reveal trigger={feedback}><View testID="settings-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite"><Notice kind={feedbackTone}>{feedback}</Notice></View></Reveal> : null}
-          <View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
+          {settingsView === 'main' && <>{menuRow('open-account-settings', <UserRound size={20} color={C.green} />, t('settings.account'), t('settings.accountBody'), () => openSettings('account'))}
+           {menuRow('open-app-settings', <SlidersHorizontal size={20} color={C.green} />, t('settings.app'), t('settings.appBody'), () => openSettings('app'))}</>}
+          {settingsView === 'account' && <><View style={s.card}><Text style={s.cardTitle}>{t('settings.yourName')}</Text><Text style={s.bodySmall}>{t('settings.yourNameHelp', { you: t('common.you') })}</Text>
             <TextInput accessibilityLabel={t('settings.yourName')} style={s.input} value={nameDraft} onChangeText={setNameDraft} placeholder={t('common.you')} placeholderTextColor={C.faint} maxLength={40} editable={settingsReady && !settingsBusy} onSubmitEditing={() => void saveMyName()} />
             {cleanName(nameDraft) !== myName && <Button loading={settingsBusy} disabled={!settingsReady} onPress={saveMyName}>{t('settings.saveName')}</Button>}</View>
           {!demo && session && <View testID="sign-in-settings" style={s.card}><View style={s.inline}><LockKeyhole size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.signIn')}</Text></View>
@@ -915,10 +980,10 @@ function AppContent() {
               <Text style={s.bodySmall}>{t('settings.passwordHelp')}</Text>
               <Text style={s.label}>{t('settings.passwordCurrent')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordCurrent')} style={s.passwordInput} value={pwCurrent} onChangeText={setPwCurrent} placeholder={t('auth.passwordCurrent')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!pwBusy} />, showPw, setShowPw, 'toggle-current-password')}
               <Text style={s.label}>{t('settings.passwordNew')}</Text>{passwordField(<TextInput accessibilityLabel={t('settings.passwordNew')} style={s.passwordInput} value={pwNew} onChangeText={setPwNew} placeholder={t('auth.passwordNew')} placeholderTextColor={C.faint} secureTextEntry={!showPw} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" editable={!pwBusy} onSubmitEditing={() => void changePassword()} />, showPw, setShowPw, 'toggle-new-password')}
-              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}
-          <View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
-            <View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.green }]}><Text accessible={false} style={s.personInitial}>{Array.from(myName || t('common.you'))[0].toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
-            {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View style={[s.personAvatar, { backgroundColor: C.blue }]}><Text accessible={false} style={s.personInitial}>{m.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
+              {(pwCurrent !== '' || pwNew !== '') && <Button loading={pwBusy} onPress={changePassword}>{t('auth.newPasswordSave')}</Button>}</View>}</>}
+          {settingsView === 'main' && <><View style={s.card}><View style={s.between}><Text style={s.cardTitle}>{t('settings.household')}</Text><Text style={s.footnote}>{t('settings.count', { n: people.length, max: MAX_MEMBERS + 1 })}</Text></View>
+            <View style={s.memberRow}><View testID="profile-avatar-self" style={[s.personAvatar, C.pastel ? profileAvatarFill(avatarOf(ME).slot) : { backgroundColor: C.green }]}><Text accessible={false} style={[s.personInitial, avatarOf(ME).label.length > 1 && s.personInitials, C.pastel && { color: C.avatarInk }]}>{avatarOf(ME).label}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{myName || t('common.you')} <Text style={s.footnote}>{t('settings.youTag')}</Text></Text><Text style={s.footnote}>{allergies.length ? allergyList(allergies, ' · ') : t('settings.noAllergies')}</Text></View><Tap accessibilityRole="button" accessibilityLabel={t('settings.editYours')} haptic="select" onPress={() => navigate('allergies')} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap></View>
+            {members.map(m => editing?.id === m.id ? <View key={m.id}>{memberForm}</View> : <View key={m.id} style={{ gap: 10 }}><View style={s.memberRow}><View testID={`profile-avatar-${m.id}`} style={[s.personAvatar, C.pastel ? profileAvatarFill(avatarOf(m.id).slot) : { backgroundColor: C.blue }]}><Text accessible={false} style={[s.personInitial, avatarOf(m.id).label.length > 1 && s.personInitials, C.pastel && { color: C.avatarInk }]}>{avatarOf(m.id).label}</Text></View><View style={{ flex: 1 }}><Text style={s.cardTitle}>{m.name}</Text><Text style={s.footnote}>{allergyList(m.allergies, ' · ')}</Text></View>
               <Tap accessibilityRole="button" accessibilityLabel={t('member.edit', { name: m.name })} haptic="select" disabled={settingsBusy} onPress={() => { setFeedback(''); setRemoving(null); setEditing({ id: m.id, name: m.name, allergies: [...m.allergies] }); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}><Pencil size={17} color={C.green} /></Tap>
               <Tap accessibilityRole="button" accessibilityLabel={t('member.removeLabel', { name: m.name })} haptic="warning" disabled={settingsBusy} onPress={() => { setFeedback(''); setEditing(null); setRemoving(m.id); }} style={s.iconButton} pressedStyle={{ backgroundColor: C.redSoft }}><Trash2 size={17} color={C.red} /></Tap></View>
               {removing === m.id && <Reveal style={{ gap: 10 }}><Notice kind="danger">{t('member.removeConfirm', { name: m.name })}{defaultPeople.length === 1 && defaultPeople[0].id === m.id ? ` ${t('member.removeDefault')}` : ''}</Notice><View style={s.actionRow}><View style={{ flex: 1 }}><Button variant="danger" hapticKind="warning" loading={settingsBusy} onPress={() => void removeMember(m.id)}>{t('member.remove', { name: m.name })}</Button></View><Button secondary onPress={() => setRemoving(null)}>{t('member.keep')}</Button></View></Reveal>}</View>)}
@@ -927,19 +992,16 @@ function AppContent() {
             {members.length >= MAX_MEMBERS && !editing && <Text style={s.footnote}>{t('settings.full', { n: MAX_MEMBERS })}</Text>}</View>
           {/* Choosing whose results show only makes sense once there is someone besides you. */}
           {household && <View style={s.card}><Text style={s.cardTitle}>{t('settings.showFor')}</Text><Text style={s.bodySmall}>{t('settings.showForHelp')}</Text>
-            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(shownDefault, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }]}>{o.label}</Text></Tap>; })}</View>
-            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}
-          <View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
+            <View testID="show-for-settings" style={{ gap: 6 }}>{(multi ? viewOptions : viewOptions.filter(o => o.id === firstPick[0])).map(o => { const on = !multi ? o.id === firstPick[0] : ticked(shownDefault, o.id, checkPeople); return <Tap key={o.id} accessibilityRole="checkbox" aria-checked={on} accessibilityState={{ checked: on, disabled: !settingsReady || settingsBusy }} accessibilityLabel={t('settings.defaultLabel', { label: o.label })} haptic={null} disabled={!settingsReady || settingsBusy} onPress={() => void toggleDefault(o.id)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><CheckMark checked={on} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{o.label}</Text></Tap>; })}</View>
+            {!multi && <Text style={s.footnote}>{t('settings.addToChoose', { everyone: t('view.everyone', { n: 1 }).replace(/\s*\(.*\)$/, '') })}</Text>}</View>}</>}
+          {settingsView === 'app' && <><View testID="language-settings" style={s.card}><View style={s.inline}><Languages size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.language')}</Text></View><Text style={s.bodySmall}>{t('settings.languageHelp')}</Text>
             <Tap testID="language-dropdown" accessibilityRole="button" aria-expanded={langOpen} accessibilityState={{ expanded: langOpen, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: languageName(lang) })} haptic="select" scaleTo={.99} disabled={settingsBusy} onPress={() => setLangOpen(!langOpen)} style={s.radioRow} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }]}>{languageName(lang)}</Text><View style={langOpen && { transform: [{ rotate: '180deg' }] }}><ChevronDown accessible={false} size={20} color={C.green} /></View></Tap>
             {langOpen && <Reveal style={s.dropdownMenu}><View accessibilityRole="radiogroup">{LANGUAGES.map((l, i) => { const on = lang === l.code; return <Tap key={l.code} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on, disabled: settingsBusy }} accessibilityLabel={t('settings.languageLabel', { name: l.name })} accessibilityLanguage={l.locale} haptic={null} scaleTo={.99} disabled={settingsBusy} onPress={() => { setLangOpen(false); void chooseLanguage(l.code); }} style={[s.dropdownRow, i < LANGUAGES.length - 1 && s.groupedSeparator]} pressedStyle={{ backgroundColor: C.pale }}><Text style={[s.navText, { flex: 1 }, on && { color: C.green, fontWeight: '700' }]}>{l.name}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></Reveal>}
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
-            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View>
-          {/* The toolbar choice is for the phone tab bar; the desktop sidebar always has room for Home. */}
-          {!wide && <View testID="toolbar-settings" style={s.card}><View style={s.inline}><PanelsTopLeft size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.toolbar')}</Text></View><Text style={s.bodySmall}>{t('settings.toolbarHelp')}</Text>
-            <Tap accessibilityRole="switch" aria-checked={showHome} accessibilityState={{ checked: showHome }} accessibilityLabel={t('settings.showHome')} haptic="select" onPress={() => setShowHome(!showHome)} style={[s.radioRow, showHome && s.allergySelected]} pressedStyle={!showHome && { backgroundColor: C.pale }}><CheckMark checked={showHome} /><Text style={[s.navText, { flex: 1 }]}>{t('settings.showHome')}</Text></Tap></View>}
-          <Tap accessibilityRole="button" haptic="select" onPress={() => navigate('about')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><BookOpen size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('settings.appDetails')}</Text><Text style={s.footnote}>{t('settings.appDetailsBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>
-          {isAdmin && !wide && <Tap testID="open-admin" accessibilityRole="button" haptic="select" onPress={() => navigate('admin')} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}><ChartColumn size={20} color={C.green} /><View style={{ flex: 1 }}><Text style={s.cardTitle}>{t('nav.admin')}</Text><Text style={s.footnote}>{t('settings.adminBody')}</Text></View><ChevronRight size={20} color={C.green} /></Tap>}</>}
+            <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View></>}
+          {settingsView === 'main' && <>{menuRow(undefined, <BookOpen size={20} color={C.green} />, t('settings.appDetails'), t('settings.appDetailsBody'), () => { slideDir.current = 1; navigate('about'); })}
+           {isAdmin && !wide && menuRow('open-admin', <ChartColumn size={20} color={C.green} />, t('nav.admin'), t('settings.adminBody'), () => { slideDir.current = 1; navigate('admin'); })}</>}</>}
         {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
@@ -949,6 +1011,7 @@ function AppContent() {
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
         <View style={s.footer}><CartLogo size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version', { version: APP_VERSION })}</Text></View>
       </Scroller>
+      </Animated.View></View>
       <View style={docScroll && [s.fixedBottom, { paddingBottom: insets.bottom }]} onLayout={docScroll ? e => setBottomBarHeight(e.nativeEvent.layout.height) : undefined}>
       {page === 'allergies' && <View style={s.profileActions}>
         <Text accessibilityLiveRegion="polite" style={[s.bodySmall, profileChanged && { color: C.amber, fontWeight: '600' }]}>{t('allergies.count', { n: draft.length, total: ALLERGENS.length })} · {profileChanged ? t('allergies.unsaved') : t('allergies.saved')}</Text>
@@ -957,10 +1020,12 @@ function AppContent() {
           : feedback ? <Reveal trigger={feedback}><View testID="profile-save-feedback" accessibilityRole="alert" accessibilityLiveRegion="polite" style={[s.saveConfirmation, { backgroundColor: tone[feedbackTone].bg }]}>{profileSaved ? <CheckMark checked round /> : <CircleAlert accessible={false} size={24} color={tone[feedbackTone].fg} />}<View style={{ flex: 1 }}>{profileSaved && !allergyOwner && <Text style={s.cardTitle}>{t('allergies.profileSaved')}</Text>}<Text style={[s.bodySmall, { color: tone[feedbackTone].fg }]}>{feedback}</Text></View></View></Reveal> : null}
         <View style={s.actionRow}><View style={{ flex: 1 }}><Button onPress={saveAllergies} hapticKind="firm" loading={saving} disabled={!profileReady}>{saving ? t('allergies.savingShort') : allergyOwner ? t('allergies.saveFor', { name: allergyOwner.name }) : t('allergies.save')}</Button></View>{profileChanged && <Button secondary disabled={saving} icon={<RotateCcw accessible={false} size={17} color={C.ink} />} onPress={() => { setDraft([...savedDraft]); setProfileSaved(false); setFeedback(''); toast(t('toast.discarded'), 'info'); }}>{t('allergies.reset')}</Button>}</View>
       </View>}
+      {showBack && !wide && <View style={s.backRow}>{backButton}</View>}
       {!wide && <View style={[s.mobileNavWrap, docScroll && (page === 'allergies' ? s.mobileNavWrapUnderSaveBar : s.mobileNavWrapFloating)]}><View style={s.mobileNav}>{mobileNavItems.map(item => { const active = page === item.page; return <Tap key={item.page} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: active }} haptic="select" scaleTo={.9} onPress={() => navigate(item.page)} style={s.mobileNavItem}>
         <View style={s.mobileNavIcon}><Icon name={item.page} color={active ? C.green : C.muted} />{item.page === 'pantry' && alertCount > 0 && <View accessible={false} style={s.navBadge} />}</View><Text style={[s.mobileNavText, active && { color: C.green, fontWeight: '600' }]}>{item.short}</Text>
       </Tap>; })}</View></View>}
       </View>
+      {showBack && wide && <View style={s.backDesk}>{backButton}</View>}
     </View>
   </View></SafeAreaView>;
 }
@@ -970,28 +1035,31 @@ export default function App() { return <SafeAreaProvider><ToastProvider><AppCont
 const glassBlur = Platform.OS === 'web' && typeof CSS !== 'undefined' && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)'));
 // Gradient themes paint over their solid colour on the web; native keeps the solid colour.
 const webGradient = (image: string) => (Platform.OS === 'web' && image ? { backgroundImage: image } as object : {});
-const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
+const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(C, shadow, {
+  // Only Apple and Partiful fill these; see pastelStyles.
+  pantryCanvas: {}, heroLogo: {}, allergenSelected: {},
   root: { flex: 1, backgroundColor: C.bg, ...webGradient(C.canvasImage) }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: C.bg },
   appFrame: { flex: 1, flexDirection: 'row' }, main: { flex: 1, minWidth: 0, minHeight: 0 }, pageScroll: { flex: 1, minHeight: 0 },
   saveConfirmation: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.greenSoft },
   profileActions: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, backgroundColor: C.paper, borderTopWidth: 1, borderColor: C.separator },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   progressTrack: { height: 4, borderRadius: 4, backgroundColor: C.pale, overflow: 'hidden' }, progressFill: { height: '100%', borderRadius: 4, backgroundColor: C.green },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 }, brandTap: { alignSelf: 'flex-start', borderRadius: 14, marginLeft: 2, padding: 6, minHeight: 44 }, mobileBrandRow: { flexDirection: 'row' }, mobileBrand: { borderRadius: 12, paddingVertical: 4, paddingRight: 8, minHeight: 44, gap: 8 }, brandText: { color: C.ink, fontSize: 23, fontWeight: '800', letterSpacing: -1 },
   // The rail keeps its narrow width in the layout; the panel inside grows over the page on hover, so nothing reflows.
   sidebarRail: { width: 88, zIndex: 10 },
-  sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingHorizontal: 16, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
+  sidebar: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: C.chrome, borderRightWidth: 1, borderColor: C.border, paddingVertical: 24, paddingLeft: 16, paddingRight: 15, overflow: 'hidden', ...(Platform.OS === 'web' ? { transitionProperty: 'width, box-shadow', transitionDuration: '180ms', transitionTimingFunction: 'ease-out' } as object : {}) },
   sidebarClosed: { width: 88 }, sidebarOpen: { width: 264, boxShadow: shadow.raised },
   // Labels stay in the layout either way and only fade, so rows keep their height and the icons never move.
   railLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10, overflow: 'hidden' },
   railFade: Platform.OS === 'web' ? { transitionProperty: 'opacity', transitionDuration: '150ms' } as object : {}, railHidden: { opacity: 0 },
   railBadge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 8, backgroundColor: C.red },
   eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1.6, fontWeight: '700', marginBottom: 8 },
-  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 13, borderRadius: 12, marginBottom: 6 }, navActive: { backgroundColor: C.greenSoft },
+  navItem: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 13, paddingHorizontal: 17.5, borderRadius: 12, marginBottom: 6 },
+  selectorBracket: { position: 'absolute', left: 0, top: 0, bottom: 0, justifyContent: 'center' }, navActive: { backgroundColor: C.greenSoft },
   // Mouse hover on the sidebar: a tint plus a green bar on the left edge, so the row under the pointer is obvious.
   navHover: { backgroundColor: C.pale, boxShadow: `inset 4px 0px 0px ${C.green}` }, navActiveHover: { boxShadow: `inset 4px 0px 0px ${C.green}` },
   accountHover: { backgroundColor: C.pale }, navText: { color: C.ink, fontSize: 15, fontWeight: '500' }, navDot: { width: 7, height: 7, backgroundColor: C.green, borderRadius: 7, marginLeft: 'auto' },
-  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16, paddingBottom: 6, paddingHorizontal: 6, borderTopWidth: 1, borderColor: C.border, borderRadius: 12 }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
+  account: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 9.5, borderRadius: 12 }, railDivider: { height: 1, backgroundColor: C.border, marginBottom: 10 }, avatar: { backgroundColor: C.greenSoft, padding: 9, borderRadius: 24 },
   topbar: { paddingVertical: 12, paddingHorizontal: 18, flexWrap: 'wrap', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.chrome, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   breadcrumb: { fontSize: 13, color: C.muted, flexShrink: 1 }, modeBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenSoft, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 }, modeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1, color: C.green },
   content: { padding: 36, gap: 24, width: '100%', maxWidth: 1320, alignSelf: 'center' },
@@ -1025,7 +1093,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   sampleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, borderBottomWidth: 1, borderColor: C.border }, sampleSwatch: { padding: 7, borderRadius: 9 },
   resultCard: { boxShadow: '0px 10px 30px rgba(23,51,43,0.08)' }, sourceBadge: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden' }, closeButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22, backgroundColor: C.pale },
   resultBanner: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 18, marginVertical: 6 }, resultIcon: { alignSelf: 'flex-start', padding: 9, borderRadius: 14 }, resultTitle: { ...type.title3, fontWeight: '700' },
-  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  matchChip: { fontSize: 12, fontWeight: '800', borderWidth: 1.5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20, overflow: 'hidden', backgroundColor: C.paper }, detailBlock: { gap: 4 }, viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, backgroundColor: C.paper }, viewChipOn: { backgroundColor: C.green, borderColor: C.green }, viewChipText: { ...type.subhead, fontWeight: '600', color: C.muted }, personCard: { flexDirection: 'row', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14 }, personAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' }, personInitial: { color: C.onAccent, fontWeight: '800', fontSize: 16 }, personInitials: { fontSize: 14, letterSpacing: -0.3 }, personVerdict: { ...type.subhead, fontWeight: '700', marginTop: 4 }, memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 6 }, memberForm: { gap: 10, padding: 14, borderRadius: 18, backgroundColor: C.pale }, iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   passwordBox: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 3, borderWidth: 1, borderColor: C.fill, borderRadius: 14, backgroundColor: C.fill }, passwordInput: { flex: 1, minWidth: 0, minHeight: 50, paddingVertical: 13, paddingLeft: 16, ...type.body, color: C.ink }, radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.fill }, radioDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.borderStrong }, radioDotOn: { borderColor: C.green, borderWidth: 6 }, evidenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 }, evidenceAllergen: { fontSize: 13, fontWeight: '800', minWidth: 72 }, ingredientHit: { color: C.red, backgroundColor: C.redSoft, fontWeight: '800', textDecorationLine: 'underline' },
   dropdownMenu: { backgroundColor: C.paper, borderRadius: 14, borderWidth: 1, borderColor: C.separator, overflow: 'hidden' }, dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 12, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
@@ -1037,8 +1105,65 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create({
   navBadge: { position: 'absolute', top: 0, right: '-15%', width: 9, height: 9, borderRadius: 5, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.paper },
   navCount: { marginLeft: 'auto', minWidth: 22, textAlign: 'center', ...type.caption, fontWeight: '800', color: C.onAccent, backgroundColor: C.red, borderRadius: 11, overflow: 'hidden', paddingHorizontal: 6, paddingVertical: 2 }, empty: { alignItems: 'center', paddingVertical: 44 },
   // No backdrop on the pinned bar: the page scrolls on behind the glass tab bar.
+  slideClip: { overflow: 'hidden' },
+  backRow: { paddingHorizontal: '4%', paddingBottom: 2, alignItems: 'flex-start', pointerEvents: 'box-none' }, backDesk: { position: 'absolute', left: '2%', bottom: '3%', zIndex: 20 },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: 10, paddingRight: 16, borderRadius: 999, backgroundColor: glassBlur ? C.glass : C.glassSolid, ...(Platform.OS === 'web' && { backdropFilter: 'blur(16px) saturate(180%)' }), borderWidth: 1, borderColor: C.glassRim, boxShadow: `0px 8px 24px ${C.shadowRaised}, 0px 0px 0px 0.5px ${C.glassEdge}, inset 0px 1px 0px ${C.glassHighlight}` } as ViewStyle, backText: { color: C.green, fontSize: 15, fontWeight: '600' },
   fixedBottom: { position: 'fixed' as 'absolute', left: 0, right: 0, bottom: 0, zIndex: 10, pointerEvents: 'box-none' },
   mobileNavWrap: { paddingHorizontal: '4%', paddingTop: 6, paddingBottom: 8, backgroundColor: C.bg }, mobileNavWrapFloating: { backgroundColor: 'transparent', pointerEvents: 'box-none' }, mobileNavWrapUnderSaveBar: { backgroundColor: C.paper },
   groupedList: { backgroundColor: C.paper, borderRadius: 22, overflow: 'hidden', rowGap: 0 }, groupedRow: { width: '100%', borderRadius: 0, borderWidth: 0 }, groupedSeparator: { borderBottomWidth: 1, borderBottomColor: C.separator },
   mobileNav: { flexDirection: 'row', backgroundColor: glassBlur ? C.glass : C.glassSolid, ...(Platform.OS === 'web' && { backdropFilter: 'blur(16px) saturate(180%)' }), borderRadius: 999, borderWidth: 1, borderColor: C.glassRim, paddingVertical: 4, paddingHorizontal: 4, boxShadow: `0px 10px 30px ${C.shadowRaised}, 0px 0px 0px 0.5px ${C.glassEdge}, inset 0px 1px 0px ${C.glassHighlight}` } as ViewStyle, mobileNavItem: { flex: 1, minWidth: 0, minHeight: 50, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, gap: 2 }, mobileNavIcon: { paddingVertical: 2 }, mobileNavText: { textAlign: 'center', fontSize: 11, lineHeight: 13, fontWeight: '500', color: C.muted },
-}));
+})));
+
+// Apple and Partiful (Jonathan Tran's pastel liquid-glass look) replace these entries; every other theme keeps its own.
+function withPastel<T extends object>(C: Palette, shadow: ReturnType<typeof shadowOf>, base: T): T {
+  return C.pastel ? { ...base, ...pastelStyles(C, shadow) } : base;
+}
+function pastelStyles(C: Palette, shadow: ReturnType<typeof shadowOf>): object {
+  return {
+  root: { flex: 1, backgroundColor: C.bg, ...(Platform.OS === 'web' && { backgroundImage: `radial-gradient(ellipse at 0% 10%, ${C.ambientSky}, transparent 60%), radial-gradient(ellipse at 100% 50%, ${C.ambientLilac}, transparent 60%), radial-gradient(ellipse at 10% 100%, ${C.ambientRose}, transparent 60%)` }) },
+  navActive: { ...gradientFill(C.panelFrom, C.lilacTo), boxShadow: `inset 0px 0px 0px 1px ${C.glassRim}, 0px 3px 12px ${C.shadow}` },
+  modeBadge: { flexDirection: 'row', alignItems: 'center', gap: 7, ...gradientFill(C.lilacFrom, C.lilacTo), paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 },
+  modeText: { fontSize: 10, fontWeight: '800', letterSpacing: 1, color: C.secondaryInk },
+  demoBar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4, ...gradientFill(C.warmFrom, C.warmTo), borderRadius: 16, paddingVertical: 4, paddingLeft: 14, paddingRight: 4 },
+  hero: { isolation: 'isolate', flexDirection: 'row', backgroundColor: C.heroStart, ...(Platform.OS === 'web' ? { backgroundImage: `radial-gradient(ellipse at 12% 0%, ${C.heroSkyGlow}, transparent 65%), radial-gradient(ellipse at 80% 5%, ${C.heroLavenderGlow}, transparent 65%), radial-gradient(ellipse at 55% 100%, ${C.heroPinkGlow}, transparent 65%), radial-gradient(ellipse at 100% 90%, ${C.heroCoralGlow}, transparent 60%), radial-gradient(ellipse at 0% 100%, ${C.heroYellowGlow}, transparent 60%), linear-gradient(125deg, ${C.heroStart}, ${C.heroMiddle} 55%, ${C.heroEnd})` } : { experimental_backgroundImage: `linear-gradient(125deg, ${C.heroStart}, ${C.heroMiddle} 35%, ${C.heroNativePink} 65%, ${C.heroNativePeach} 85%, ${C.heroNativeYellow})` }), borderRadius: 26, overflow: 'hidden', boxShadow: `inset 0px 1px 0px ${C.glassHighlight}, 0px 8px 30px ${C.shadow}` },
+  heroEyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: '700', color: C.heroCopyMuted },
+  heroTitle: { color: C.heroCopyInk, fontSize: 36, fontWeight: '600', letterSpacing: -.8, lineHeight: 43 },
+  heroBody: { color: C.heroCopyMuted, fontSize: 15, lineHeight: 22, maxWidth: 360 },
+  heroCaption: { color: C.heroCopyMuted, ...type.footnote },
+  limeButton: { ...gradientFill(C.primaryFrom, C.primaryTo), boxShadow: `inset 0px 1px 0px rgba(255,255,255,0.55), 0px 4px 12px rgba(86,79,140,0.12)`, minHeight: 50, paddingVertical: 13, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 999 },
+  heroArt: { flex: .8, padding: 26, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  scanIllustration: { backgroundColor: Platform.OS === 'web' ? 'transparent' : C.artworkGlass, aspectRatio: 245 / 329, borderRadius: 20, padding: 17, width: '100%', maxWidth: 245, gap: 12, ...(Platform.OS !== 'web' && { boxShadow: `inset 0px 1px 0px ${C.artworkRim}, inset 0px 0px 0px 1px ${C.artworkRim}, 0px 16px 40px rgba(91,75,130,0.12)` }) },
+  tinyLeaf: { padding: 5, backgroundColor: C.greenSoft, borderRadius: 30 },
+  packageIllustration: { backgroundColor: C.ice, padding: 14, alignItems: 'center', gap: 6, borderRadius: 10 },
+  packageBrand: { color: C.sampleBlue, fontSize: 14, fontStyle: 'italic' },
+  packageName: { color: C.sampleBlue, fontWeight: '800', fontSize: 25, textAlign: 'center', letterSpacing: 1 },
+  packageBottom: { fontSize: 7, letterSpacing: 1, color: C.heroMuted },
+  card: { ...gradientFill(C.panelFrom, C.panelTo, 155), borderRadius: 22, padding: 20, gap: 13, boxShadow: shadow.card },
+  textLink: { color: C.secondaryInk, fontSize: 13, fontWeight: '700' },
+  pillLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, ...gradientFill(C.lilacFrom, C.lilacTo), boxShadow: `inset 0px 1px 0px ${C.glassHighlight}` },
+  allergyChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, ...gradientFill(C.roseFrom, C.roseTo), paddingVertical: 8, paddingHorizontal: 14 },
+  chipDot: { width: 7, height: 7, borderRadius: 7, backgroundColor: C.chipInk },
+  chipText: { fontSize: 13, color: C.chipInk, fontWeight: '700' },
+  iconTile: { alignSelf: 'flex-start', padding: 8, borderRadius: 11, ...gradientFill(C.lilacFrom, C.lilacTo) },
+  stepNumber: { color: C.peachInk, ...gradientFill(C.warmFrom, C.warmTo), fontSize: 12, fontWeight: '800', paddingVertical: 4, paddingHorizontal: 9, borderRadius: 20, overflow: 'hidden' },
+  miniPackText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  smallPill: { ...type.footnote, fontWeight: '600', color: C.green, ...gradientFill(C.lilacFrom, C.lilacTo), paddingVertical: 7, paddingHorizontal: 13, borderRadius: 999, overflow: 'hidden' },
+  welcomeGraphic: { flexDirection: 'row', gap: 18, padding: 18, ...gradientFill(C.lilacFrom, C.panelTo), borderRadius: 20, alignItems: 'center' },
+  allergySelected: { borderColor: C.selectedEdge, ...gradientFill(C.primaryFrom, C.primaryTo) },
+  allergenMark: { minWidth: 40, textAlign: 'center', paddingVertical: 8, paddingHorizontal: 6, borderRadius: 12, overflow: 'hidden', fontSize: 14, color: C.allergenInk, ...gradientFill(C.allergenFrom, C.allergenTo), fontWeight: '800' },
+  scannerPlaceholder: { alignItems: 'center', gap: 14, paddingVertical: 22, paddingHorizontal: 14, ...gradientFill(C.lilacFrom, C.panelTo), borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.borderStrong },
+  resultCard: { boxShadow: shadow.raised },
+  viewChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: C.separator, ...gradientFill(C.panelFrom, C.lilacTo) },
+  viewChipOn: { ...gradientFill(C.primaryFrom, C.primaryTo), borderColor: C.selectedEdge },
+  iconButton: { ...gradientFill(C.panelFrom, C.panelTo), width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, ...gradientFill(C.lilacFrom, C.lilacTo) },
+  radioDotOn: { borderColor: C.primaryInk, borderWidth: 6 },
+  pantryCard: { gap: 12, padding: 14, ...gradientFill(C.pantryFrom, C.pantryTo, 155), boxShadow: `inset 0px 0px 0px 1px ${C.pantryEdge}, inset 0px 1px 0px ${C.glassHighlight}, 0px 4px 10px ${C.pantryShadow}, 0px 14px 28px ${C.shadow}` },
+  pantryBadge: { alignSelf: 'flex-start', backgroundColor: 'transparent', color: C.amber },
+  pantryAction: { boxShadow: `inset 0px 1px 0px ${C.glassHighlight}`, flexGrow: 1, flexBasis: '40%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 999 },
+  pantryCanvas: { ...gradientFill(C.subtleDangerFrom, C.subtleDangerTo, 165) },
+  heroLogo: { position: 'absolute', top: '-5%', left: 0, width: '100%', height: '110%' },
+  allergenSelected: { borderColor: C.selectedEdge, ...gradientFill(C.allergenSelectedFrom, C.allergenSelectedTo) },
+  limeButtonText: { color: C.heroInk, ...type.headline },
+  };
+}

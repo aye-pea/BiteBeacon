@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Korean (ko-KR). Machine-drafted; needs native-speaker review before launch.
 export const ko: Messages = {
   'app.opening': 'BiteBeacon을 여는 중…',
-  'nav.overview': '개요', 'nav.overview.short': '홈',
+  'nav.overview': '개요', 'nav.overview.short': '홈', 'nav.brandHome': 'BiteBeacon, 홈으로 이동',
   'nav.scan': '제품 스캔', 'nav.scan.short': '스캔',
   'nav.allergies': '알레르기', 'nav.allergies.short': '알레르기',
   'nav.history': '최근 스캔', 'nav.history.short': '기록',
   'nav.settings': '설정', 'nav.settings.short': '설정',
-  'nav.about': '앱 정보', 'nav.about.short': '정보',
+  'nav.about': '정보 및 개인정보', 'nav.about.short': '정보',
 
   'allergen.milk': '우유', 'allergen.eggs': '달걀', 'allergen.peanuts': '땅콩', 'allergen.tree-nuts': '견과류(트리너트)', 'allergen.soy': '대두',
   'allergen.wheat': '밀', 'allergen.fish': '생선', 'allergen.shellfish': '갑각류', 'allergen.sesame': '참깨',
@@ -69,7 +69,6 @@ export const ko: Messages = {
 
   'scan.title': '다음 한 입에 무엇이 들었을까요?', 'scan.body': '식품 바코드를 스캔하거나 바코드 아래 숫자를 입력하세요.',
   'scan.chooseAllergies': '알레르기 선택하기', 'scan.scanner': '바코드 스캐너',
-  'scan.upce': 'UPC-E는 확장이 필요해요. 전체 UPC 바코드를 입력하거나 다른 제품을 시도하세요.',
   'scan.center': '바코드를 프레임 가운데에 맞추세요', 'scan.closeCamera': '카메라 닫기',
   'scan.webCamera': '카메라 스캔에는 보안(https) 페이지와 카메라 권한이 필요해요. 아래에 바코드를 직접 입력할 수도 있어요.', 'scan.pointCamera': '카메라를 UPC 또는 EAN 바코드에 맞추세요.', 'scan.openCamera': '카메라 열기',
   'scan.manual': '또는 바코드를 직접 입력하세요', 'scan.barcodeLabel': '바코드 번호', 'scan.checking': '제품 확인 중…', 'scan.checkingLabel': '제품 확인 중', 'scan.lookUp': '제품 조회',
@@ -145,7 +144,8 @@ export const ko: Messages = {
   'settings.defaultLabel': '기본값: {label}', 'settings.addToChoose': '“{everyone}”을(를) 선택하려면 사람을 추가하세요.',
   'settings.defaultFailed': '기본값을 저장할 수 없어요. 이전 선택이 계속 적용 중이에요.',
   'toast.defaultEveryone': '이제 기본적으로 모두의 결과를 표시해요', 'toast.defaultPerson': '이제 기본적으로 {name}님의 결과를 표시해요',
-  'settings.appDetails': '앱 정보', 'settings.appDetailsBody': '데이터 출처, 개인정보, 로그아웃 및 계정 삭제',
+  'settings.appDetails': '정보 및 개인정보', 'settings.appDetailsBody': '데이터 출처, 개인정보, 로그아웃 및 계정 삭제',
+  'settings.account': '계정', 'settings.accountBody': '이름, 로그인 및 비밀번호', 'settings.app': '앱', 'settings.appBody': '언어 및 화면 스타일', 'settings.back': '설정으로 돌아가기',
   'settings.language': '언어',
   'settings.languageHelp': '앱의 텍스트를 바꿔요. 제품명과 원재료 목록은 정보 제공처가 제공한 그대로 표시되며, 원재료 비교는 영어로 이루어져요.',
   'settings.languageLabel': '언어: {name}', 'toast.languageSaved': '언어를 {name}(으)로 설정했어요',
@@ -296,6 +296,5 @@ export const ko: Messages = {
   'auth.emailOptional': '이메일 (선택)',
   'auth.emailOptionalHelp': '비밀번호를 잊었을 때 재설정하는 데에만 사용됩니다. 나중에 설정에서 추가하거나 바꿀 수 있습니다.',
   'auth.emailNotSaved': '계정이 만들어졌지만 이메일을 저장하지 못했습니다. 설정에서 추가할 수 있습니다.',
-  'settings.appearance.presentation': '프레젠테이션', 'auth.showPassword': '비밀번호 표시', 'auth.hidePassword': '비밀번호 숨기기',
-  'settings.toolbar': '도구 막대', 'settings.toolbarHelp': '탭 막대와 사이드바에 표시할 항목을 선택하세요. 이 기기에 저장돼요.', 'settings.showHome': '도구 막대에 홈 표시',
+  'settings.appearance.presentation': '프레젠테이션', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '비밀번호 표시', 'auth.hidePassword': '비밀번호 숨기기',
 };

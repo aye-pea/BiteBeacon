@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Simplified Chinese (zh-CN). Machine-drafted; needs native-speaker review before launch.
 export const zh: Messages = {
   'app.opening': '正在打开 BiteBeacon…',
-  'nav.overview': '概览', 'nav.overview.short': '首页',
+  'nav.overview': '概览', 'nav.overview.short': '首页', 'nav.brandHome': 'BiteBeacon，前往首页',
   'nav.scan': '扫描商品', 'nav.scan.short': '扫描',
   'nav.allergies': '过敏原', 'nav.allergies.short': '过敏原',
   'nav.history': '最近扫描', 'nav.history.short': '记录',
   'nav.settings': '设置', 'nav.settings.short': '设置',
-  'nav.about': '应用详情', 'nav.about.short': '详情',
+  'nav.about': '关于与隐私', 'nav.about.short': '关于',
 
   'allergen.milk': '牛奶', 'allergen.eggs': '鸡蛋', 'allergen.peanuts': '花生', 'allergen.tree-nuts': '树坚果', 'allergen.soy': '大豆',
   'allergen.wheat': '小麦', 'allergen.fish': '鱼类', 'allergen.shellfish': '甲壳类水产', 'allergen.sesame': '芝麻',
@@ -69,7 +69,6 @@ export const zh: Messages = {
 
   'scan.title': '你下一口吃的是什么？', 'scan.body': '扫描食品条形码，或输入条码下方的数字。',
   'scan.chooseAllergies': '选择你的过敏原', 'scan.scanner': '条码扫描器',
-  'scan.upce': 'UPC-E 条码需要展开。请输入完整的 UPC 条码，或换一件商品试试。',
   'scan.center': '请将条形码对准框内', 'scan.closeCamera': '关闭相机',
   'scan.webCamera': '相机扫描需要安全（https）页面和相机权限。你仍可在下方输入条形码。', 'scan.pointCamera': '将相机对准 UPC 或 EAN 条形码。', 'scan.openCamera': '打开相机',
   'scan.manual': '或手动输入条形码', 'scan.barcodeLabel': '条形码数字', 'scan.checking': '正在检查商品…', 'scan.checkingLabel': '正在检查商品', 'scan.lookUp': '查询商品',
@@ -145,7 +144,8 @@ export const zh: Messages = {
   'settings.defaultLabel': '默认：{label}', 'settings.addToChoose': '添加一位成员后即可选择“{everyone}”。',
   'settings.defaultFailed': '无法保存默认设置。你之前的选择仍然有效。',
   'toast.defaultEveryone': '结果现在默认显示所有人', 'toast.defaultPerson': '结果现在默认显示 {name}',
-  'settings.appDetails': '应用详情', 'settings.appDetailsBody': '数据来源、隐私、退出登录和删除账户',
+  'settings.appDetails': '关于与隐私', 'settings.appDetailsBody': '数据来源、隐私、退出登录和删除账户',
+  'settings.account': '账户', 'settings.accountBody': '你的名字、登录和密码', 'settings.app': '应用', 'settings.appBody': '语言和外观', 'settings.back': '返回设置',
   'settings.language': '语言',
   'settings.languageHelp': '更改应用中的文字。商品名称和配料表将保持数据源提供的原样，配料比对使用英文进行。',
   'settings.languageLabel': '语言：{name}', 'toast.languageSaved': '语言已设为{name}',
@@ -296,6 +296,5 @@ export const zh: Messages = {
   'auth.emailOptional': '邮箱（可选）',
   'auth.emailOptionalHelp': '仅用于在你忘记密码时重置密码。之后可在“设置”中添加或更改。',
   'auth.emailNotSaved': '账户已创建，但该邮箱未能保存。你可以在“设置”中添加。',
-  'settings.appearance.presentation': '演示文稿', 'auth.showPassword': '显示密码', 'auth.hidePassword': '隐藏密码',
-  'settings.toolbar': '工具栏', 'settings.toolbarHelp': '选择标签栏和侧边栏中显示的内容。保存在此设备上。', 'settings.showHome': '在工具栏中显示“首页”',
+  'settings.appearance.presentation': '演示文稿', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '显示密码', 'auth.hidePassword': '隐藏密码',
 };

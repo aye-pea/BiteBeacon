@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Spanish (es-US). Machine-drafted; needs native-speaker review before launch.
 export const es: Messages = {
   'app.opening': 'Abriendo BiteBeacon…',
-  'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio',
+  'nav.overview': 'Resumen', 'nav.overview.short': 'Inicio', 'nav.brandHome': 'BiteBeacon, ir a Inicio',
   'nav.scan': 'Escanear un producto', 'nav.scan.short': 'Escanear',
   'nav.allergies': 'Alergias', 'nav.allergies.short': 'Alergias',
   'nav.history': 'Escaneos recientes', 'nav.history.short': 'Historial',
   'nav.settings': 'Ajustes', 'nav.settings.short': 'Ajustes',
-  'nav.about': 'Detalles de la app', 'nav.about.short': 'Detalles',
+  'nav.about': 'Acerca de y privacidad', 'nav.about.short': 'Acerca de',
 
   'allergen.milk': 'Leche', 'allergen.eggs': 'Huevo', 'allergen.peanuts': 'Cacahuate (maní)', 'allergen.tree-nuts': 'Nueces de árbol', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Trigo', 'allergen.fish': 'Pescado', 'allergen.shellfish': 'Mariscos crustáceos', 'allergen.sesame': 'Ajonjolí (sésamo)',
@@ -69,7 +69,6 @@ export const es: Messages = {
 
   'scan.title': '¿Qué hay en tu próximo bocado?', 'scan.body': 'Escanea el código de barras de un alimento o ingresa los números que aparecen debajo.',
   'scan.chooseAllergies': 'Elige tus alergias', 'scan.scanner': 'Escáner de códigos de barras',
-  'scan.upce': 'El código UPC-E necesita expandirse. Ingresa el código UPC completo o prueba con otro producto.',
   'scan.center': 'Centra el código de barras dentro del marco', 'scan.closeCamera': 'Cerrar cámara',
   'scan.webCamera': 'El escaneo con cámara necesita una página segura (https) y acceso a la cámara. Aún puedes escribir el código abajo.', 'scan.pointCamera': 'Apunta la cámara a un código de barras UPC o EAN.', 'scan.openCamera': 'Abrir cámara',
   'scan.manual': 'O ingresa el código manualmente', 'scan.barcodeLabel': 'Número del código de barras', 'scan.checking': 'Revisando producto…', 'scan.checkingLabel': 'Revisando producto', 'scan.lookUp': 'Buscar producto',
@@ -145,7 +144,8 @@ export const es: Messages = {
   'settings.defaultLabel': 'Predeterminado: {label}', 'settings.addToChoose': 'Agrega a una persona para elegir “{everyone}”.',
   'settings.defaultFailed': 'No se pudo guardar la opción predeterminada. Tu elección anterior sigue activa.',
   'toast.defaultEveryone': 'Ahora los resultados muestran a todos de forma predeterminada', 'toast.defaultPerson': 'Ahora los resultados muestran a {name} de forma predeterminada',
-  'settings.appDetails': 'Detalles de la app', 'settings.appDetailsBody': 'Fuentes de datos, privacidad, cierre de sesión y eliminación de cuenta',
+  'settings.appDetails': 'Acerca de y privacidad', 'settings.appDetailsBody': 'Fuentes de datos, privacidad, cierre de sesión y eliminación de cuenta',
+  'settings.account': 'Cuenta', 'settings.accountBody': 'Tu nombre, inicio de sesión y contraseña', 'settings.app': 'App', 'settings.appBody': 'Idioma y apariencia', 'settings.back': 'Volver a Ajustes',
   'settings.language': 'Idioma',
   'settings.languageHelp': 'Cambia el texto de la app. Los nombres de productos y las listas de ingredientes se muestran como los proporciona la fuente, y la comparación de ingredientes se hace en inglés.',
   'settings.languageLabel': 'Idioma: {name}', 'toast.languageSaved': 'Idioma cambiado a {name}',
@@ -296,6 +296,5 @@ export const es: Messages = {
   'auth.emailOptional': 'Correo (opcional)',
   'auth.emailOptionalHelp': 'Solo se usa para restablecer tu contraseña si la olvidas. Puedes añadirlo o cambiarlo después en Configuración.',
   'auth.emailNotSaved': 'Cuenta creada, pero no se pudo guardar ese correo. Puedes añadirlo en Configuración.',
-  'settings.appearance.presentation': 'Presentación', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
-  'settings.toolbar': 'Barra de navegación', 'settings.toolbarHelp': 'Elige qué aparece en la barra de pestañas y la barra lateral. Se guarda en este dispositivo.', 'settings.showHome': 'Mostrar Inicio en la barra',
+  'settings.appearance.presentation': 'Presentación', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Mostrar contraseña', 'auth.hidePassword': 'Ocultar contraseña',
 };

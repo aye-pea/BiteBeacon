@@ -8,9 +8,9 @@ test('employer demo: four outcomes, profile edits, session history and invalid b
   await expect(page.getByText('Good food starts with a check.')).toBeVisible();
   await page.screenshot({ path: 'artifacts/dashboard-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
-  await expect(page.getByText('4 of 8 people have an allergen signal', { exact: true })).toBeVisible();
+  await expect(page.getByText('4 of 7 people have an allergen signal', { exact: true })).toBeVisible();
   // Unticking Everyone narrows the check back to the account holder.
-  await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();
+  await page.getByRole('checkbox', { name: 'Check for Everyone (7)' }).click();
   await expect(page.getByText('Allergen signal found', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Dark Chocolate Bites', exact: true }).click();
   await expect(page.getByText('May contain your allergen', { exact: true })).toBeVisible();
@@ -112,4 +112,21 @@ test('allergy rows wrap enlarged text without hiding controls', async ({ page })
   expect(labelBox!.y + labelBox!.height).toBeLessThanOrEqual(rowBox!.y + rowBox!.height);
   await expect(page.getByRole('button', { name: 'Save allergy profile' })).toBeInViewport();
   await page.screenshot({ path: 'artifacts/allergies-large-text.png' });
+});
+
+test('the demo signs in as a random one of the demo people, others in shuffled order', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.addInitScript(() => localStorage.removeItem('bitebeacon.demoFixedOrder')); // undo the tests' fixed order
+  await page.goto('/');
+  // A stuck random number makes the shuffle predictable: Kha signs in, the others follow as DFK, Jonathan, Nafis, Banjo, BiteBeacon, Alex.
+  await page.evaluate(() => { Math.random = () => 0; });
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await expect(page.getByTestId('toast')).toContainText('household of 7: Kha, DFK, Jonathan, Nafis, Banjo, BiteBeacon, Alex');
+  await page.getByRole('button', { name: 'Allergies', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Kha', exact: true })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Milk' })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Peanuts' })).not.toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Capstone', exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

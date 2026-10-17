@@ -58,6 +58,7 @@ test('signs up with a username, then adds a recovery email in Settings', async (
   expect(seen.emailChange).toBeUndefined();
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-account-settings').click();
   const card = page.getByTestId('sign-in-settings');
   await expect(card).toContainText('Username: sam_k');
   await expect(card).toContainText('No email added');
@@ -122,6 +123,7 @@ test('an email typed at sign-up is saved as the recovery email straight away', a
   expect(seen.signup?.email).toBe('sam_k@users.bitebeacon.org');
   expect(seen.emailChange?.email).toBe('sam@example.com');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-account-settings').click();
   await expect(page.getByTestId('sign-in-settings')).toContainText('Recovery email: sam@example.com');
 });
 
@@ -136,6 +138,7 @@ test('changes the password in Settings after checking the current one', async ({
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByTestId('toast')).toContainText('profile loaded');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-account-settings').click();
   const card = page.getByTestId('password-settings');
   await card.getByLabel('Current password').fill('not-my-password');
   await card.getByLabel('New password').fill('a-brand-new-password');

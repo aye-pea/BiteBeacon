@@ -87,3 +87,16 @@ it('spaces repeated lookups', async () => {
   await expect(lookupProduct('3017620422003')).rejects.toThrow('wait a few seconds');
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
+it('looks up a UPC-E code as its expanded UPC-A', async () => {
+  const fetcher = route(() => json({ foods: [usdaFood({ gtinUpc: '049000000443', description: 'Coca-Cola' })] }), () => { throw new Error('should not call OFF'); });
+  vi.stubGlobal('fetch', fetcher);
+  expect(await lookupProduct('04904403', false, true)).toMatchObject({ source: 'usda', name: 'Coca-Cola' });
+  expect(decodeURIComponent(fetcher.mock.calls[0][0])).toContain('049000000443');
+});
+it('falls back to EAN-8 when the UPC-E reading of a typed code finds nothing', async () => {
+  const body = { code: '04252641', product: { code: '04252641', product_name: 'Eight digit product' } };
+  const fetcher = vi.fn((url: string) => url.includes('api.nal.usda.gov') ? noUsda() : url.includes('04252641') ? json(body) : new Response(null, { status: 404 }));
+  vi.stubGlobal('fetch', fetcher);
+  expect(await lookupProduct('04252641')).toMatchObject({ source: 'openfoodfacts', name: 'Eight Digit Product' });
+});

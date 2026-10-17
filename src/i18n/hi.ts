@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Hindi (hi-IN). Machine-drafted; needs native-speaker review before launch.
 export const hi: Messages = {
   'app.opening': 'BiteBeacon खुल रहा है…',
-  'nav.overview': 'सारांश', 'nav.overview.short': 'होम',
+  'nav.overview': 'सारांश', 'nav.overview.short': 'होम', 'nav.brandHome': 'BiteBeacon, होम पर जाएँ',
   'nav.scan': 'प्रोडक्ट स्कैन करें', 'nav.scan.short': 'स्कैन',
   'nav.allergies': 'एलर्जी', 'nav.allergies.short': 'एलर्जी',
   'nav.history': 'हाल के स्कैन', 'nav.history.short': 'इतिहास',
   'nav.settings': 'सेटिंग्स', 'nav.settings.short': 'सेटिंग्स',
-  'nav.about': 'ऐप की जानकारी', 'nav.about.short': 'जानकारी',
+  'nav.about': 'परिचय और निजता', 'nav.about.short': 'परिचय',
 
   'allergen.milk': 'दूध', 'allergen.eggs': 'अंडे', 'allergen.peanuts': 'मूंगफली', 'allergen.tree-nuts': 'ट्री नट्स (पेड़ पर उगने वाले मेवे)', 'allergen.soy': 'सोया',
   'allergen.wheat': 'गेहूं', 'allergen.fish': 'मछली', 'allergen.shellfish': 'क्रस्टेशियन शेलफ़िश (झींगा, केकड़ा, लॉबस्टर)', 'allergen.sesame': 'तिल',
@@ -69,7 +69,6 @@ export const hi: Messages = {
 
   'scan.title': 'आपके अगले निवाले में क्या है?', 'scan.body': 'खाने का बारकोड स्कैन करें या उसके नीचे लिखे नंबर डालें।',
   'scan.chooseAllergies': 'अपनी एलर्जी चुनें', 'scan.scanner': 'बारकोड स्कैनर',
-  'scan.upce': 'UPC-E को पूरा करना ज़रूरी है। पूरा UPC बारकोड डालें या कोई दूसरा प्रोडक्ट आज़माएं।',
   'scan.center': 'बारकोड को फ़्रेम के बीच में रखें', 'scan.closeCamera': 'कैमरा बंद करें',
   'scan.webCamera': 'कैमरे से स्कैन करने के लिए सुरक्षित (https) पेज और कैमरा अनुमति चाहिए। आप फिर भी नीचे बारकोड टाइप कर सकते हैं।', 'scan.pointCamera': 'अपना कैमरा किसी UPC या EAN बारकोड की ओर करें।', 'scan.openCamera': 'कैमरा खोलें',
   'scan.manual': 'या बारकोड खुद डालें', 'scan.barcodeLabel': 'बारकोड नंबर', 'scan.checking': 'प्रोडक्ट जांचा जा रहा है…', 'scan.checkingLabel': 'प्रोडक्ट जांचा जा रहा है', 'scan.lookUp': 'प्रोडक्ट खोजें',
@@ -145,7 +144,8 @@ export const hi: Messages = {
   'settings.defaultLabel': 'डिफ़ॉल्ट: {label}', 'settings.addToChoose': '“{everyone}” चुनने के लिए किसी व्यक्ति को जोड़ें।',
   'settings.defaultFailed': 'डिफ़ॉल्ट सेव नहीं हो सका। आपका पिछला चुनाव अब भी लागू है।',
   'toast.defaultEveryone': 'अब नतीजे डिफ़ॉल्ट रूप से सभी के लिए दिखेंगे', 'toast.defaultPerson': 'अब नतीजे डिफ़ॉल्ट रूप से {name} के लिए दिखेंगे',
-  'settings.appDetails': 'ऐप की जानकारी', 'settings.appDetailsBody': 'डेटा स्रोत, निजता, साइन आउट और अकाउंट डिलीट करना',
+  'settings.appDetails': 'परिचय और निजता', 'settings.appDetailsBody': 'डेटा स्रोत, निजता, साइन आउट और अकाउंट डिलीट करना',
+  'settings.account': 'खाता', 'settings.accountBody': 'आपका नाम, साइन-इन और पासवर्ड', 'settings.app': 'ऐप', 'settings.appBody': 'भाषा और रूप', 'settings.back': 'सेटिंग्स पर वापस जाएं',
   'settings.language': 'भाषा',
   'settings.languageHelp': 'ऐप का टेक्स्ट बदलता है। प्रोडक्ट के नाम और सामग्री सूचियां वैसी ही रहती हैं जैसी स्रोत देता है, और सामग्री का मिलान अंग्रेज़ी में होता है।',
   'settings.languageLabel': 'भाषा: {name}', 'toast.languageSaved': 'भाषा {name} पर सेट की गई',
@@ -296,6 +296,5 @@ export const hi: Messages = {
   'auth.emailOptional': 'ईमेल (वैकल्पिक)',
   'auth.emailOptionalHelp': 'केवल पासवर्ड भूलने पर उसे रीसेट करने के लिए। आप इसे बाद में सेटिंग्स में जोड़ या बदल सकते हैं।',
   'auth.emailNotSaved': 'खाता बन गया, लेकिन यह ईमेल सहेजा नहीं जा सका। आप इसे सेटिंग्स में जोड़ सकते हैं।',
-  'settings.appearance.presentation': 'प्रेज़ेंटेशन', 'auth.showPassword': 'पासवर्ड दिखाएं', 'auth.hidePassword': 'पासवर्ड छिपाएं',
-  'settings.toolbar': 'टूलबार', 'settings.toolbarHelp': 'चुनें कि टैब बार और साइडबार में क्या दिखे। इस डिवाइस पर सहेजा जाता है।', 'settings.showHome': 'टूलबार में होम दिखाएं',
+  'settings.appearance.presentation': 'प्रेज़ेंटेशन', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'पासवर्ड दिखाएं', 'auth.hidePassword': 'पासवर्ड छिपाएं',
 };

@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test';
 
 // These flows start from the sample cards on Home, which phones hide until Settings turns Home on.
-test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem('bitebeacon.showHome', 'true')));
 
 test('result explains which words and tags caused an allergen signal', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByTestId('brand-home').click(); // phones open on Scan; the logo goes Home
   await page.getByRole('button', { name: 'Try Peanut Crunch Granola' }).click();
   // Unticking Everyone narrows the check back to the account holder.
-  await page.getByRole('checkbox', { name: 'Check for Everyone (8)' }).click();
+  await page.getByRole('checkbox', { name: 'Check for Everyone (7)' }).click();
   const result = page.getByTestId('product-result');
   await expect(result.getByText('Allergen signal found', { exact: true })).toBeVisible();
   const why = page.getByTestId('result-evidence');

@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Vietnamese (vi-VN). Machine-drafted; needs native-speaker review before launch.
 export const vi: Messages = {
   'app.opening': 'Đang mở BiteBeacon…',
-  'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ',
+  'nav.overview': 'Tổng quan', 'nav.overview.short': 'Trang chủ', 'nav.brandHome': 'BiteBeacon, về Trang chủ',
   'nav.scan': 'Quét sản phẩm', 'nav.scan.short': 'Quét',
   'nav.allergies': 'Dị ứng', 'nav.allergies.short': 'Dị ứng',
   'nav.history': 'Lượt quét gần đây', 'nav.history.short': 'Lịch sử',
   'nav.settings': 'Cài đặt', 'nav.settings.short': 'Cài đặt',
-  'nav.about': 'Thông tin ứng dụng', 'nav.about.short': 'Chi tiết',
+  'nav.about': 'Giới thiệu & quyền riêng tư', 'nav.about.short': 'Giới thiệu',
 
   'allergen.milk': 'Sữa', 'allergen.eggs': 'Trứng', 'allergen.peanuts': 'Đậu phộng (lạc)', 'allergen.tree-nuts': 'Các loại hạt cây', 'allergen.soy': 'Đậu nành',
   'allergen.wheat': 'Lúa mì', 'allergen.fish': 'Cá', 'allergen.shellfish': 'Động vật giáp xác (tôm, cua…)', 'allergen.sesame': 'Mè (vừng)',
@@ -69,7 +69,6 @@ export const vi: Messages = {
 
   'scan.title': 'Miếng ăn tiếp theo có gì?', 'scan.body': 'Quét mã vạch thực phẩm hoặc nhập dãy số bên dưới mã.',
   'scan.chooseAllergies': 'Chọn dị ứng của bạn', 'scan.scanner': 'Máy quét mã vạch',
-  'scan.upce': 'Mã UPC-E cần được mở rộng. Hãy nhập đầy đủ mã vạch UPC hoặc thử sản phẩm khác.',
   'scan.center': 'Đặt mã vạch vào giữa khung', 'scan.closeCamera': 'Đóng camera',
   'scan.webCamera': 'Quét bằng camera cần trang bảo mật (https) và quyền dùng camera. Bạn vẫn có thể nhập mã vạch bên dưới.', 'scan.pointCamera': 'Hướng camera vào mã vạch UPC hoặc EAN.', 'scan.openCamera': 'Mở camera',
   'scan.manual': 'Hoặc nhập mã vạch thủ công', 'scan.barcodeLabel': 'Số mã vạch', 'scan.checking': 'Đang kiểm tra sản phẩm…', 'scan.checkingLabel': 'Đang kiểm tra sản phẩm', 'scan.lookUp': 'Tra cứu sản phẩm',
@@ -145,7 +144,8 @@ export const vi: Messages = {
   'settings.defaultLabel': 'Mặc định: {label}', 'settings.addToChoose': 'Thêm một người để chọn “{everyone}”.',
   'settings.defaultFailed': 'Không thể lưu mặc định. Lựa chọn trước đó của bạn vẫn đang có hiệu lực.',
   'toast.defaultEveryone': 'Kết quả giờ mặc định hiển thị cho mọi người', 'toast.defaultPerson': 'Kết quả giờ mặc định hiển thị cho {name}',
-  'settings.appDetails': 'Thông tin ứng dụng', 'settings.appDetailsBody': 'Nguồn dữ liệu, quyền riêng tư, đăng xuất và xóa tài khoản',
+  'settings.appDetails': 'Giới thiệu & quyền riêng tư', 'settings.appDetailsBody': 'Nguồn dữ liệu, quyền riêng tư, đăng xuất và xóa tài khoản',
+  'settings.account': 'Tài khoản', 'settings.accountBody': 'Tên, đăng nhập và mật khẩu', 'settings.app': 'Ứng dụng', 'settings.appBody': 'Ngôn ngữ và giao diện', 'settings.back': 'Quay lại Cài đặt',
   'settings.language': 'Ngôn ngữ',
   'settings.languageHelp': 'Thay đổi văn bản của ứng dụng. Tên sản phẩm và danh sách thành phần được giữ nguyên như nguồn cung cấp, và việc đối chiếu thành phần được thực hiện bằng tiếng Anh.',
   'settings.languageLabel': 'Ngôn ngữ: {name}', 'toast.languageSaved': 'Đã đặt ngôn ngữ thành {name}',
@@ -296,6 +296,5 @@ export const vi: Messages = {
   'auth.emailOptional': 'Email (không bắt buộc)',
   'auth.emailOptionalHelp': 'Chỉ dùng để đặt lại mật khẩu khi bạn quên. Bạn có thể thêm hoặc đổi sau trong Cài đặt.',
   'auth.emailNotSaved': 'Đã tạo tài khoản, nhưng không thể lưu email này. Bạn có thể thêm trong Cài đặt.',
-  'settings.appearance.presentation': 'Bản trình bày', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
-  'settings.toolbar': 'Thanh công cụ', 'settings.toolbarHelp': 'Chọn những gì hiện trên thanh tab và thanh bên. Được lưu trên thiết bị này.', 'settings.showHome': 'Hiện Trang chủ trên thanh công cụ',
+  'settings.appearance.presentation': 'Bản trình bày', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Hiện mật khẩu', 'auth.hidePassword': 'Ẩn mật khẩu',
 };

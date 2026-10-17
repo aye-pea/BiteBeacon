@@ -1,6 +1,62 @@
 import { useSyncExternalStore } from 'react';
-import { Platform, TextStyle, useColorScheme } from 'react-native';
+import { Platform, TextStyle, ViewStyle, useColorScheme } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { IS_BETA } from '../lib/beta';
+
+// Apple and Partiful: Jonathan Tran's pastel liquid-glass look (icy-blue actions, lavender secondary controls, rose chips,
+// translucent gradients). Its extra tokens live in every palette so the types line up; only `pastel` themes use them.
+const brand = {
+  sky: '#6CC7F6', periwinkle: '#8FA7FF', ice: '#DDEEFF', lavender: '#C7B9FF',
+  yellow: '#EFE88A', pink: '#F4A6D7', coral: '#F28C8C',
+  heroInk: '#233548', heroMuted: '#41566C', heroButton: '#8FA7FF', heroButtonPressed: '#7E96F0',
+  heroCopyInk: '#233548', heroCopyMuted: '#41566C',
+  logoBacking: '#FFFFFF', avatarInk: '#344653',
+  heroStart: '#F4FAFF', heroMiddle: '#E3E2FB', heroEnd: '#FBE7EE',
+  heroPinkGlow: 'rgba(246,187,218,0.68)', heroCoralGlow: 'rgba(255,213,181,0.72)', heroYellowGlow: 'rgba(250,241,174,0.72)',
+  heroNativePink: '#F3DEF0', heroNativePeach: '#FBE8DB', heroNativeYellow: '#FAF4D9',
+  heroSkyGlow: 'rgba(190,229,255,0.84)', heroLavenderGlow: 'rgba(186,182,248,0.68)',
+  sampleIce: '#E7F2FF', sampleLavender: '#EEE9FF', sampleYellow: '#FAF6D9', samplePinkSoft: '#FBEAF5',
+  sampleBlue: '#35678F', samplePurple: '#65558E', samplePink: '#895176', sampleCoral: '#925454',
+};
+const pastelLightExtras = {
+  ...brand,
+  primaryInk: '#23455D', primaryFrom: 'rgba(241,252,255,0.86)', primaryTo: 'rgba(148,211,245,0.72)',
+  lilacFrom: 'rgba(252,249,255,0.80)', lilacTo: 'rgba(212,199,242,0.52)',
+  roseFrom: 'rgba(255,250,252,0.72)', roseTo: 'rgba(245,190,211,0.38)',
+  warmFrom: 'rgba(255,253,244,0.82)', warmTo: 'rgba(245,229,163,0.44)',
+  dangerFrom: 'rgba(255,250,250,0.82)', dangerTo: 'rgba(244,170,174,0.30)',
+  subtleDangerFrom: 'rgba(255,255,255,0.26)', subtleDangerTo: 'rgba(245,188,192,0.18)',
+  allergenInk: '#4B4F5D', allergenFrom: '#ECE4F8', allergenTo: '#D8C7ED', allergenSelectedFrom: 'rgba(221,243,254,0.96)', allergenSelectedTo: 'rgba(136,196,231,0.82)',
+  discardFrom: 'rgba(255,244,246,0.85)', discardTo: 'rgba(240,163,178,0.52)',
+  selectedEdge: '#7B97AA', pantryFrom: 'rgba(255,255,255,0.96)', pantryTo: 'rgba(239,245,253,0.80)', pantryEdge: '#C8D8E4', pantryShadow: 'rgba(67,90,111,0.11)',
+  panelFrom: 'rgba(255,255,255,0.78)', panelTo: 'rgba(235,233,251,0.40)',
+  ambientSky: 'rgba(189,229,255,0.32)', ambientRose: 'rgba(246,206,222,0.26)', ambientLilac: 'rgba(211,201,246,0.28)',
+  secondaryInk: '#5D6170', secondarySoft: '#F0EDF8', chipInk: '#75516D', chipSoft: '#F7EDF5',
+  peachInk: '#805347', peachSoft: '#FCF0E8', yellowSoft: '#F9F6DF', navSurface: 'rgba(255,255,255,0.86)',
+  artworkGlass: 'rgba(255,255,255,0.48)', artworkRim: 'rgba(255,255,255,0.92)',
+};
+const pastelDarkExtras: typeof pastelLightExtras = {
+  ...brand,
+  primaryInk: '#23455D', primaryFrom: 'rgba(238,250,255,0.94)', primaryTo: 'rgba(155,215,247,0.88)',
+  lilacFrom: 'rgba(95,82,127,0.42)', lilacTo: 'rgba(65,51,94,0.46)',
+  roseFrom: 'rgba(89,62,86,0.42)', roseTo: 'rgba(94,51,76,0.40)',
+  warmFrom: 'rgba(73,62,39,0.62)', warmTo: 'rgba(89,72,36,0.44)',
+  dangerFrom: 'rgba(77,43,49,0.72)', dangerTo: 'rgba(103,46,53,0.42)',
+  subtleDangerFrom: 'rgba(62,43,49,0.26)', subtleDangerTo: 'rgba(114,58,65,0.24)',
+  allergenInk: '#DDD6E9', allergenFrom: '#514860', allergenTo: '#443A55', allergenSelectedFrom: 'rgba(221,243,254,0.98)', allergenSelectedTo: 'rgba(147,207,239,0.94)',
+  discardFrom: 'rgba(110,40,55,0.42)', discardTo: 'rgba(152,46,68,0.44)',
+  selectedEdge: '#87A8BF', pantryFrom: 'rgba(53,54,70,0.94)', pantryTo: 'rgba(38,44,59,0.88)', pantryEdge: '#596879', pantryShadow: 'rgba(0,0,0,0.22)',
+  panelFrom: 'rgba(46,44,63,0.78)', panelTo: 'rgba(35,32,50,0.68)',
+  ambientSky: 'rgba(83,132,166,0.12)', ambientRose: 'rgba(151,78,114,0.12)', ambientLilac: 'rgba(116,94,161,0.12)',
+  secondaryInk: '#CDC9D8', secondarySoft: '#332C45', chipInk: '#E2BDD7', chipSoft: '#392C3A',
+  peachInk: '#E9C0AA', peachSoft: '#3D2F2A', yellowSoft: '#363226', navSurface: 'rgba(63,57,81,0.80)',
+  artworkGlass: 'rgba(255,255,255,0.48)', artworkRim: 'rgba(255,255,255,0.92)',  // Partiful's Home banner: deep night violet with the periwinkle-to-magenta glow of its glass logo, light copy.
+  heroCopyInk: '#F3EEFF', heroCopyMuted: '#C9BEDF',
+  heroStart: '#16131F', heroMiddle: '#1E1730', heroEnd: '#26152F',
+  heroSkyGlow: 'rgba(110,120,230,0.30)', heroLavenderGlow: 'rgba(150,120,255,0.38)', heroPinkGlow: 'rgba(190,80,200,0.30)',
+  heroCoralGlow: 'rgba(220,90,190,0.34)', heroYellowGlow: 'rgba(90,70,160,0.30)',
+  heroNativePink: '#2A1B3A', heroNativePeach: '#33183A', heroNativeYellow: '#1E1830',
+};
 
 // Grouped-background palette: tinted canvas, content cards, one green accent kept for actions and selection.
 // Dark values are dimmer canvases with brighter foregrounds, not inversions (dark-mode.md › Dark Mode colors).
@@ -14,6 +70,9 @@ const light = {
   glass: 'rgba(255,255,255,0.62)', glassSolid: 'rgba(255,255,255,0.94)', glassRim: 'rgba(255,255,255,0.75)', glassHighlight: 'rgba(255,255,255,0.9)', glassEdge: 'rgba(23,51,43,0.10)',
   // Home hero card; the web also paints `canvasImage` / `heroImage` gradients over the solid colours when a theme sets them.
   hero: '#214B3C', heroArt: '#2D5A48', heroEyebrow: '#CBD9AE', limePressed: '#C6E26C', canvasImage: '', heroImage: '',
+  // `pastel` switches on the Apple/Partiful styles; the other three say what sits on a primary fill, the swipe-to-toss icon and the active sidebar label.
+  pastel: false, onPrimary: '#FFFFFF', trashIcon: '#FFFFFF', navActiveText: '#1F5A45',
+  ...pastelLightExtras,
 };
 export type Palette = typeof light;
 const dark: Palette = {
@@ -24,6 +83,8 @@ const dark: Palette = {
   toast: '#E9EFEA', toastText: '#0E1311', shadow: 'rgba(0,0,0,0)', shadowRaised: 'rgba(0,0,0,0.5)',
   glass: 'rgba(34,42,38,0.58)', glassSolid: 'rgba(30,37,33,0.95)', glassRim: 'rgba(255,255,255,0.14)', glassHighlight: 'rgba(255,255,255,0.12)', glassEdge: 'rgba(0,0,0,0.35)',
   hero: '#214B3C', heroArt: '#2D5A48', heroEyebrow: '#CBD9AE', limePressed: '#C6E26C', canvasImage: '', heroImage: '',
+  pastel: false, onPrimary: '#0E1311', trashIcon: '#0E1311', navActiveText: '#86D0A8',
+  ...pastelDarkExtras,
 };
 // Presentation: the colours of the BiteBeacon pitch deck in Canva (teal to sage to butter-yellow backdrop, cards in
 // periwinkle, butter, mint and coral). Text and buttons use deeper shades of the same hues so they stay readable.
@@ -37,10 +98,54 @@ const presentation: Palette = {
   hero: '#17697A', heroArt: '#5FA79B', heroEyebrow: '#F0DD78', limePressed: '#E4CF5E',
   canvasImage: 'linear-gradient(115deg, #BFE6EE 0%, #D6EBD9 50%, #F6EDBE 100%)',
   heroImage: 'linear-gradient(120deg, #17697A 0%, #23786F 55%, #3E7F4E 100%)',
+  pastel: false, onPrimary: '#FFFFFF', trashIcon: '#FFFFFF', navActiveText: '#16687A',
+  ...pastelLightExtras,
 };
+const apple: Palette = {
+  bg: '#FAFAFC', paper: '#FFFFFF', chrome: '#F8F8FC', ink: '#293041', muted: '#626573', faint: '#626573',
+  green: '#496174', greenDeep: '#354B5C', greenSoft: '#F0EDF8', greenSoftPressed: '#E5DFF2', lime: '#8FA7FF', onAccent: '#FFFFFF',
+  border: '#E7E6EE', borderStrong: '#A4B7C5', pale: '#F3F2F7', separator: 'rgba(44,42,64,0.10)', fill: '#F5F5F9',
+  red: '#A2322C', redPressed: '#7E2521', redSoft: '#FCEBE8', amber: '#86560F', amberSoft: '#FFF7DC', amberPressed: '#F3E3BD', blue: '#365F7C', blueSoft: '#EAF3FA',
+  toast: '#293041', toastText: '#FFFFFF', shadow: 'rgba(46,42,70,0.045)', shadowRaised: 'rgba(46,42,70,0.12)',
+  glass: 'rgba(255,255,255,0.68)', glassSolid: 'rgba(253,252,255,0.97)', glassRim: 'rgba(255,255,255,0.95)', glassHighlight: 'rgba(255,255,255,0.98)', glassEdge: 'rgba(85,72,123,0.12)',
+  hero: '#F4FAFF', heroArt: 'transparent', heroEyebrow: '#41566C', limePressed: 'rgba(148,211,245,0.72)', canvasImage: '', heroImage: '',
+  pastel: true, onPrimary: '#23455D', trashIcon: '#A2322C', navActiveText: '#293041',
+  ...pastelLightExtras,
+};
+const partiful: Palette = {
+  bg: '#15151E', paper: '#21212D', chrome: '#191923', ink: '#F0EFF7', muted: '#BAB7CB', faint: '#ABA8BE',
+  green: '#BACDDC', greenDeep: '#D4E2EC', greenSoft: '#302C44', greenSoftPressed: '#403957', lime: '#8FA7FF', onAccent: '#15151E',
+  border: '#343240', borderStrong: '#738593', pale: '#2A2836', separator: 'rgba(240,239,247,0.12)', fill: '#2A2836',
+  red: '#FF928A', redPressed: '#FFB3AD', redSoft: '#3A1E1C', amber: '#F0C46C', amberSoft: '#32280F', amberPressed: '#40341A', blue: '#AED4EE', blueSoft: '#233242',
+  toast: '#F0EFF7', toastText: '#15151E', shadow: 'rgba(0,0,0,0.10)', shadowRaised: 'rgba(0,0,0,0.32)',
+  glass: 'rgba(39,36,52,0.76)', glassSolid: 'rgba(39,36,52,0.97)', glassRim: 'rgba(255,255,255,0.20)', glassHighlight: 'rgba(255,255,255,0.16)', glassEdge: 'rgba(0,0,0,0.35)',
+  hero: '#F4FAFF', heroArt: 'transparent', heroEyebrow: '#41566C', limePressed: 'rgba(155,215,247,0.88)', canvasImage: '', heroImage: '',
+  pastel: true, onPrimary: '#23455D', trashIcon: '#FF928A', navActiveText: '#F0EFF7',
+  ...pastelDarkExtras,
+};
+/** Shared translucent gradient treatment; only the fill is translucent, never its text or icons. */
+export function gradientFill(from: string, to: string, angle = 135): ViewStyle {
+  const image = `linear-gradient(${angle}deg, ${from}, ${to})`;
+  return Platform.OS === 'web'
+    ? { backgroundColor: 'transparent', backgroundImage: image } as ViewStyle
+    : { backgroundColor: 'transparent', experimental_backgroundImage: image } as ViewStyle;
+}
+// Household initials cycle through gentle colours in Apple and Partiful, in display order; profileHues lets
+// people whose letters still match (two "Ja"s) take colours from opposite sides of the colour wheel.
+const profileGradients = [
+  ['#EFFAFF', '#C9E8F6'], ['#F7F1FF', '#E0D4F4'],
+  ['#FFF3F9', '#F2D3E3'], ['#FFF7EF', '#F7DEC9'],
+  ['#F1F7FC', '#D5E1ED'], ['#F4F3FF', '#DDDFF5'],
+  ['#FDF8EA', '#F2E7C7'], ['#F9F4FF', '#E7D5EC'],
+] as const;
+export const profileHues = [200, 270, 330, 30, 210, 245, 45, 290] as const;
+export function profileAvatarFill(index: number): ViewStyle {
+  const [from, to] = profileGradients[index % profileGradients.length];
+  return { ...gradientFill(from, to), boxShadow: 'inset 0px 1px 0px rgba(255,255,255,0.9)' } as ViewStyle;
+}
 /** Light palette, for the few module-level defaults that render before a scheme is known. */
 export const C = light;
-export const shadowOf = (P: Palette) => ({ card: `0px 1px 2px ${P.shadow}`, raised: `0px 12px 32px ${P.shadowRaised}` });
+export const shadowOf = (P: Palette) => ({ card: P.pastel ? `0px 2px 8px ${P.shadow}, 0px 12px 32px ${P.shadow}` : `0px 1px 2px ${P.shadow}`, raised: `0px 12px 32px ${P.shadowRaised}` });
 export const shadow = shadowOf(light);
 // Web cannot drive transforms on the native thread.
 export const nativeDriver = Platform.OS !== 'web';
@@ -64,17 +169,20 @@ const toneOf = (P: Palette): Record<Tone, { fg: string; bg: string }> => ({
 });
 export const tone = toneOf(light);
 
-export type Scheme = 'light' | 'dark' | 'presentation';
-export const palettes: Record<Scheme, Palette> = { light, dark, presentation };
+export type Scheme = 'apple' | 'partiful' | 'light' | 'dark' | 'presentation';
+export const palettes: Record<Scheme, Palette> = { apple, partiful, light, dark, presentation };
 export const themes: Record<Scheme, { C: Palette; tone: Record<Tone, { fg: string; bg: string }>; shadow: ReturnType<typeof shadowOf> }> = {
+  apple: { C: apple, tone: toneOf(apple), shadow: shadowOf(apple) },
+  partiful: { C: partiful, tone: toneOf(partiful), shadow: shadowOf(partiful) },
   light: { C: light, tone: toneOf(light), shadow: shadowOf(light) },
   dark: { C: dark, tone: toneOf(dark), shadow: shadowOf(dark) },
   presentation: { C: presentation, tone: toneOf(presentation), shadow: shadowOf(presentation) },
 };
-// Light / Dark / Auto / Presentation choice from Settings. Auto (the default) follows the device. Kept on this device only:
+// Auto / Apple / Partiful / Light / Dark / Presentation choice from Settings. Auto (the default) follows the device:
+// Apple or Partiful on beta builds, Light or Dark on bitebeacon.org. Kept on this device only:
 // localStorage on the web (falls back to memory when blocked), SecureStore on native.
 export type Appearance = 'auto' | Scheme;
-export const APPEARANCES: readonly Appearance[] = ['auto', 'light', 'dark', 'presentation'];
+export const APPEARANCES: readonly Appearance[] = ['auto', 'apple', 'partiful', 'light', 'dark', 'presentation'];
 const APPEARANCE_KEY = 'bitebeacon.appearance';
 const isAppearance = (v: unknown): v is Appearance => APPEARANCES.includes(v as Appearance);
 const web = Platform.OS === 'web';
@@ -92,9 +200,10 @@ export function useAppearance(): Appearance { return useSyncExternalStore(subscr
 /** The scheme to draw: the Settings choice, or the device's light or dark appearance when that is Auto. */
 export function useScheme(): Scheme {
   const device = useColorScheme(); const chosen = useAppearance();
-  return chosen === 'auto' ? (device === 'dark' ? 'dark' : 'light') : chosen;
+  if (chosen !== 'auto') return chosen;
+  return device === 'dark' ? (IS_BETA ? 'partiful' : 'dark') : (IS_BETA ? 'apple' : 'light');
 }
 /** Builds a StyleSheet for every appearance once, at module load. */
 export function bothSchemes<T>(make: (P: Palette, sh: ReturnType<typeof shadowOf>) => T): Record<Scheme, T> {
-  return { light: make(light, shadowOf(light)), dark: make(dark, shadowOf(dark)), presentation: make(presentation, shadowOf(presentation)) };
+  return { apple: make(apple, shadowOf(apple)), partiful: make(partiful, shadowOf(partiful)), light: make(light, shadowOf(light)), dark: make(dark, shadowOf(dark)), presentation: make(presentation, shadowOf(presentation)) };
 }

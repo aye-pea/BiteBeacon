@@ -1,0 +1,45 @@
+import { expect, test } from '@playwright/test';
+
+// Apple and Partiful are Jonathan Tran's pastel look; on bitebeacon.org Auto still means Light/Dark (beta builds use Apple/Partiful).
+test('Settings lists Apple and Partiful first, and each paints its own canvas', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
+  const radios = page.getByTestId('appearance-settings').getByRole('radio');
+  await expect(radios).toHaveText(['Auto', 'Apple', 'Partiful', 'Light', 'Dark', 'Presentation']);
+  for (const [name, bg] of [['Apple', 'rgb(250, 250, 252)'], ['Partiful', 'rgb(21, 21, 30)']] as const) {
+    await page.getByTestId('appearance-settings').getByRole('radio', { name: `Appearance: ${name}` }).click();
+    await expect.poll(() => page.evaluate(() => {
+      for (let n: Element | null = document.querySelector('[data-testid="page-scroll"]'); n; n = n.parentElement) {
+        const c = getComputedStyle(n).backgroundColor; if (c !== 'rgba(0, 0, 0, 0)') return c;
+      } return '';
+    })).toBe(bg);
+    await page.getByTestId('settings-back').click(); // household avatars are on the main Settings menu
+    const avatars = page.getByTestId(/^profile-avatar-/);
+    await expect(avatars.first()).toHaveCSS('background-image', /linear-gradient/);
+    await page.getByTestId('open-app-settings').click();
+  }
+  await page.reload();
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByTestId('open-app-settings').click();
+  await expect(page.getByTestId('appearance-settings').getByRole('radio', { name: 'Appearance: Partiful' })).toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test('Apple shows the glass cart and Partiful a deeper glass cart in the top-left corner', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const srcs: string[] = [];
+  for (const theme of ['apple', 'partiful']) {
+    await page.addInitScript(t => localStorage.setItem('bitebeacon.appearance', t), theme);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Explore employer demo' }).click();
+    const img = page.getByTestId('glass-logo').first().locator('img');
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    srcs.push(await img.getAttribute('src') as string);
+  }
+  expect(srcs[0]).not.toBe(srcs[1]);
+});

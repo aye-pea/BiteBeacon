@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Bengali (bn-BD). Machine-drafted; needs native-speaker review before launch.
 export const bn: Messages = {
   'app.opening': 'BiteBeacon খোলা হচ্ছে…',
-  'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম',
+  'nav.overview': 'সারসংক্ষেপ', 'nav.overview.short': 'হোম', 'nav.brandHome': 'BiteBeacon, হোমে যান',
   'nav.scan': 'পণ্য স্ক্যান করুন', 'nav.scan.short': 'স্ক্যান',
   'nav.allergies': 'অ্যালার্জি', 'nav.allergies.short': 'অ্যালার্জি',
   'nav.history': 'সাম্প্রতিক স্ক্যান', 'nav.history.short': 'ইতিহাস',
   'nav.settings': 'সেটিংস', 'nav.settings.short': 'সেটিংস',
-  'nav.about': 'অ্যাপের বিবরণ', 'nav.about.short': 'বিবরণ',
+  'nav.about': 'পরিচিতি ও গোপনীয়তা', 'nav.about.short': 'পরিচিতি',
 
   'allergen.milk': 'দুধ', 'allergen.eggs': 'ডিম', 'allergen.peanuts': 'চিনাবাদাম', 'allergen.tree-nuts': 'গাছের বাদাম', 'allergen.soy': 'সয়া',
   'allergen.wheat': 'গম', 'allergen.fish': 'মাছ', 'allergen.shellfish': 'খোলসযুক্ত প্রাণী (চিংড়ি, কাঁকড়া, লবস্টার)', 'allergen.sesame': 'তিল',
@@ -69,7 +69,6 @@ export const bn: Messages = {
 
   'scan.title': 'আপনার পরের কামড়ে কী আছে?', 'scan.body': 'খাবারের বারকোড স্ক্যান করুন বা তার নিচের নম্বরগুলো লিখুন।',
   'scan.chooseAllergies': 'আপনার অ্যালার্জি বেছে নিন', 'scan.scanner': 'বারকোড স্ক্যানার',
-  'scan.upce': 'UPC-E বারকোড সম্প্রসারণ করা প্রয়োজন। পূর্ণ UPC বারকোড লিখুন বা অন্য পণ্য চেষ্টা করুন।',
   'scan.center': 'বারকোডটি ফ্রেমের মাঝখানে রাখুন', 'scan.closeCamera': 'ক্যামেরা বন্ধ করুন',
   'scan.webCamera': 'ক্যামেরা স্ক্যানের জন্য নিরাপদ (https) পেজ ও ক্যামেরার অনুমতি দরকার। আপনি নিচে বারকোড টাইপ করতে পারেন।', 'scan.pointCamera': 'আপনার ক্যামেরা একটি UPC বা EAN বারকোডের দিকে ধরুন।', 'scan.openCamera': 'ক্যামেরা খুলুন',
   'scan.manual': 'অথবা বারকোড নিজে লিখুন', 'scan.barcodeLabel': 'বারকোড নম্বর', 'scan.checking': 'পণ্য যাচাই হচ্ছে…', 'scan.checkingLabel': 'পণ্য যাচাই হচ্ছে', 'scan.lookUp': 'পণ্য খুঁজুন',
@@ -145,7 +144,8 @@ export const bn: Messages = {
   'settings.defaultLabel': 'ডিফল্ট: {label}', 'settings.addToChoose': '“{everyone}” বেছে নিতে একজন ব্যক্তি যোগ করুন।',
   'settings.defaultFailed': 'ডিফল্ট সংরক্ষণ করা যায়নি। আপনার আগের পছন্দই এখনো চালু আছে।',
   'toast.defaultEveryone': 'ফলাফলে এখন ডিফল্টভাবে সবাইকে দেখাবে', 'toast.defaultPerson': 'ফলাফলে এখন ডিফল্টভাবে {name}-কে দেখাবে',
-  'settings.appDetails': 'অ্যাপের বিবরণ', 'settings.appDetailsBody': 'তথ্যের উৎস, গোপনীয়তা, সাইন আউট ও অ্যাকাউন্ট মুছে ফেলা',
+  'settings.appDetails': 'পরিচিতি ও গোপনীয়তা', 'settings.appDetailsBody': 'তথ্যের উৎস, গোপনীয়তা, সাইন আউট ও অ্যাকাউন্ট মুছে ফেলা',
+  'settings.account': 'অ্যাকাউন্ট', 'settings.accountBody': 'আপনার নাম, সাইন-ইন ও পাসওয়ার্ড', 'settings.app': 'অ্যাপ', 'settings.appBody': 'ভাষা ও চেহারা', 'settings.back': 'সেটিংসে ফিরে যান',
   'settings.language': 'ভাষা',
   'settings.languageHelp': 'অ্যাপের লেখা বদলায়। পণ্যের নাম ও উপাদানের তালিকা উৎস যেভাবে দেয় সেভাবেই থাকে, এবং উপাদান মেলানো হয় ইংরেজিতে।',
   'settings.languageLabel': 'ভাষা: {name}', 'toast.languageSaved': 'ভাষা {name} করা হয়েছে',
@@ -296,6 +296,5 @@ export const bn: Messages = {
   'auth.emailOptional': 'ইমেল (ঐচ্ছিক)',
   'auth.emailOptionalHelp': 'শুধু পাসওয়ার্ড ভুলে গেলে রিসেট করতে ব্যবহার হয়। পরে সেটিংসে যোগ বা পরিবর্তন করতে পারেন।',
   'auth.emailNotSaved': 'অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু ইমেলটি সংরক্ষণ করা যায়নি। সেটিংসে যোগ করতে পারেন।',
-  'settings.appearance.presentation': 'উপস্থাপনা', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
-  'settings.toolbar': 'টুলবার', 'settings.toolbarHelp': 'ট্যাব বার ও সাইডবারে কী দেখাবে তা বেছে নিন। এই ডিভাইসে সংরক্ষিত হয়।', 'settings.showHome': 'টুলবারে হোম দেখান',
+  'settings.appearance.presentation': 'উপস্থাপনা', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'পাসওয়ার্ড দেখান', 'auth.hidePassword': 'পাসওয়ার্ড লুকান',
 };

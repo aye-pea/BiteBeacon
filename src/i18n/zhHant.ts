@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Traditional Chinese (zh-TW). Converted from the Simplified file with Taiwan wording; needs native-speaker review before launch.
 export const zhHant: Messages = {
   'app.opening': '正在開啟 BiteBeacon…',
-  'nav.overview': '概覽', 'nav.overview.short': '首頁',
+  'nav.overview': '概覽', 'nav.overview.short': '首頁', 'nav.brandHome': 'BiteBeacon，前往首頁',
   'nav.scan': '掃描商品', 'nav.scan.short': '掃描',
   'nav.allergies': '過敏原', 'nav.allergies.short': '過敏原',
   'nav.history': '最近掃描', 'nav.history.short': '記錄',
   'nav.settings': '設定', 'nav.settings.short': '設定',
-  'nav.about': 'App 詳細資訊', 'nav.about.short': '詳情',
+  'nav.about': '關於與隱私', 'nav.about.short': '關於',
 
   'allergen.milk': '牛奶', 'allergen.eggs': '雞蛋', 'allergen.peanuts': '花生', 'allergen.tree-nuts': '樹堅果', 'allergen.soy': '大豆',
   'allergen.wheat': '小麥', 'allergen.fish': '魚類', 'allergen.shellfish': '甲殼類水產', 'allergen.sesame': '芝麻',
@@ -69,7 +69,6 @@ export const zhHant: Messages = {
 
   'scan.title': '你下一口吃的是什麼？', 'scan.body': '掃描食品條碼，或輸入條碼下方的數字。',
   'scan.chooseAllergies': '選擇你的過敏原', 'scan.scanner': '條碼掃描器',
-  'scan.upce': 'UPC-E 條碼需要展開。請輸入完整的 UPC 條碼，或換一件商品試試。',
   'scan.center': '請將條碼對準框內', 'scan.closeCamera': '關閉相機',
   'scan.webCamera': '相機掃描需要安全（https）頁面和相機許可權。你仍可在下方輸入條碼。', 'scan.pointCamera': '將相機對準 UPC 或 EAN 條碼。', 'scan.openCamera': '開啟相機',
   'scan.manual': '或手動輸入條碼', 'scan.barcodeLabel': '條碼數字', 'scan.checking': '正在檢查商品…', 'scan.checkingLabel': '正在檢查商品', 'scan.lookUp': '查詢商品',
@@ -145,7 +144,8 @@ export const zhHant: Messages = {
   'settings.defaultLabel': '預設：{label}', 'settings.addToChoose': '新增一位成員後即可選擇「{everyone}」。',
   'settings.defaultFailed': '無法儲存預設設定。你之前的選擇仍然有效。',
   'toast.defaultEveryone': '結果現在預設顯示所有人', 'toast.defaultPerson': '結果現在預設顯示 {name}',
-  'settings.appDetails': 'App 詳細資訊', 'settings.appDetailsBody': '資料來源、隱私、登出和刪除帳號',
+  'settings.appDetails': '關於與隱私', 'settings.appDetailsBody': '資料來源、隱私、登出和刪除帳號',
+  'settings.account': '帳戶', 'settings.accountBody': '你的名字、登入和密碼', 'settings.app': 'App', 'settings.appBody': '語言和外觀', 'settings.back': '返回設定',
   'settings.language': '語言',
   'settings.languageHelp': '更改 App 中的文字。商品名稱和配料表將保持資料來源提供的原樣，配料比對使用英文進行。',
   'settings.languageLabel': '語言：{name}', 'toast.languageSaved': '語言已設為{name}',
@@ -296,6 +296,5 @@ export const zhHant: Messages = {
   'auth.emailOptional': '電子郵件（選填）',
   'auth.emailOptionalHelp': '僅用於在你忘記密碼時重設密碼。之後可在「設定」中新增或變更。',
   'auth.emailNotSaved': '帳號已建立，但此電子郵件未能儲存。你可以在「設定」中新增。',
-  'settings.appearance.presentation': '簡報', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
-  'settings.toolbar': '工具列', 'settings.toolbarHelp': '選擇標籤列和側邊欄中顯示的內容。儲存在此裝置上。', 'settings.showHome': '在工具列中顯示「首頁」',
+  'settings.appearance.presentation': '簡報', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': '顯示密碼', 'auth.hidePassword': '隱藏密碼',
 };

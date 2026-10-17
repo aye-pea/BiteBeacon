@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Haitian Creole (ht-HT). Machine-drafted; needs native-speaker review before launch.
 export const ht: Messages = {
   'app.opening': 'N ap louvri BiteBeacon…',
-  'nav.overview': 'Apèsi', 'nav.overview.short': 'Akèy',
+  'nav.overview': 'Apèsi', 'nav.overview.short': 'Akèy', 'nav.brandHome': 'BiteBeacon, ale nan Akèy',
   'nav.scan': 'Eskane yon pwodui', 'nav.scan.short': 'Eskane',
   'nav.allergies': 'Alèji', 'nav.allergies.short': 'Alèji',
   'nav.history': 'Dènye eskanè yo', 'nav.history.short': 'Istorik',
   'nav.settings': 'Paramèt', 'nav.settings.short': 'Paramèt',
-  'nav.about': 'Detay aplikasyon an', 'nav.about.short': 'Detay',
+  'nav.about': 'Konsènan ak vi prive', 'nav.about.short': 'Konsènan',
 
   'allergen.milk': 'Lèt', 'allergen.eggs': 'Ze', 'allergen.peanuts': 'Pistach', 'allergen.tree-nuts': 'Nwa pyebwa (zanmann, nwa, elatriye)', 'allergen.soy': 'Soya',
   'allergen.wheat': 'Ble', 'allergen.fish': 'Pwason', 'allergen.shellfish': 'Kristase (kribich, krab, woma)', 'allergen.sesame': 'Wowoli (sezam)',
@@ -69,7 +69,6 @@ export const ht: Messages = {
 
   'scan.title': 'Kisa ki nan pwochen bouche ou?', 'scan.body': 'Eskane kòd ba yon manje oswa antre nimewo ki anba l yo.',
   'scan.chooseAllergies': 'Chwazi alèji ou', 'scan.scanner': 'Eskanè kòd ba',
-  'scan.upce': 'Kòd UPC-E a bezwen agrandi. Antre tout kòd ba UPC a oswa eseye yon lòt pwodui.',
   'scan.center': 'Mete kòd ba a nan mitan kad la', 'scan.closeCamera': 'Fèmen kamera a',
   'scan.webCamera': 'Pou eskane ak kamera, ou bezwen yon paj ki an sekirite (https) ak aksè kamera. Ou ka toujou tape kòd ba a anba a.', 'scan.pointCamera': 'Brake kamera ou sou yon kòd ba UPC oswa EAN.', 'scan.openCamera': 'Louvri kamera a',
   'scan.manual': 'Oswa antre kòd ba a ak men', 'scan.barcodeLabel': 'Nimewo kòd ba', 'scan.checking': 'N ap verifye pwodui a…', 'scan.checkingLabel': 'N ap verifye pwodui a', 'scan.lookUp': 'Chèche pwodui a',
@@ -145,7 +144,8 @@ export const ht: Messages = {
   'settings.defaultLabel': 'Pa defo: {label}', 'settings.addToChoose': 'Ajoute yon moun pou ou ka chwazi “{everyone}”.',
   'settings.defaultFailed': 'Nou pa t kapab sere chwa pa defo a. Ansyen chwa ou a toujou aktif.',
   'toast.defaultEveryone': 'Rezilta yo kounye a montre tout moun pa defo', 'toast.defaultPerson': 'Rezilta yo kounye a montre {name} pa defo',
-  'settings.appDetails': 'Detay aplikasyon an', 'settings.appDetailsBody': 'Sous done, konfidansyalite, dekoneksyon ak efase kont',
+  'settings.appDetails': 'Konsènan ak vi prive', 'settings.appDetailsBody': 'Sous done, konfidansyalite, dekoneksyon ak efase kont',
+  'settings.account': 'Kont', 'settings.accountBody': 'Non ou, koneksyon ak modpas', 'settings.app': 'Aplikasyon', 'settings.appBody': 'Lang ak aparans', 'settings.back': 'Retounen nan Paramèt',
   'settings.language': 'Lang',
   'settings.languageHelp': 'Sa chanje tèks aplikasyon an. Non pwodui ak lis engredyan yo rete jan sous la bay yo, epi konparezon engredyan yo fèt an angle.',
   'settings.languageLabel': 'Lang: {name}', 'toast.languageSaved': 'Lang lan chanje an {name}',
@@ -296,6 +296,5 @@ export const ht: Messages = {
   'auth.emailOptional': 'Imèl (opsyonèl)',
   'auth.emailOptionalHelp': 'Se sèlman pou reyinisyalize modpas ou si ou bliye l. Ou ka ajoute oswa chanje l pita nan Paramèt.',
   'auth.emailNotSaved': 'Kont lan kreye, men nou pa t ka anrejistre imèl sa a. Ou ka ajoute l nan Paramèt.',
-  'settings.appearance.presentation': 'Prezantasyon', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
-  'settings.toolbar': 'Ba zouti', 'settings.toolbarHelp': 'Chwazi sa ki parèt nan ba onglè a ak ba bò a. Li sere sou aparèy sa a.', 'settings.showHome': 'Montre Akèy nan ba zouti a',
+  'settings.appearance.presentation': 'Prezantasyon', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Montre modpas la', 'auth.hidePassword': 'Kache modpas la',
 };

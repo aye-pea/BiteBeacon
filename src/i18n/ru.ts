@@ -2,12 +2,12 @@ import { Messages } from './en';
 // Russian (ru-RU). Machine-drafted; needs native-speaker review before launch.
 export const ru: Messages = {
   'app.opening': 'Открываем BiteBeacon…',
-  'nav.overview': 'Обзор', 'nav.overview.short': 'Главная',
+  'nav.overview': 'Обзор', 'nav.overview.short': 'Главная', 'nav.brandHome': 'BiteBeacon, перейти на главную',
   'nav.scan': 'Сканировать продукт', 'nav.scan.short': 'Скан',
   'nav.allergies': 'Аллергии', 'nav.allergies.short': 'Аллергии',
   'nav.history': 'Недавние сканы', 'nav.history.short': 'История',
   'nav.settings': 'Настройки', 'nav.settings.short': 'Настройки',
-  'nav.about': 'О приложении', 'nav.about.short': 'О приложении',
+  'nav.about': 'О приложении и конфиденциальность', 'nav.about.short': 'О приложении',
 
   'allergen.milk': 'Молоко', 'allergen.eggs': 'Яйца', 'allergen.peanuts': 'Арахис', 'allergen.tree-nuts': 'Древесные орехи', 'allergen.soy': 'Соя',
   'allergen.wheat': 'Пшеница', 'allergen.fish': 'Рыба', 'allergen.shellfish': 'Ракообразные', 'allergen.sesame': 'Кунжут',
@@ -69,7 +69,6 @@ export const ru: Messages = {
 
   'scan.title': 'Что в вашем следующем кусочке?', 'scan.body': 'Отсканируйте штрихкод продукта или введите цифры под ним.',
   'scan.chooseAllergies': 'Выберите аллергии', 'scan.scanner': 'Сканер штрихкодов',
-  'scan.upce': 'Код UPC-E нужно развернуть. Введите полный штрихкод UPC или попробуйте другой продукт.',
   'scan.center': 'Поместите штрихкод в центр рамки', 'scan.closeCamera': 'Закрыть камеру',
   'scan.webCamera': 'Для сканирования камерой нужна защищённая (https) страница и доступ к камере. Штрихкод можно ввести вручную ниже.', 'scan.pointCamera': 'Наведите камеру на штрихкод UPC или EAN.', 'scan.openCamera': 'Открыть камеру',
   'scan.manual': 'Или введите штрихкод вручную', 'scan.barcodeLabel': 'Номер штрихкода', 'scan.checking': 'Проверяем продукт…', 'scan.checkingLabel': 'Проверка продукта', 'scan.lookUp': 'Найти продукт',
@@ -145,7 +144,8 @@ export const ru: Messages = {
   'settings.defaultLabel': 'По умолчанию: {label}', 'settings.addToChoose': 'Добавьте человека, чтобы выбрать «{everyone}».',
   'settings.defaultFailed': 'Не удалось сохранить выбор по умолчанию. Прежний выбор по-прежнему действует.',
   'toast.defaultEveryone': 'Теперь по умолчанию показываются все', 'toast.defaultPerson': 'Теперь по умолчанию показывается: {name}',
-  'settings.appDetails': 'О приложении', 'settings.appDetailsBody': 'Источники данных, конфиденциальность, выход и удаление аккаунта',
+  'settings.appDetails': 'О приложении и конфиденциальность', 'settings.appDetailsBody': 'Источники данных, конфиденциальность, выход и удаление аккаунта',
+  'settings.account': 'Аккаунт', 'settings.accountBody': 'Ваше имя, вход и пароль', 'settings.app': 'Приложение', 'settings.appBody': 'Язык и оформление', 'settings.back': 'Назад в настройки',
   'settings.language': 'Язык',
   'settings.languageHelp': 'Меняет язык интерфейса. Названия продуктов и составы остаются такими, как их предоставляет источник, а сверка ингредиентов выполняется на английском.',
   'settings.languageLabel': 'Язык: {name}', 'toast.languageSaved': 'Язык: {name}',
@@ -296,6 +296,5 @@ export const ru: Messages = {
   'auth.emailOptional': 'Email (необязательно)',
   'auth.emailOptionalHelp': 'Нужен только для сброса забытого пароля. Его можно добавить или изменить позже в Настройках.',
   'auth.emailNotSaved': 'Аккаунт создан, но этот email сохранить не удалось. Его можно добавить в Настройках.',
-  'settings.appearance.presentation': 'Презентация', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
-  'settings.toolbar': 'Панель навигации', 'settings.toolbarHelp': 'Выберите, что показывать на панели вкладок и в боковом меню. Сохраняется на этом устройстве.', 'settings.showHome': 'Показывать «Главную» на панели',
+  'settings.appearance.presentation': 'Презентация', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Показать пароль', 'auth.hidePassword': 'Скрыть пароль',
 };

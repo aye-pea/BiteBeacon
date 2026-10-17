@@ -2,12 +2,12 @@ import { Messages } from './en';
 // French (fr-FR). Machine-drafted; needs native-speaker review before launch.
 export const fr: Messages = {
   'app.opening': 'Ouverture de BiteBeacon…',
-  'nav.overview': 'Vue d’ensemble', 'nav.overview.short': 'Accueil',
+  'nav.overview': 'Vue d’ensemble', 'nav.overview.short': 'Accueil', 'nav.brandHome': 'BiteBeacon, aller à l’accueil',
   'nav.scan': 'Scanner un produit', 'nav.scan.short': 'Scanner',
   'nav.allergies': 'Allergies', 'nav.allergies.short': 'Allergies',
   'nav.history': 'Scans récents', 'nav.history.short': 'Historique',
   'nav.settings': 'Réglages', 'nav.settings.short': 'Réglages',
-  'nav.about': 'Infos sur l’app', 'nav.about.short': 'Infos',
+  'nav.about': 'À propos et confidentialité', 'nav.about.short': 'À propos',
 
   'allergen.milk': 'Lait', 'allergen.eggs': 'Œufs', 'allergen.peanuts': 'Arachides (cacahuètes)', 'allergen.tree-nuts': 'Fruits à coque', 'allergen.soy': 'Soja',
   'allergen.wheat': 'Blé', 'allergen.fish': 'Poisson', 'allergen.shellfish': 'Crustacés', 'allergen.sesame': 'Sésame',
@@ -69,7 +69,6 @@ export const fr: Messages = {
 
   'scan.title': 'Qu’y a-t-il dans votre prochaine bouchée ?', 'scan.body': 'Scannez le code-barres d’un aliment ou saisissez les chiffres situés dessous.',
   'scan.chooseAllergies': 'Choisissez vos allergies', 'scan.scanner': 'Lecteur de code-barres',
-  'scan.upce': 'Le code UPC-E doit être développé. Saisissez le code-barres UPC complet ou essayez un autre produit.',
   'scan.center': 'Centrez le code-barres dans le cadre', 'scan.closeCamera': 'Fermer la caméra',
   'scan.webCamera': 'Le scan par caméra nécessite une page sécurisée (https) et l’accès à la caméra. Vous pouvez toujours saisir le code-barres ci-dessous.', 'scan.pointCamera': 'Pointez votre caméra vers un code-barres UPC ou EAN.', 'scan.openCamera': 'Ouvrir la caméra',
   'scan.manual': 'Ou saisissez le code-barres manuellement', 'scan.barcodeLabel': 'Numéro du code-barres', 'scan.checking': 'Vérification du produit…', 'scan.checkingLabel': 'Vérification du produit', 'scan.lookUp': 'Rechercher le produit',
@@ -145,7 +144,8 @@ export const fr: Messages = {
   'settings.defaultLabel': 'Par défaut : {label}', 'settings.addToChoose': 'Ajoutez une personne pour choisir « {everyone} ».',
   'settings.defaultFailed': 'Impossible d’enregistrer le choix par défaut. Votre choix précédent reste actif.',
   'toast.defaultEveryone': 'Les résultats affichent désormais tout le monde par défaut', 'toast.defaultPerson': 'Les résultats affichent désormais {name} par défaut',
-  'settings.appDetails': 'Infos sur l’app', 'settings.appDetailsBody': 'Sources de données, confidentialité, déconnexion et suppression du compte',
+  'settings.appDetails': 'À propos et confidentialité', 'settings.appDetailsBody': 'Sources de données, confidentialité, déconnexion et suppression du compte',
+  'settings.account': 'Compte', 'settings.accountBody': 'Votre nom, connexion et mot de passe', 'settings.app': 'App', 'settings.appBody': 'Langue et apparence', 'settings.back': 'Retour aux réglages',
   'settings.language': 'Langue',
   'settings.languageHelp': 'Modifie le texte de l’app. Les noms de produits et les listes d’ingrédients restent tels que la source les fournit, et la comparaison des ingrédients se fait en anglais.',
   'settings.languageLabel': 'Langue : {name}', 'toast.languageSaved': 'Langue définie : {name}',
@@ -296,6 +296,5 @@ export const fr: Messages = {
   'auth.emailOptional': 'E-mail (facultatif)',
   'auth.emailOptionalHelp': 'Sert uniquement à réinitialiser votre mot de passe si vous l’oubliez. Vous pourrez l’ajouter ou le modifier plus tard dans Réglages.',
   'auth.emailNotSaved': 'Compte créé, mais cet e-mail n’a pas pu être enregistré. Vous pouvez l’ajouter dans Réglages.',
-  'settings.appearance.presentation': 'Présentation', 'auth.showPassword': 'Afficher le mot de passe', 'auth.hidePassword': 'Masquer le mot de passe',
-  'settings.toolbar': 'Barre d’outils', 'settings.toolbarHelp': 'Choisissez ce qui apparaît dans la barre d’onglets et la barre latérale. Enregistré sur cet appareil.', 'settings.showHome': 'Afficher Accueil dans la barre',
+  'settings.appearance.presentation': 'Présentation', 'settings.appearance.apple': 'Apple', 'settings.appearance.partiful': 'Partiful', 'auth.showPassword': 'Afficher le mot de passe', 'auth.hidePassword': 'Masquer le mot de passe',
 };
