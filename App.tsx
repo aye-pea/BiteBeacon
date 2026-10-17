@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, AppState, Linking, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, ViewStyle, useWindowDimensions } from 'react-native';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Animated, AppState, Easing, Linking, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, ViewStyle, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -132,6 +132,11 @@ function AppContent() {
   const [page, setPage] = useState<Page>('overview');
   // Settings opens on a short menu; Account and App are its two submenus.
   const [settingsView, setSettingsView] = useState<'main' | 'account' | 'app'>('main');
+  // Phones slide Settings pages sideways: a submenu comes in from the right (1), going back brings the menu in from the left (-1).
+  const slideDir = useRef<0 | 1 | -1>(0);
+  const slideX = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useRef(false);
+  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled?.().then(on => { reduceMotion.current = on; }).catch(() => {}); }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   // When the browser window becomes active again (for example swiping back to a full-screen browser on a Mac), it hands focus back
@@ -712,10 +717,17 @@ function AppContent() {
   const Scroller = docScroll ? View : ScrollView;
   // A Settings row that opens another page (Account, App, About & Privacy, Admin Dashboard).
   const menuRow = (testID: string | undefined, icon: React.ReactNode, title: string, body: string, onPress: () => void) => <Tap testID={testID} accessibilityRole="button" haptic="select" onPress={onPress} style={[s.card, s.historyRow]} pressedStyle={{ borderColor: C.green }}>{icon}<View style={{ flex: 1 }}><Text style={s.cardTitle}>{title}</Text><Text style={s.footnote}>{body}</Text></View><ChevronRight size={20} color={C.green} /></Tap>;
-  const openSettings = (view: 'account' | 'app') => { setFeedback(''); setLangOpen(false); setEditing(null); setRemoving(null); setNameDraft(myName); setSettingsView(view); };
+  const openSettings = (view: 'account' | 'app') => { slideDir.current = 1; setFeedback(''); setLangOpen(false); setEditing(null); setRemoving(null); setNameDraft(myName); setSettingsView(view); };
   // Pages opened from Settings get a floating button back to the Settings menu (Admin Dashboard only on phones; desktop has it in the sidebar).
+  // Runs before paint so the new page starts off-screen instead of flashing in place.
+  useLayoutEffect(() => {
+    const dir = slideDir.current; slideDir.current = 0;
+    if (!dir || wide || reduceMotion.current) { slideX.setValue(0); return; }
+    slideX.setValue(dir * width);
+    Animated.timing(slideX, { toValue: 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [page, settingsView]);
   const showBack = (page === 'settings' && settingsView !== 'main') || page === 'about' || (page === 'admin' && !wide);
-  const backButton = <Tap testID="settings-back" accessibilityRole="button" accessibilityLabel={t('settings.back')} haptic="select" scaleTo={.95} onPress={() => navigate('settings')} style={s.backButton} pressedStyle={{ opacity: .75 }}><ChevronLeft accessible={false} size={20} color={C.green} /><Text style={s.backText}>{t('nav.settings')}</Text></Tap>;
+  const backButton = <Tap testID="settings-back" accessibilityRole="button" accessibilityLabel={t('settings.back')} haptic="select" scaleTo={.95} onPress={() => { slideDir.current = -1; navigate('settings'); }} style={s.backButton} pressedStyle={{ opacity: .75 }}><ChevronLeft accessible={false} size={20} color={C.green} /><Text style={s.backText}>{t('nav.settings')}</Text></Tap>;
   // Password box with an eye button that shows or hides what was typed.
   const passwordField = (input: React.ReactElement, shown = showPassword, setShown = setShowPassword, testID = 'toggle-password') => <View style={s.passwordBox}>{input}
     <Tap testID={testID} accessibilityRole="button" accessibilityLabel={shown ? t('auth.hidePassword') : t('auth.showPassword')} haptic="select" onPress={() => setShown(!shown)} style={s.iconButton} pressedStyle={{ backgroundColor: C.pale }}>
@@ -839,6 +851,7 @@ function AppContent() {
         <View style={[s.inline, { flexShrink: 1 }]}><Text style={s.breadcrumb}><Text style={{ color: C.ink, fontWeight: '600' }}>{page === 'overview' ? t('nav.overview') : navItems.find(n => n.page === page)?.label}</Text></Text></View>
         <View style={s.modeBadge}><View style={[s.navDot, { marginLeft: 0 }]} /><Text style={s.modeText}>{demo ? t('mode.demo') : IS_BETA ? t('mode.beta') : t('mode.connected')}</Text></View>
       </View>}
+      <View style={[s.slideClip, !docScroll && s.pageScroll]}><Animated.View testID="page-slide" style={[!docScroll && s.pageScroll, { transform: [{ translateX: slideX }] }]}>
       <Scroller {...(docScroll ? { style: [s.content, { padding: 18, gap: 20, paddingBottom: 18 + bottomBarHeight }] } : { ref: scrollRef, style: s.pageScroll, contentContainerStyle: [s.content, !wide && { padding: 18, gap: 20 }], keyboardShouldPersistTaps: 'handled' as const })} key={page} testID="page-scroll">
         {!wide && <View style={s.mobileBrandRow}><Tap testID="brand-home" accessibilityRole="button" accessibilityLabel={t('nav.brandHome')} accessibilityState={{ selected: page === 'overview' }} haptic="select" scaleTo={.96} onPress={() => navigate('overview')} style={[s.brand, s.mobileBrand]} pressedStyle={{ opacity: .6 }}><BrandLogo size={30} color={C.green} glass={scheme === 'presentation' || C.pastel} deep={scheme === 'partiful'} /><Text style={[s.brandText, { fontSize: 20 }]}>BiteBeacon</Text></Tap></View>}
         {demo && <View style={s.demoBar}><View style={[s.inline, { flexShrink: 1 }]}><Sparkles accessible={false} size={15} color={C.amber} /><Text style={[s.bodySmall, { color: C.amber, flexShrink: 1 }]}>{t('demo.bar')}</Text></View><Tap accessibilityRole="button" onPress={leave} disabled={busy || saving} style={s.demoExit} pressedStyle={{ backgroundColor: C.amberPressed }}><Text style={[s.textLink, { color: C.amber }]}>{t('demo.exit')}</Text></Tap></View>}
@@ -987,8 +1000,8 @@ function AppContent() {
             {lang !== 'en' && <Text style={s.footnote}>{t('settings.translationNote')}</Text>}</View>
           <View testID="appearance-settings" style={s.card}><View style={s.inline}><SunMoon size={20} color={C.green} /><Text style={s.cardTitle}>{t('settings.appearance')}</Text></View><Text style={s.bodySmall}>{t('settings.appearanceHelp')}</Text>
             <View accessibilityRole="radiogroup" style={{ gap: 6 }}>{APPEARANCES.map(a => { const on = appearance === a; return <Tap key={a} accessibilityRole="radio" aria-checked={on} accessibilityState={{ checked: on }} accessibilityLabel={t('settings.appearanceLabel', { name: t(`settings.appearance.${a}`) })} haptic="select" onPress={() => setAppearance(a)} style={[s.radioRow, on && s.allergySelected]} pressedStyle={!on && { backgroundColor: C.pale }}><View style={[s.radioDot, on && s.radioDotOn]} /><Text style={[s.navText, { flex: 1 }, on && C.pastel && { color: C.primaryInk }]}>{t(`settings.appearance.${a}`)}</Text>{on && <Check size={18} color={C.green} />}</Tap>; })}</View></View></>}
-          {settingsView === 'main' && <>{menuRow(undefined, <BookOpen size={20} color={C.green} />, t('settings.appDetails'), t('settings.appDetailsBody'), () => navigate('about'))}
-           {isAdmin && !wide && menuRow('open-admin', <ChartColumn size={20} color={C.green} />, t('nav.admin'), t('settings.adminBody'), () => navigate('admin'))}</>}</>}
+          {settingsView === 'main' && <>{menuRow(undefined, <BookOpen size={20} color={C.green} />, t('settings.appDetails'), t('settings.appDetailsBody'), () => { slideDir.current = 1; navigate('about'); })}
+           {isAdmin && !wide && menuRow('open-admin', <ChartColumn size={20} color={C.green} />, t('nav.admin'), t('settings.adminBody'), () => { slideDir.current = 1; navigate('admin'); })}</>}</>}
         {page === 'admin' && isAdmin && adminPage}
         {page === 'about' && <><Text accessibilityRole="header" style={s.pageTitle}>{t('about.title')}</Text>
           <View style={s.card}><View style={s.iconTile}><ShieldCheck size={24} color={C.green} /></View><Text style={s.sectionTitle}>{t('about.profileTitle')}</Text><Text style={s.body}>{t('about.profileBody1')}</Text><Text style={s.body}>{t('about.profileBody2')}</Text></View>
@@ -998,6 +1011,7 @@ function AppContent() {
             {!demo && <>{deleteConfirm ? <Reveal style={{ gap: 12 }}><Notice kind="danger">{t('about.deleteConfirm')}</Notice><Button variant="danger" hapticKind="warning" loading={saving} onPress={deleteAccount}>{saving ? t('about.deleting') : t('about.confirmDelete')}</Button><Button secondary onPress={() => setDeleteConfirm(false)}>{t('about.cancelDelete')}</Button></Reveal> : <Tap accessibilityRole="button" haptic="warning" onPress={() => setDeleteConfirm(true)}><Text style={[s.link, { color: C.red }]}>{t('about.delete')}</Text></Tap>}</>}</View></>}
         <View style={s.footer}><CartLogo size={15} color={C.muted} /><Tap accessibilityRole="link" accessibilityHint={t('legal.disclaimer')} haptic="select" onPress={() => openLegal('disclaimer')} style={{ flexShrink: 1 }}><Text style={s.footnote}>{t('footer.disclaimer')}</Text></Tap><Text style={s.footnote}>{t('footer.version', { version: APP_VERSION })}</Text></View>
       </Scroller>
+      </Animated.View></View>
       <View style={docScroll && [s.fixedBottom, { paddingBottom: insets.bottom }]} onLayout={docScroll ? e => setBottomBarHeight(e.nativeEvent.layout.height) : undefined}>
       {page === 'allergies' && <View style={s.profileActions}>
         <Text accessibilityLiveRegion="polite" style={[s.bodySmall, profileChanged && { color: C.amber, fontWeight: '600' }]}>{t('allergies.count', { n: draft.length, total: ALLERGENS.length })} · {profileChanged ? t('allergies.unsaved') : t('allergies.saved')}</Text>
@@ -1091,6 +1105,7 @@ const STYLES = bothSchemes((C: Palette, shadow) => StyleSheet.create(withPastel(
   navBadge: { position: 'absolute', top: 0, right: '-15%', width: 9, height: 9, borderRadius: 5, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.paper },
   navCount: { marginLeft: 'auto', minWidth: 22, textAlign: 'center', ...type.caption, fontWeight: '800', color: C.onAccent, backgroundColor: C.red, borderRadius: 11, overflow: 'hidden', paddingHorizontal: 6, paddingVertical: 2 }, empty: { alignItems: 'center', paddingVertical: 44 },
   // No backdrop on the pinned bar: the page scrolls on behind the glass tab bar.
+  slideClip: { overflow: 'hidden' },
   backRow: { paddingHorizontal: '4%', paddingBottom: 2, alignItems: 'flex-start', pointerEvents: 'box-none' }, backDesk: { position: 'absolute', left: '2%', bottom: '3%', zIndex: 20 },
   backButton: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: 10, paddingRight: 16, borderRadius: 999, backgroundColor: glassBlur ? C.glass : C.glassSolid, ...(Platform.OS === 'web' && { backdropFilter: 'blur(16px) saturate(180%)' }), borderWidth: 1, borderColor: C.glassRim, boxShadow: `0px 8px 24px ${C.shadowRaised}, 0px 0px 0px 0.5px ${C.glassEdge}, inset 0px 1px 0px ${C.glassHighlight}` } as ViewStyle, backText: { color: C.green, fontSize: 15, fontWeight: '600' },
   fixedBottom: { position: 'fixed' as 'absolute', left: 0, right: 0, bottom: 0, zIndex: 10, pointerEvents: 'box-none' },

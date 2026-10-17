@@ -46,3 +46,23 @@ test('Settings groups name and sign-in under Account, language and appearance un
   await page.screenshot({ path: 'artifacts/settings-menu-desktop.png' });
   expect(errors).toEqual([]);
 });
+
+test('on phones, a Settings submenu slides in from the right and Back slides the menu in from the left', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore employer demo' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const slide = page.getByTestId('page-slide');
+  const offset = () => slide.evaluate(el => new DOMMatrix(getComputedStyle(el).transform).m41);
+  await page.getByTestId('open-app-settings').click();
+  await page.waitForTimeout(60);
+  expect(await offset()).toBeGreaterThan(20); // still coming in from the right
+  await expect.poll(offset).toBe(0);
+  await page.getByTestId('settings-back').click();
+  await page.waitForTimeout(60);
+  expect(await offset()).toBeLessThan(-20); // the menu comes back from the left
+  await expect.poll(offset).toBe(0);
+  // Switching tabs doesn't slide.
+  await page.getByRole('button', { name: 'Pantry', exact: true }).click();
+  expect(await offset()).toBe(0);
+});
